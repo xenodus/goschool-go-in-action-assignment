@@ -43,7 +43,7 @@ func startHttpServer() {
 
 	http.Handle("/favicon.ico", http.NotFoundHandler())
 
-	err := http.ListenAndServe(":5221", nil)
+	err := http.ListenAndServe(serverHost+":"+serverPort, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
