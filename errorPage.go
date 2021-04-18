@@ -10,9 +10,6 @@ func errorPage(res http.ResponseWriter, req *http.Request) {
 	var errorCode = http.StatusInternalServerError
 
 	switch err {
-	case "ErrInternalServerError":
-		errorCode = http.StatusInternalServerError
-		errorMsg = ErrInternalServerError.Error()
 	default:
 		errorCode = http.StatusInternalServerError
 		errorMsg = ErrInternalServerError.Error()
@@ -31,4 +28,20 @@ func errorPage(res http.ResponseWriter, req *http.Request) {
 
 	res.WriteHeader(errorCode)
 	tpl.ExecuteTemplate(res, "error.gohtml", payload)
+}
+
+func notFoundErrorHandler(res http.ResponseWriter, req *http.Request) {
+	// Anonymous payload
+	payload := struct {
+		PageTitle string
+		ErrorMsg  string
+		User      *patient
+	}{
+		"Page not found",
+		ErrStatusNotFound.Error(),
+		nil,
+	}
+
+	res.WriteHeader(http.StatusNotFound)
+	tpl.ExecuteTemplate(res, "404.gohtml", payload)
 }

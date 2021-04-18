@@ -17,3 +17,4 @@ var ErrInvalidNRIC = errors.New("invalid NRIC")
 var ErrAuthFailure = errors.New("invalid NRIC / password combination")
 
 var ErrInternalServerError = errors.New("internal server error")
+var ErrStatusNotFound = errors.New("page not found")
