@@ -331,6 +331,8 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	var chosenDoctor *doctor = nil
 	var theAppt *appointment = nil
 	var timeslotsAvailable []int64
+	var errorMsg = ""
+	var adminApptIDIndex = -1
 
 	if action == "edit" || action == "cancel" {
 
@@ -338,14 +340,18 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 		if err == nil {
 			// Check if appt id is valid
-			isValidApptID := func(apptID int64) bool {
-				patientApptIDIndex := binarySearchApptID(thePatient.Appointments, 0, len(thePatient.Appointments)-1, apptID)
+			isValidApptID := func(apptId int64) bool {
+				patientApptIDIndex := binarySearchApptID(thePatient.Appointments, 0, len(thePatient.Appointments)-1, apptId)
 				return patientApptIDIndex >= 0
 			}(apptId)
 
 			// if user is admin, appt id is valid although don't belong to him/her
 			if isAdmin {
-				isValidApptID = true
+				adminApptIDIndex = binarySearchApptID(appointments, 0, len(appointments)-1, apptId)
+
+				if adminApptIDIndex >= 0 {
+					isValidApptID = true
+				}
 			}
 
 			if isValidApptID {
@@ -364,63 +370,85 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 				// Edit Appt
 				// Change thePatient to the actual patient since thePatient is Admin at the moment
-				if thePatient.IsAdmin() {
-					tempApptID := binarySearchApptID(appointments, 0, len(appointments)-1, apptId)
-
-					if tempApptID >= 0 {
-						appt := appointments[tempApptID]
+				if action == "edit" {
+					if thePatient.IsAdmin() {
+						appt := appointments[adminApptIDIndex]
 						thePatient = appt.Patient
 					}
-				}
 
-				patientApptIDIndex := binarySearchApptID(thePatient.Appointments, 0, len(thePatient.Appointments)-1, apptId)
+					patientApptIDIndex := binarySearchApptID(thePatient.Appointments, 0, len(thePatient.Appointments)-1, apptId)
 
-				if patientApptIDIndex >= 0 {
-					theAppt = thePatient.Appointments[patientApptIDIndex]
-					chosenDoctor = theAppt.Doctor
-					timeslotsAvailable = getAvailableTimeslot(append(chosenDoctor.Appointments, thePatient.Appointments...))
+					if patientApptIDIndex >= 0 {
+						theAppt = thePatient.Appointments[patientApptIDIndex]
+						chosenDoctor = theAppt.Doctor
 
-					if timeslot != "" && chosenDoctor != nil {
-						t, _ := strconv.ParseInt(timeslot, 10, 64)
+						patientTimeslotsAvailable := getAvailableTimeslot(thePatient.Appointments)
+						doctorTimeslotsAvailable := getAvailableTimeslot(chosenDoctor.Appointments)
+						timeslotsAvailable = getAvailableTimeslot(append(chosenDoctor.Appointments, thePatient.Appointments...))
 
-						if isApptTimeValid(t) {
-
-							theAppt.editAppointment(t, thePatient, chosenDoctor)
-
-							if isAdmin && source == "admin" {
-								http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
+						if len(timeslotsAvailable) <= 0 {
+							if len(patientTimeslotsAvailable) <= 0 {
+								errorMsg = ErrPatientNoMoreTimeslot.Error()
+							} else if len(doctorTimeslotsAvailable) <= 0 {
+								errorMsg = ErrDoctorNoMoreTimeslot.Error()
 							} else {
-								http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
+								errorMsg = ErrNoMoreTimeslot.Error()
 							}
-							return
+						}
+
+						if timeslot != "" && chosenDoctor != nil {
+							t, _ := strconv.ParseInt(timeslot, 10, 64)
+
+							if isApptTimeValid(t) {
+
+								theAppt.editAppointment(t, thePatient, chosenDoctor)
+
+								if isAdmin && source == "admin" {
+									http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
+								} else {
+									http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
+								}
+								return
+							}
 						}
 					}
 				}
-
-				// Anonymous payload
-				payload := struct {
-					PageTitle          string
-					User               *patient
-					Doctors            []*doctor
-					Appt               *appointment
-					ChosenDoctor       *doctor
-					TimeslotsAvailable []int64
-				}{
-					"Edit Appointment",
-					thePatient,
-					doctors,
-					theAppt,
-					chosenDoctor,
-					timeslotsAvailable,
-				}
-
-				tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
-				return
+			} else {
+				errorMsg = ErrAppointmentIDNotFound.Error()
 			}
+		} else {
+			errorMsg = ErrAppointmentIDNotFound.Error()
 		}
+
+		// Anonymous payload
+		payload := struct {
+			PageTitle          string
+			User               *patient
+			Doctors            []*doctor
+			Appt               *appointment
+			ChosenDoctor       *doctor
+			TimeslotsAvailable []int64
+			ErrorMsg           string
+		}{
+			"Edit Appointment",
+			thePatient,
+			doctors,
+			theAppt,
+			chosenDoctor,
+			timeslotsAvailable,
+			errorMsg,
+		}
+
+		tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
+		return
 	}
 
-	http.Redirect(res, req, pageIndex, http.StatusSeeOther)
+	if isAdmin && source == "admin" {
+		http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
+		return
+	}
+
+	http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 }
 
 func appointmentPage(res http.ResponseWriter, req *http.Request) {
@@ -461,11 +489,18 @@ func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 	var chosenDoctor *doctor = nil
 	var timeslotsAvailable []int64
+	var errorMsg = ""
 
 	if doctorID != "" {
 		doctorID, _ := strconv.ParseInt(doctorID, 10, 64)
-		chosenDoctor, _ = doctorsBST.getDoctorByIDBST(doctorID)
-		timeslotsAvailable = getAvailableTimeslot(append(chosenDoctor.Appointments, thePatient.Appointments...))
+		doc, err := doctorsBST.getDoctorByIDBST(doctorID)
+
+		if err == nil {
+			chosenDoctor = doc
+			timeslotsAvailable = getAvailableTimeslot(append(chosenDoctor.Appointments, thePatient.Appointments...))
+		} else {
+			errorMsg = err.Error()
+		}
 	}
 
 	if timeslot != "" && chosenDoctor != nil {
@@ -491,8 +526,6 @@ func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 		http.Redirect(res, req, pageIndex, http.StatusSeeOther)
 		return
 	}
-
-	errorMsg := ""
 
 	if errorCode == "dnf" {
 		t, _ := strconv.ParseInt(errorTimeslot, 10, 64)

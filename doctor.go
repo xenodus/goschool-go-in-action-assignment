@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"sync"
@@ -167,22 +168,33 @@ func viewDoctorsPage(res http.ResponseWriter, req *http.Request) {
 
 	var chosenDoctor *doctor = nil
 	var timeslotsAvailable []int64
+	var errorMsg = ""
+
+	fmt.Println(errorMsg)
 
 	if doctorID != "" {
 		doctorID, _ := strconv.ParseInt(doctorID, 10, 64)
-		chosenDoctor, _ = doctorsBST.getDoctorByIDBST(doctorID)
-		timeslotsAvailable = getAvailableTimeslot(chosenDoctor.Appointments)
+		doc, err := doctorsBST.getDoctorByIDBST(doctorID)
+
+		if err == nil {
+			chosenDoctor = doc
+			timeslotsAvailable = getAvailableTimeslot(chosenDoctor.Appointments)
+		} else {
+			errorMsg = err.Error()
+		}
 	}
 
 	// Anonymous payload
 	payload := struct {
 		PageTitle          string
+		ErrorMsg           string
 		User               *patient
 		ChosenDoctor       *doctor
 		TimeslotsAvailable []int64
 		Doctors            []*doctor
 	}{
 		"View Doctors",
+		errorMsg,
 		thePatient,
 		chosenDoctor,
 		timeslotsAvailable,

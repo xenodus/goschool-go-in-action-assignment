@@ -8,32 +8,36 @@
 
         <div class="container my-3">
             <div class="mb-3">
+                <div class="mb-1"><a href="/appointments" class="btn btn-dark btn-sm mb-1" role="button"><i class="fas fa-reply"></i> Back</a></div>
                 <h1>Edit Appointment</h1>
             </div>
 
             <hr/>
 
-            <div class="mb-3">Your appointment ({{ .Appt.Id }}) with <strong>Dr. {{ .Appt.Doctor.First_name }} {{ .Appt.Doctor.Last_name }}</strong> is scheduled for <strong>{{ time2HumanReadable .Appt.Time }}</strong></div>
+            {{ if .ErrorMsg }}
+            <div class="alert alert-danger" role="alert">
+                {{ .ErrorMsg }}
+            </div>
+            {{ end }}
+
+            {{ if .ChosenDoctor }}
+            <div class="mb-3">Appointment ({{ .Appt.Id }}) with <strong>Dr. {{ .Appt.Doctor.First_name }} {{ .Appt.Doctor.Last_name }}</strong> is scheduled for <strong>{{ time2HumanReadable .Appt.Time }}</strong></div>
 
             <form method="post">
-
-                {{ if .ChosenDoctor }}
-                    {{ if gt (len .TimeslotsAvailable) 0 }}
-                    <div class="form-group mb-3">
-                        <label for="timeslot" class="form-label">Change Timeslot</label>
-                        <select class="form-select" name="timeslot">
-                        {{ range .TimeslotsAvailable }}
-                            <option value="{{.}}">{{time2HumanReadable .}}</option>
-                        {{ end }}
-                        </select>
-                    </div>
-
-                    <div><button type="submit" class="btn btn-primary mb-3">Edit Appointment</button></div>
-                    {{ else }}
-                        <div class="mb-3">There are no timeslots available.</div>
+                {{ if gt (len .TimeslotsAvailable) 0 }}
+                <div class="form-group mb-3">
+                    <label for="timeslot" class="form-label">Change Timeslot</label>
+                    <select class="form-select" name="timeslot">
+                    {{ range .TimeslotsAvailable }}
+                        <option value="{{.}}">{{time2HumanReadable .}}</option>
                     {{ end }}
+                    </select>
+                </div>
+
+                <div><button type="submit" class="btn btn-primary mb-3">Edit Appointment</button></div>
                 {{ end }}
             </form>
+            {{ end }}
 
             {{template "footer"}}
         </div>

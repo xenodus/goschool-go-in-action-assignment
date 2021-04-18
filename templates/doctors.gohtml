@@ -7,6 +7,13 @@
         {{template "nav" .}}
 
         <div class="container my-3">
+
+            {{ if .ErrorMsg }}
+            <div class="alert alert-danger" role="alert">
+                {{ .ErrorMsg }}
+            </div>
+            {{ end }}
+
             {{ if .ChosenDoctor }}
                 <div class="mb-3">
                     <div class="mb-1"><a href="/doctors" class="btn btn-dark btn-sm mb-1" role="button"><i class="fas fa-reply"></i> Back</a></div>

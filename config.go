@@ -9,7 +9,7 @@ const appointmentIntervals = 30 // 30 mins between each consultations
 const strictNRIC = false
 
 // Set current hour minute for testing
-const testFakeTime = false
+const testFakeTime = true
 const testHour = 9
 const testMinute = 15
 

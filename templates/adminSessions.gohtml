@@ -14,6 +14,12 @@
 
             <hr/>
 
+            {{ if .ErrorMsg }}
+            <div class="alert alert-danger" role="alert">
+                {{ .ErrorMsg }}
+            </div>
+            {{ end }}
+
             {{ if gt (len .Sessions) 0 }}
                 <table class="table">
                     <thead>

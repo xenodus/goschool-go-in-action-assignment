@@ -20,13 +20,19 @@ func adminSessionsPage(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	var errorMsg = ""
+
 	// Get querystring values
 	action := req.FormValue("action")
 	sessionId := req.FormValue("sessionId")
 
 	// delete single session
 	if action == "delete" && sessionId != "" {
-		delete(mapSessions, sessionId)
+		if _, ok := mapSessions[sessionId]; ok {
+			delete(mapSessions, sessionId)
+		} else {
+			errorMsg = ErrSessionNotFound.Error()
+		}
 	}
 
 	// delete all sessions
@@ -47,10 +53,12 @@ func adminSessionsPage(res http.ResponseWriter, req *http.Request) {
 		PageTitle string
 		User      *patient
 		Sessions  map[string]string
+		ErrorMsg  string
 	}{
 		"Manage Sessions",
 		thePatient,
 		mapSessions,
+		errorMsg,
 	}
 
 	tpl.ExecuteTemplate(res, "adminSessions.gohtml", payload)
@@ -70,15 +78,26 @@ func adminAppointmentPage(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	var errorMsg = ""
+
+	// Get querystring values
+	err := req.FormValue("error")
+
+	if err == "ErrAppointmentIDNotFound" {
+		errorMsg = ErrAppointmentIDNotFound.Error()
+	}
+
 	// Anonymous payload
 	payload := struct {
 		PageTitle    string
 		User         *patient
 		Appointments []*appointment
+		ErrorMsg     string
 	}{
 		"Manage Appointments",
 		thePatient,
 		appointmentsSortedByTimeslot,
+		errorMsg,
 	}
 
 	tpl.ExecuteTemplate(res, "adminAppointments.gohtml", payload)
@@ -98,6 +117,8 @@ func adminUsersPage(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	var errorMsg = ""
+
 	// Get querystring values
 	action := req.FormValue("action")
 	userId := req.FormValue("userId")
@@ -108,6 +129,8 @@ func adminUsersPage(res http.ResponseWriter, req *http.Request) {
 
 		if err == nil {
 			theUser.delete()
+		} else {
+			errorMsg = ErrPatientIDNotFound.Error()
 		}
 	}
 
@@ -124,10 +147,12 @@ func adminUsersPage(res http.ResponseWriter, req *http.Request) {
 		PageTitle string
 		User      *patient
 		Patients  []*patient
+		ErrorMsg  string
 	}{
 		"Manage Users",
 		thePatient,
 		patients,
+		errorMsg,
 	}
 
 	tpl.ExecuteTemplate(res, "adminUsers.gohtml", payload)
@@ -167,7 +192,7 @@ func adminPaymentEnqueuePage(res http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
+	http.Redirect(res, req, pageAdminAllAppointments+"?error=ErrAppointmentIDNotFound", http.StatusSeeOther)
 }
 
 func adminPaymentDequeuePage(res http.ResponseWriter, req *http.Request) {
