@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -42,6 +43,8 @@ func startHttpServer() {
 	http.HandleFunc(pagePaymentQueue, paymentQueuePage)
 
 	http.Handle("/favicon.ico", http.NotFoundHandler())
+
+	fmt.Println("Server starting on: http://" + serverHost + ":" + serverPort)
 
 	err := http.ListenAndServe(serverHost+":"+serverPort, nil)
 	if err != nil {
