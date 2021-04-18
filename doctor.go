@@ -18,8 +18,12 @@ type doctor struct {
 func addDoctor(first_name string, last_name string) {
 	atomic.AddInt64(&doctor_start_id, 1)
 	doc := doctor{doctor_start_id, first_name, last_name, nil}
-	doctors = append(doctors, &doc)
-	doctorsBST = makeBST()
+	mutex.Lock()
+	{
+		doctors = append(doctors, &doc)
+		doctorsBST = makeBST()
+	}
+	mutex.Unlock()
 }
 
 func (d *doctor) isFreeAt(t int64) bool {
@@ -38,8 +42,13 @@ func (d *doctor) sortAppointments() {
 
 func (d *doctor) addAppointment(appt *appointment) {
 	defer wg.Done()
-	d.Appointments = append(d.Appointments, appt)
-	mergeSort(d.Appointments, 0, len(d.Appointments)-1)
+
+	mutex.Lock()
+	{
+		d.Appointments = append(d.Appointments, appt)
+		d.sortAppointments()
+	}
+	mutex.Unlock()
 }
 
 func (d *doctor) cancelAppointment(apptID int64) error {
@@ -49,13 +58,17 @@ func (d *doctor) cancelAppointment(apptID int64) error {
 
 	if apptIDIndex >= 0 {
 
-		if apptIDIndex == 0 {
-			d.Appointments = d.Appointments[1:]
-		} else if apptIDIndex == len(d.Appointments)-1 {
-			d.Appointments = d.Appointments[:apptIDIndex]
-		} else {
-			d.Appointments = append(d.Appointments[:apptIDIndex], d.Appointments[apptIDIndex+1:]...)
+		mutex.Lock()
+		{
+			if apptIDIndex == 0 {
+				d.Appointments = d.Appointments[1:]
+			} else if apptIDIndex == len(d.Appointments)-1 {
+				d.Appointments = d.Appointments[:apptIDIndex]
+			} else {
+				d.Appointments = append(d.Appointments[:apptIDIndex], d.Appointments[apptIDIndex+1:]...)
+			}
 		}
+		mutex.Unlock()
 
 		return nil
 	}
@@ -134,6 +147,8 @@ func (bst *BST) getDoctorByIDBST(docID int64) (*doctor, error) {
 
 	return nil, ErrDoctorIDNotFound
 }
+
+// Web Pages
 
 func viewDoctorsPage(res http.ResponseWriter, req *http.Request) {
 

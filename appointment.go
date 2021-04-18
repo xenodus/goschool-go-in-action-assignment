@@ -19,63 +19,58 @@ type appointment struct {
 
 func (appt *appointment) editAppointment(t int64, pat *patient, doc *doctor) error {
 
-	if !testFakeTime {
-		// Check if time of appointment is in the past - e.g. process started at 3:55PM, use chose 4PM timeslot but submitted at 4:05PM
-		currTime := time.Now()
-		var lastPossibleTimeslot int64
+	mutex.Lock()
+	{
+		// Update
+		appt.Patient = pat
+		appt.Doctor = doc
+		appt.Time = t
 
-		if currTime.Minute() >= 30 {
-			lastPossibleTimeslot = time.Date(currTime.Year(), currTime.Month(), currTime.Day(), currTime.Hour(), 30, 0, 0, time.Local).Unix()
-		} else {
-			lastPossibleTimeslot = time.Date(currTime.Year(), currTime.Month(), currTime.Day(), currTime.Hour(), 0, 0, 0, time.Local).Unix()
-		}
-
-		if lastPossibleTimeslot > t {
-			return ErrTimeslotExpired
-		}
+		// Re-sort appointmentsSortedByTimeslot by time
+		updateTimeslotSortedAppts()
+		// Re-sort doc and patient's appts
+		pat.sortAppointments()
+		doc.sortAppointments()
 	}
-
-	// Update
-	appt.Patient = pat
-	appt.Doctor = doc
-	appt.Time = t
-
-	// Re-sort appointmentsSortedByTimeslot by time
-	updateTimeslotSortedAppts()
-	// Re-sort doc and patient's appts
-	pat.sortAppointments()
-	doc.sortAppointments()
+	mutex.Unlock()
 
 	return nil
 }
 
+func isApptTimeValid(t int64) bool {
+
+	if testFakeTime {
+		return true
+	}
+
+	// Check if time of appointment is in the past - e.g. process started at 3:55PM, use chose 4PM timeslot but submitted at 4:05PM
+	currTime := time.Now()
+	var lastPossibleTimeslot int64
+
+	if currTime.Minute() >= 30 {
+		lastPossibleTimeslot = time.Date(currTime.Year(), currTime.Month(), currTime.Day(), currTime.Hour(), 30, 0, 0, time.Local).Unix()
+	} else {
+		lastPossibleTimeslot = time.Date(currTime.Year(), currTime.Month(), currTime.Day(), currTime.Hour(), 0, 0, 0, time.Local).Unix()
+	}
+
+	if lastPossibleTimeslot > t {
+		return false
+	}
+
+	return true
+}
+
 // Make and sort by appointment time
 func makeAppointment(t int64, pat *patient, doc *doctor) (appointment, error) {
-
-	if !testFakeTime {
-		// Check if time of appointment is in the past - e.g. process started at 3:55PM, use chose 4PM timeslot but submitted at 4:05PM
-		currTime := time.Now()
-		var lastPossibleTimeslot int64
-
-		if currTime.Minute() >= 30 {
-			lastPossibleTimeslot = time.Date(currTime.Year(), currTime.Month(), currTime.Day(), currTime.Hour(), 30, 0, 0, time.Local).Unix()
-		} else {
-			lastPossibleTimeslot = time.Date(currTime.Year(), currTime.Month(), currTime.Day(), currTime.Hour(), 0, 0, 0, time.Local).Unix()
-		}
-
-		if lastPossibleTimeslot > t {
-			return appointment{}, ErrTimeslotExpired
-		}
-	}
 
 	atomic.AddInt64(&appointment_start_id, 1)
 	app := appointment{appointment_start_id, t, pat, doc}
 
 	// Concurrently handle adding of pointers to the individual slices
 	wg.Add(3)
-	addAppointment(&app)
-	pat.addAppointment(&app) // add to patient
-	doc.addAppointment(&app) // add to doctor
+	go addAppointment(&app)
+	go pat.addAppointment(&app) // add to patient
+	go doc.addAppointment(&app) // add to doctor
 	wg.Wait()
 
 	// Re-sort appointmentsSortedByTimeslot by time
@@ -86,11 +81,20 @@ func makeAppointment(t int64, pat *patient, doc *doctor) (appointment, error) {
 
 func addAppointment(app *appointment) {
 	defer wg.Done()
-	appointments = append(appointments, app) // add to global appointments
+
+	mutex.Lock()
+	{
+		appointments = append(appointments, app) // add to global appointments
+	}
+	mutex.Unlock()
 }
 
 func updateTimeslotSortedAppts() {
-	appointmentsSortedByTimeslot = generateTimeslotSortedAppts(appointments)
+	mutex.Lock()
+	{
+		appointmentsSortedByTimeslot = generateTimeslotSortedAppts(appointments)
+	}
+	mutex.Unlock()
 }
 
 func generateTimeslotSortedAppts(appt []*appointment) []*appointment {
@@ -110,17 +114,21 @@ func cancelAppointment(apptID int64) error {
 		// Remove from Patient & Doctor
 		// Concurrently handle removal of pointer from the individual slices
 		wg.Add(2)
-		appointments[apptIDIndex].Patient.cancelAppointment(apptID)
-		appointments[apptIDIndex].Doctor.cancelAppointment(apptID)
+		go appointments[apptIDIndex].Patient.cancelAppointment(apptID)
+		go appointments[apptIDIndex].Doctor.cancelAppointment(apptID)
 		wg.Wait()
 
-		if apptIDIndex == 0 {
-			appointments = appointments[1:]
-		} else if apptIDIndex == len(appointments)-1 {
-			appointments = appointments[:apptIDIndex]
-		} else {
-			appointments = append(appointments[:apptIDIndex], appointments[apptIDIndex+1:]...)
+		mutex.Lock()
+		{
+			if apptIDIndex == 0 {
+				appointments = appointments[1:]
+			} else if apptIDIndex == len(appointments)-1 {
+				appointments = appointments[:apptIDIndex]
+			} else {
+				appointments = append(appointments[:apptIDIndex], appointments[apptIDIndex+1:]...)
+			}
 		}
+		mutex.Unlock()
 
 		// Re-sort appointmentsSortedByTimeslot by time
 		updateTimeslotSortedAppts()
@@ -290,6 +298,7 @@ func searchApptID(arr []*appointment, apptID int64) (int, error) {
 }
 
 // Web Pages
+
 func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 	if !isLoggedIn(req) {
@@ -362,15 +371,19 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 					if timeslot != "" && chosenDoctor != nil {
 						t, _ := strconv.ParseInt(timeslot, 10, 64)
-						theAppt.editAppointment(t, thePatient, chosenDoctor)
 
-						if isAdmin {
-							fmt.Println("Admin edited appt id:", apptId)
-							http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
-						} else {
-							http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
+						if isApptTimeValid(t) {
+
+							theAppt.editAppointment(t, thePatient, chosenDoctor)
+
+							if isAdmin {
+								fmt.Println("Admin edited appt id:", apptId)
+								http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
+							} else {
+								http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
+							}
+							return
 						}
-						return
 					}
 				}
 
@@ -457,7 +470,10 @@ func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		makeAppointment(t, thePatient, chosenDoctor)
+		if isApptTimeValid(t) {
+			makeAppointment(t, thePatient, chosenDoctor)
+		}
+
 		http.Redirect(res, req, pageIndex, http.StatusSeeOther)
 		return
 	}

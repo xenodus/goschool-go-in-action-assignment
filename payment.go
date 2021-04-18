@@ -32,34 +32,44 @@ func (p *paymentQueue) enqueue(pmy *payment) error {
 		Next:    nil,
 	}
 
-	if p.Front == nil {
-		p.Front = newNode
-	} else {
-		p.Back.Next = newNode
-	}
+	mutex.Lock()
+	{
+		if p.Front == nil {
+			p.Front = newNode
+		} else {
+			p.Back.Next = newNode
+		}
 
-	p.Back = newNode
-	p.Size++
+		p.Back = newNode
+		p.Size++
+	}
+	mutex.Unlock()
+
 	return nil
 }
 
 func (p *paymentQueue) dequeue() (*payment, error) {
 	var pmy *payment
 
-	if p.Front == nil {
-		return nil, ErrEmptyPaymentQueue
+	mutex.Lock()
+	{
+		if p.Front == nil {
+			return nil, ErrEmptyPaymentQueue
+		}
+
+		pmy = p.Front.Payment
+
+		if p.Size == 1 {
+			p.Front = nil
+			p.Back = nil
+		} else {
+			p.Front = p.Front.Next
+		}
+
+		p.Size--
 	}
+	mutex.Unlock()
 
-	pmy = p.Front.Payment
-
-	if p.Size == 1 {
-		p.Front = nil
-		p.Back = nil
-	} else {
-		p.Front = p.Front.Next
-	}
-
-	p.Size--
 	return pmy, nil
 }
 
@@ -121,6 +131,8 @@ func (p *paymentQueue) dequeueToPaymentQueue() (*payment, error) {
 
 	return nil, err
 }
+
+// Web Pages
 
 func paymentQueuePage(res http.ResponseWriter, req *http.Request) {
 

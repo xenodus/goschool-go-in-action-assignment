@@ -50,13 +50,18 @@ func (p *patient) delete() error {
 	patientIDIndex := binarySearchPatientID(patients, 0, len(patients)-1, p.Id)
 
 	if patientIDIndex >= 0 {
-		if patientIDIndex == 0 {
-			patients = patients[1:]
-		} else if patientIDIndex == len(patients)-1 {
-			patients = patients[:patientIDIndex]
-		} else {
-			patients = append(patients[:patientIDIndex], patients[patientIDIndex+1:]...)
+
+		mutex.Lock()
+		{
+			if patientIDIndex == 0 {
+				patients = patients[1:]
+			} else if patientIDIndex == len(patients)-1 {
+				patients = patients[:patientIDIndex]
+			} else {
+				patients = append(patients[:patientIDIndex], patients[patientIDIndex+1:]...)
+			}
 		}
+		mutex.Unlock()
 	}
 
 	return nil
@@ -79,8 +84,13 @@ func (p *patient) sortAppointments() {
 
 func (p *patient) addAppointment(appt *appointment) {
 	defer wg.Done()
-	p.Appointments = append(p.Appointments, appt)
-	p.sortAppointments()
+
+	mutex.Lock()
+	{
+		p.Appointments = append(p.Appointments, appt)
+		p.sortAppointments()
+	}
+	mutex.Unlock()
 }
 
 func (p *patient) cancelAppointment(apptID int64) error {
@@ -90,13 +100,17 @@ func (p *patient) cancelAppointment(apptID int64) error {
 
 	if apptIDIndex >= 0 {
 
-		if apptIDIndex == 0 {
-			p.Appointments = p.Appointments[1:]
-		} else if apptIDIndex == len(p.Appointments)-1 {
-			p.Appointments = p.Appointments[:apptIDIndex]
-		} else {
-			p.Appointments = append(p.Appointments[:apptIDIndex], p.Appointments[apptIDIndex+1:]...)
+		mutex.Lock()
+		{
+			if apptIDIndex == 0 {
+				p.Appointments = p.Appointments[1:]
+			} else if apptIDIndex == len(p.Appointments)-1 {
+				p.Appointments = p.Appointments[:apptIDIndex]
+			} else {
+				p.Appointments = append(p.Appointments[:apptIDIndex], p.Appointments[apptIDIndex+1:]...)
+			}
 		}
+		mutex.Unlock()
 
 		return nil
 	}
@@ -178,11 +192,11 @@ func binarySearchPatientID(arr []*patient, first int, last int, patientID string
 	}
 }
 
-// recursion
 func (p patient) IsAdmin() bool {
 	return isAdminCheck(p.Id, 0)
 }
 
+// recursion
 func isAdminCheck(adminID string, index int) bool {
 
 	if index >= len(admins) {
@@ -294,23 +308,29 @@ func getLoggedInPatient(res http.ResponseWriter, req *http.Request) *patient {
 	return thePatient
 }
 
-func createPatient(username, password, first_name, last_name string) {
-	bPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
-	thePatient := patient{username, first_name, last_name, bPassword, nil}
-	patients = append(patients, &thePatient)
-	// Sort by patient id alphabetically
-	mergeSortPatient(patients, 0, len(patients)-1)
+func createPatient(username, first_name, last_name string, password []byte) *patient {
+	thePatient := patient{username, first_name, last_name, password, nil}
+	mutex.Lock()
+	{
+		patients = append(patients, &thePatient)
+		// Sort by patient id alphabetically
+		mergeSortPatient(patients, 0, len(patients)-1)
+	}
+	mutex.Unlock()
+
+	return &thePatient
 }
 
 // Web Pages
-func register(res http.ResponseWriter, req *http.Request) {
+
+func registerPage(res http.ResponseWriter, req *http.Request) {
 
 	if isLoggedIn(req) {
 		http.Redirect(res, req, pageIndex, http.StatusSeeOther)
 		return
 	}
 
-	var thePatient patient
+	var thePatient *patient
 
 	// process form submission
 	if req.Method == http.MethodPost {
@@ -350,11 +370,7 @@ func register(res http.ResponseWriter, req *http.Request) {
 				return
 			}
 
-			thePatient = patient{username, firstname, lastname, bPassword, nil}
-
-			patients = append(patients, &thePatient)
-			// Sort by patient id alphabetically
-			mergeSortPatient(patients, 0, len(patients)-1)
+			createPatient(username, firstname, lastname, bPassword)
 		}
 		// redirect to main index
 		http.Redirect(res, req, pageIndex, http.StatusSeeOther)
@@ -364,7 +380,7 @@ func register(res http.ResponseWriter, req *http.Request) {
 	tpl.ExecuteTemplate(res, "register.gohtml", thePatient)
 }
 
-func login(res http.ResponseWriter, req *http.Request) {
+func loginPage(res http.ResponseWriter, req *http.Request) {
 	if isLoggedIn(req) {
 		http.Redirect(res, req, pageIndex, http.StatusSeeOther)
 		return
@@ -405,7 +421,7 @@ func login(res http.ResponseWriter, req *http.Request) {
 	tpl.ExecuteTemplate(res, "login.gohtml", nil)
 }
 
-func logout(res http.ResponseWriter, req *http.Request) {
+func logoutPage(res http.ResponseWriter, req *http.Request) {
 	if !isLoggedIn(req) {
 		http.Redirect(res, req, pageIndex, http.StatusSeeOther)
 		return
@@ -431,7 +447,7 @@ func logout(res http.ResponseWriter, req *http.Request) {
 	http.Redirect(res, req, pageIndex, http.StatusSeeOther)
 }
 
-func profile(res http.ResponseWriter, req *http.Request) {
+func profilePage(res http.ResponseWriter, req *http.Request) {
 
 	if !isLoggedIn(req) {
 		http.Redirect(res, req, pageLogin, http.StatusSeeOther)
