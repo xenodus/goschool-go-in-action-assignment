@@ -8,24 +8,27 @@ import (
 )
 
 func seedAdmins() {
-	admins = append(admins, []string{"S1234567A", "S0000000B", "S9999999C"}...)
+	admins = append(admins, []string{"S1234567A", "S0000000A", "S9999999C"}...)
 }
 
 func seedPatients() {
 	bPassword, err := bcrypt.GenerateFromPassword([]byte("12345678"), bcrypt.MinCost)
 
 	if err == nil {
-		wg.Add(3)
-		go createPatient("S8621568C", "Bruce", "Wayne", bPassword)
+		wg.Add(7)
+		go createPatient("S0000000A", "Diana", "Prince", bPassword) // admin
+		go createPatient("S1111111B", "Barry", "Allen", bPassword)
+		go createPatient("S2222222C", "Bruce", "Wayne", bPassword)
+		go createPatient("S3333333D", "Hal", "Jordan", bPassword)
+		go createPatient("S4444444D", "Arthur", "Curry", bPassword)
 		go createPatient("S1234567A", "Clark", "Kent", bPassword)   // admin
-		go createPatient("S0000000B", "Diana", "Prince", bPassword) // admin
+		go createPatient("S9999999C", "Oliver", "Queen", bPassword) // admin
 		wg.Wait()
 	}
 }
 
 func seedDoctors() {
 	wg.Add(9)
-	go addDoctor("Alvin", "Yeoh")
 	go addDoctor("Ben", "Low")
 	go addDoctor("Dina", "Malyana")
 	go addDoctor("Lydia", "Ng")
@@ -33,7 +36,8 @@ func seedDoctors() {
 	go addDoctor("June", "Yeoh")
 	go addDoctor("Yonghao", "Fu")
 	go addDoctor("Geraldine", "Tee")
-	go addDoctor("Ray", "Chong")
+	go addDoctor("Bruce", "Banner")
+	go addDoctor("Steven", "Strange")
 	wg.Wait()
 }
 

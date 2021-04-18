@@ -523,7 +523,7 @@ func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 			makeAppointment(t, thePatient, chosenDoctor)
 		}
 
-		http.Redirect(res, req, pageIndex, http.StatusSeeOther)
+		http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 		return
 	}
 
