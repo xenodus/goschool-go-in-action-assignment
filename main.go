@@ -80,8 +80,9 @@ func startHttpServer() {
 	http.HandleFunc(pageAdminUsers, adminUsersPage)
 
 	http.HandleFunc(pageAdminPaymentEnqueue, adminPaymentEnqueuePage)
-	http.HandleFunc(pageAdminPaymentDequeue, paymentDequeuePage)
-	http.HandleFunc(pageAdminPaymentDequeueToMissedQueue, paymentDequeueToMissedQueuePage)
+	http.HandleFunc(pageAdminPaymentDequeue, adminPaymentDequeuePage)
+	http.HandleFunc(pageAdminPaymentDequeueToMissedQueue, adminPaymentDequeueToMissedQueuePage)
+	http.HandleFunc(pageAdminPaymentDequeueToPaymentQueue, adminPaymentDequeueToPaymentQueuePage)
 
 	// Payment Queue
 	http.HandleFunc(pagePaymentQueue, paymentQueuePage)

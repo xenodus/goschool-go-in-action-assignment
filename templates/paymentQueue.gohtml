@@ -7,7 +7,7 @@
         {{template "nav" .}}
 
         <div class="container my-3">
-            <div class="mb-3">
+            <div>
                 <h1>Serving Queue No.</h1>
                 {{ if gt .Queue.Size 0 }}
                     <div class="text-center mb-3" style="font-size: 8rem;">
@@ -24,7 +24,9 @@
 
                     {{ if .Queue.Front.Next }}
                     <h1>Next</h1>
-                    <div class="text-center mb-3" style="font-size: 8rem;"><strong>{{ .Queue.Front.Next.Payment.Appointment.Id }}</div>
+                    <div class="text-center mb-3" style="font-size: 8rem;">
+                        <strong>{{ .Queue.PrintAllQueueIDs true }}</strong>
+                    </div>
                     {{ end }}
                 {{ else }}
                     <div class="text-center mb-3" style="font-size: 8rem;">-</div>
@@ -32,7 +34,16 @@
 
                 {{ if gt .MissedQueue.Size 0 }}
                     <h1>Missed Queue</h1>
-                    <div>{{ .MissedQueue.PrintAllQueueIDs }}</div>
+                    <div class="mb-3" style="font-size: 8rem;">
+                        <div><strong>{{ .MissedQueue.PrintAllQueueIDs false }}</strong></div>
+                        {{ if .User }}
+                            {{ if .User.IsAdmin }}
+                            <div class="text-center" style="font-size: 1rem;">
+                                <a class="btn btn-primary btn-sm" href="/admin/payment/dequeueToPaymentQueue" role="button">Enqueue</a>
+                            </div>
+                            {{ end }}
+                        {{ end }}
+                    </div>
                 {{ end }}
             </div>
 

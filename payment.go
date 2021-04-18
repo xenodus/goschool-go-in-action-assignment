@@ -63,14 +63,18 @@ func (p *paymentQueue) dequeue() (*payment, error) {
 	return pmy, nil
 }
 
-func (p *paymentQueue) PrintAllQueueIDs() string {
+func (p *paymentQueue) PrintAllQueueIDs(skipFirst bool) string {
 
 	queueIds := p.getAllQueueID()
 
 	fmt.Println(queueIds)
 
 	if len(queueIds) > 0 {
-		return strings.Join(queueIds, ", ")
+		if skipFirst {
+			return strings.Join(queueIds[1:], ", ")
+		} else {
+			return strings.Join(queueIds, ", ")
+		}
 	}
 
 	return ""
@@ -95,11 +99,23 @@ func (p *paymentQueue) getAllQueueID() []string {
 }
 
 // Move over to missed queues if say nobody turns up
-func (p *paymentQueue) dequeueToMissedQueues() (*payment, error) {
+func (p *paymentQueue) dequeueToMissedPaymentQueue() (*payment, error) {
 	pmy, err := p.dequeue()
 
 	if err == nil {
 		missedPaymentQ.enqueue(pmy)
+		return pmy, nil
+	}
+
+	return nil, err
+}
+
+// Move from missed payment queue back to main payment queue
+func (p *paymentQueue) dequeueToPaymentQueue() (*payment, error) {
+	pmy, err := p.dequeue()
+
+	if err == nil {
+		paymentQ.enqueue(pmy)
 		return pmy, nil
 	}
 
@@ -116,16 +132,14 @@ func paymentQueuePage(res http.ResponseWriter, req *http.Request) {
 
 	// Anonymous payload
 	payload := struct {
-		Queue       paymentQueue
-		MissedQueue paymentQueue
+		Queue       *paymentQueue
+		MissedQueue *paymentQueue
 		User        *patient
 	}{
-		paymentQ,
-		missedPaymentQ,
+		&paymentQ,
+		&missedPaymentQ,
 		theUser,
 	}
-
-	fmt.Println(payload.MissedQueue)
 
 	tpl.ExecuteTemplate(res, "paymentQueue.gohtml", payload)
 }
