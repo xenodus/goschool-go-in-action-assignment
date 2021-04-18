@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        {{template "header"}}
+        {{template "header" .}}
     </head>
     <body>
         {{template "nav" .}}
 
         <div class="container my-3">
             <div class="mb-3">
-                <div><a href="/"><<< Back</a></div>
+                <div class="mb-1"><a href="/" class="btn btn-dark btn-sm mb-1" role="button"><i class="fas fa-reply"></i> Back</a></div>
                 <h1>New Appointment</h1>
             </div>
 
@@ -17,7 +17,7 @@
             {{ if .ErrorMsg }}
             <div class="alert alert-danger" role="alert">
                 {{ .ErrorMsg }}
-            </div>            
+            </div>
             {{ end }}
 
             {{ $chosenDoctorId := -1 }}
@@ -31,7 +31,7 @@
                     <label for="doctor" class="form-label">Select Doctor</label>
                     <select class="form-select" name="doctor">
                     {{ range .Doctors }}
-                        <option value="{{.Id}}" {{if eq $chosenDoctorId .Id }} selected {{end}}>{{.First_name}} {{.Last_name}}</option>    
+                        <option value="{{.Id}}" {{if eq $chosenDoctorId .Id }} selected {{end}}>{{.First_name}} {{.Last_name}}</option>
                     {{ end }}
                     </select>
                 </div>
@@ -42,7 +42,7 @@
                         <label for="timeslot" class="form-label">Select Timeslot</label>
                         <select class="form-select" name="timeslot">
                         {{ range .TimeslotsAvailable }}
-                            <option value="{{.}}">{{time2HumanReadable .}}</option>    
+                            <option value="{{.}}">{{time2HumanReadable .}}</option>
                         {{ end }}
                         </select>
                     </div>
@@ -56,7 +56,7 @@
                 {{else}}
                     <div><button type="submit" class="btn btn-primary mb-3">Next</button></div>
                 {{end}}
-            </form> 
+            </form>
 
             {{template "footer"}}
         </div>

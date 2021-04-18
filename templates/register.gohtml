@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        {{template "header"}}
+        {{template "header" .}}
     </head>
     <body>
-        {{template "nav"}}
+        {{template "nav" .}}
 
         <div class="container my-3">
             <div class="mb-3">
                 <h1>Register</h1>
-            </div>    
+            </div>
 
-            <hr/>    
+            <hr/>
 
             <div>
                 <form method="post">
@@ -37,6 +37,6 @@
             </div>
         </div>
 
-        {{template "footer"}}        
+        {{template "footer"}}
     </body>
 </html>

@@ -13,8 +13,10 @@ func indexPage(res http.ResponseWriter, req *http.Request) {
 
 	// Anonymous payload
 	payload := struct {
-		User *patient
+		PageTitle string
+		User      *patient
 	}{
+		"",
 		thePatient,
 	}
 

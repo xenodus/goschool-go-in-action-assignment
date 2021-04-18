@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        {{template "header"}}
+        {{template "header" .}}
     </head>
     <body>
         {{template "nav" .}}
 
         <div class="container my-3">
             <div class="mb-3">
-                <div><a href="/"><<< Back</a></div>
+                <div class="mb-1"><a href="/" class="btn btn-dark btn-sm mb-1" role="button"><i class="fas fa-reply"></i> Back</a></div>
                 <h1>My Appointment</h1>
             </div>
 
@@ -23,18 +23,18 @@
                             <th scope="col">Dr.</th>
                             <th scope="col">Actions</th>
                         </tr>
-                    </thead>  
-                    <tbody>          
-                    {{ range $key, $val := .User.Appointments }}             
+                    </thead>
+                    <tbody>
+                    {{ range $key, $val := .User.Appointments }}
                         <tr>
                             <td>{{ $val.Id }}</td>
                             <td>{{ time2HumanReadable $val.Time }}</td>
                             <td>{{ $val.Doctor.First_name }} {{ $val.Doctor.Last_name }}</td>
-                            <td><a href="/appointment/edit?apptId={{ $val.Id }}&action=edit">Edit</a> | <a href="/appointment/edit?apptId={{ $val.Id }}&action=cancel">Cancel</a></td>
+                            <td><a href="/appointment/edit?apptId={{ $val.Id }}&action=edit" class="btn btn-primary btn-sm" role="button">Edit</a> <a href="/appointment/edit?apptId={{ $val.Id }}&action=cancel" class="btn btn-danger btn-sm" role="button">Cancel</a></td>
                         </tr>
-                    {{ end }}   
+                    {{ end }}
                     </tbody>
-                </table>             
+                </table>
             {{ else }}
                 <div>You have no upcoming appointments.</div>
             {{ end }}

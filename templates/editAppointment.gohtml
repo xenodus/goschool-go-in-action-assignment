@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        {{template "header"}}
+        {{template "header" .}}
     </head>
     <body>
         {{template "nav" .}}
@@ -13,7 +13,7 @@
 
             <hr/>
 
-            <div class="mb-3">Your appointment ({{ .Appt.Id }}) with <strong>Dr. {{ .Appt.Doctor.First_name }} {{ .Appt.Doctor.Last_name }}</strong> is scheduled for <strong>{{ time2HumanReadable .Appt.Time }}</strong></div>   
+            <div class="mb-3">Your appointment ({{ .Appt.Id }}) with <strong>Dr. {{ .Appt.Doctor.First_name }} {{ .Appt.Doctor.Last_name }}</strong> is scheduled for <strong>{{ time2HumanReadable .Appt.Time }}</strong></div>
 
             <form method="post">
 
@@ -23,7 +23,7 @@
                         <label for="timeslot" class="form-label">Change Timeslot</label>
                         <select class="form-select" name="timeslot">
                         {{ range .TimeslotsAvailable }}
-                            <option value="{{.}}">{{time2HumanReadable .}}</option>    
+                            <option value="{{.}}">{{time2HumanReadable .}}</option>
                         {{ end }}
                         </select>
                     </div>
@@ -33,7 +33,7 @@
                         <div class="mb-3">There are no timeslots available.</div>
                     {{ end }}
                 {{ end }}
-            </form> 
+            </form>
 
             {{template "footer"}}
         </div>

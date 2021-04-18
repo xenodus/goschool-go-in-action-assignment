@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	uuid "github.com/satori/go.uuid"
@@ -84,6 +85,8 @@ func (p *patient) sortAppointments() {
 
 func (p *patient) addAppointment(appt *appointment) {
 	defer wg.Done()
+
+	var mutex sync.Mutex
 
 	mutex.Lock()
 	{
@@ -309,6 +312,8 @@ func getLoggedInPatient(res http.ResponseWriter, req *http.Request) *patient {
 }
 
 func createPatient(username, first_name, last_name string, password []byte) *patient {
+	defer wg.Done()
+
 	thePatient := patient{username, first_name, last_name, password, nil}
 	mutex.Lock()
 	{
@@ -329,8 +334,6 @@ func registerPage(res http.ResponseWriter, req *http.Request) {
 		http.Redirect(res, req, pageIndex, http.StatusSeeOther)
 		return
 	}
-
-	var thePatient *patient
 
 	// process form submission
 	if req.Method == http.MethodPost {
@@ -370,14 +373,25 @@ func registerPage(res http.ResponseWriter, req *http.Request) {
 				return
 			}
 
+			wg.Add(1)
 			createPatient(username, firstname, lastname, bPassword)
+			wg.Wait()
 		}
 		// redirect to main index
 		http.Redirect(res, req, pageIndex, http.StatusSeeOther)
 		return
 	}
 
-	tpl.ExecuteTemplate(res, "register.gohtml", thePatient)
+	// Anonymous payload
+	payload := struct {
+		PageTitle string
+		User      *patient
+	}{
+		"Register",
+		nil,
+	}
+
+	tpl.ExecuteTemplate(res, "register.gohtml", payload)
 }
 
 func loginPage(res http.ResponseWriter, req *http.Request) {
@@ -418,7 +432,16 @@ func loginPage(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	tpl.ExecuteTemplate(res, "login.gohtml", nil)
+	// Anonymous payload
+	payload := struct {
+		PageTitle string
+		User      *patient
+	}{
+		"Login",
+		nil,
+	}
+
+	tpl.ExecuteTemplate(res, "login.gohtml", payload)
 }
 
 func logoutPage(res http.ResponseWriter, req *http.Request) {
@@ -478,8 +501,10 @@ func profilePage(res http.ResponseWriter, req *http.Request) {
 
 	// Anonymous payload
 	payload := struct {
-		User *patient
+		PageTitle string
+		User      *patient
 	}{
+		"Profile",
 		thePatient,
 	}
 

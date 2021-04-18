@@ -15,13 +15,16 @@ func seedPatients() {
 	bPassword, err := bcrypt.GenerateFromPassword([]byte("12345678"), bcrypt.MinCost)
 
 	if err == nil {
+		wg.Add(3)
 		go createPatient("S8621568C", "Bruce", "Wayne", bPassword)
 		go createPatient("S1234567A", "Clark", "Kent", bPassword)   // admin
 		go createPatient("S0000000B", "Diana", "Prince", bPassword) // admin
+		wg.Wait()
 	}
 }
 
 func seedDoctors() {
+	wg.Add(9)
 	go addDoctor("Alvin", "Yeoh")
 	go addDoctor("Ben", "Low")
 	go addDoctor("Dina", "Malyana")
@@ -31,6 +34,7 @@ func seedDoctors() {
 	go addDoctor("Yonghao", "Fu")
 	go addDoctor("Geraldine", "Tee")
 	go addDoctor("Ray", "Chong")
+	wg.Wait()
 }
 
 func time2HumanReadable(t int64) string {

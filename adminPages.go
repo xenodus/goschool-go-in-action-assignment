@@ -44,9 +44,11 @@ func adminSessionsPage(res http.ResponseWriter, req *http.Request) {
 
 	// Anonymous payload
 	payload := struct {
-		User     *patient
-		Sessions map[string]string
+		PageTitle string
+		User      *patient
+		Sessions  map[string]string
 	}{
+		"Manage Sessions",
 		thePatient,
 		mapSessions,
 	}
@@ -70,9 +72,11 @@ func adminAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 	// Anonymous payload
 	payload := struct {
+		PageTitle    string
 		User         *patient
 		Appointments []*appointment
 	}{
+		"Manage Appointments",
 		thePatient,
 		appointmentsSortedByTimeslot,
 	}
@@ -117,9 +121,11 @@ func adminUsersPage(res http.ResponseWriter, req *http.Request) {
 
 	// Anonymous payload
 	payload := struct {
-		User     *patient
-		Patients []*patient
+		PageTitle string
+		User      *patient
+		Patients  []*patient
 	}{
+		"Manage Users",
 		thePatient,
 		patients,
 	}

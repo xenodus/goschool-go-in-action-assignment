@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        {{template "header"}}
+        {{template "header" .}}
     </head>
     <body>
         {{template "nav" .}}
 
         <div class="container my-3">
             <div class="mb-3">
-                <div><a href="/"><<< Back</a></div>
+                <div class="mb-1"><a href="/" class="btn btn-dark btn-sm mb-1" role="button"><i class="fas fa-reply"></i> Back</a></div>
                 <h1>Clinic's Appointments</h1>
             </div>
 
@@ -33,9 +33,9 @@
                             <td>{{ $val.Patient.First_name }} {{ $val.Patient.Last_name }}</td>
                             <td>{{ $val.Doctor.First_name }} {{ $val.Doctor.Last_name }}</td>
                             <td>
-                                <a href="/appointment/edit?apptId={{ $val.Id }}&action=edit" class="btn btn-primary btn-sm" role="button">Edit</a>
+                                <a href="/appointment/edit?apptId={{ $val.Id }}&action=edit&source=admin" class="btn btn-primary btn-sm" role="button">Edit</a>
+                                <a href="/appointment/edit?apptId={{ $val.Id }}&action=cancel&source=admin" class="btn btn-danger btn-sm" role="button">Cancel</a>
                                 <a href="/admin/payment/enqueue?apptId={{ $val.Id }}" class="btn btn-success btn-sm" role="button">Add To Payment Queue</a>
-                                <a href="/appointment/edit?apptId={{ $val.Id }}&action=cancel" class="btn btn-danger btn-sm" role="button">Cancel Appointment</a>
                             </td>
                         </tr>
                     {{ end }}

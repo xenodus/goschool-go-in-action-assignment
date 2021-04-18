@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        {{template "header"}}
+        {{template "header" .}}
     </head>
     <body>
         {{template "nav" .}}
 
         <div class="container my-3">
             <div class="mb-3">
-                <div><a href="/"><<< Back</a></div>
+                <div class="mb-1"><a href="/" class="btn btn-dark btn-sm mb-1" role="button"><i class="fas fa-reply"></i> Back</a></div>
                 <h1>Clinic's Sessions</h1>
             </div>
 
@@ -21,24 +21,24 @@
                             <th scope="col">ID</th>
                             <th scope="col">User</th>
                             <th scope="col">Is Admin</th>
-                            <th scope="col">Actions</th>
+                            <th scope="col" class="text-end">Actions</th>
                         </tr>
-                    </thead>  
-                    <tbody>          
-                    {{ range $key, $val := .Sessions }}             
+                    </thead>
+                    <tbody>
+                    {{ range $key, $val := .Sessions }}
                         <tr>
                             <td>{{ $key }}</td>
                             <td>{{ $val }}</td>
                             <td>{{ if isUserAdminByID $val }}Yes{{ else }}No{{ end }}</td>
-                            <td><a href="/admin/sessions?action=delete&sessionId={{ $key }}">Delete</a></td>
+                            <td class="text-end"><a href="/admin/sessions?action=delete&sessionId={{ $key }}" class="btn btn-danger btn-sm" role="button">Delete</a></td>
                         </tr>
-                    {{ end }}   
+                    {{ end }}
+                    <tr>
+                        <td colspan="3"></td>
+                        <td class="text-end"><a href="/admin/sessions?action=purge" role="button" class="btn btn-danger btn-sm">Purge All Sessions</a></td>
+                    </tr>
                     </tbody>
-                </table>   
-
-                <div class="text-end">
-                    <a class="btn btn-danger" href="/admin/sessions?action=purge" role="button">Purge All</a>
-                </div>                          
+                </table>
             {{ else }}
                 <div>There are no session records.</div>
             {{ end }}

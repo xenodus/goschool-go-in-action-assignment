@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 	"strconv"
-	"sync/atomic"
+	"sync"
 )
 
 var doctor_start_id int64 = 100
@@ -16,10 +16,12 @@ type doctor struct {
 }
 
 func addDoctor(first_name string, last_name string) {
-	atomic.AddInt64(&doctor_start_id, 1)
-	doc := doctor{doctor_start_id, first_name, last_name, nil}
+	defer wg.Done()
+
 	mutex.Lock()
 	{
+		doctor_start_id++
+		doc := doctor{doctor_start_id, first_name, last_name, nil}
 		doctors = append(doctors, &doc)
 		doctorsBST = makeBST()
 	}
@@ -42,6 +44,8 @@ func (d *doctor) sortAppointments() {
 
 func (d *doctor) addAppointment(appt *appointment) {
 	defer wg.Done()
+
+	var mutex sync.Mutex
 
 	mutex.Lock()
 	{
@@ -172,11 +176,13 @@ func viewDoctorsPage(res http.ResponseWriter, req *http.Request) {
 
 	// Anonymous payload
 	payload := struct {
+		PageTitle          string
 		User               *patient
 		ChosenDoctor       *doctor
 		TimeslotsAvailable []int64
 		Doctors            []*doctor
 	}{
+		"View Doctors",
 		thePatient,
 		chosenDoctor,
 		timeslotsAvailable,

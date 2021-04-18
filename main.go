@@ -12,10 +12,10 @@ import (
 var doctors = []*doctor{}
 var patients = []*patient{}
 var appointments = []*appointment{}
+var appointmentsSortedByTimeslot = []*appointment{}
 
 var paymentQ = paymentQueue{}
 var missedPaymentQ = paymentQueue{}
-var appointmentsSortedByTimeslot = []*appointment{}
 
 var admins = []string{}
 
@@ -29,7 +29,7 @@ var mapSessions = map[string]string{}
 var cookieID string
 
 func init() {
-	// Essentials
+	// Essentials Test Data
 	seedDoctors()
 	seedAdmins()
 	seedPatients()

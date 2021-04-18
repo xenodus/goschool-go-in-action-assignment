@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"sync/atomic"
+	"sync"
 	"time"
 )
 
@@ -63,24 +63,32 @@ func isApptTimeValid(t int64) bool {
 // Make and sort by appointment time
 func makeAppointment(t int64, pat *patient, doc *doctor) (appointment, error) {
 
-	atomic.AddInt64(&appointment_start_id, 1)
-	app := appointment{appointment_start_id, t, pat, doc}
+	app := appointment{}
 
-	// Concurrently handle adding of pointers to the individual slices
-	wg.Add(3)
-	go addAppointment(&app)
-	go pat.addAppointment(&app) // add to patient
-	go doc.addAppointment(&app) // add to doctor
-	wg.Wait()
+	mutex.Lock()
+	{
+		appointment_start_id++
+		app = appointment{appointment_start_id, t, pat, doc}
 
-	// Re-sort appointmentsSortedByTimeslot by time
-	updateTimeslotSortedAppts()
+		// Concurrently handle adding of pointers to the individual slices
+		wg.Add(3)
+		go addAppointment(&app)
+		go pat.addAppointment(&app) // add to patient
+		go doc.addAppointment(&app) // add to doctor
+		wg.Wait()
+
+		// Re-sort appointmentsSortedByTimeslot by time
+		updateTimeslotSortedAppts()
+	}
+	mutex.Unlock()
 
 	return app, nil
 }
 
 func addAppointment(app *appointment) {
 	defer wg.Done()
+
+	var mutex sync.Mutex
 
 	mutex.Lock()
 	{
@@ -90,6 +98,9 @@ func addAppointment(app *appointment) {
 }
 
 func updateTimeslotSortedAppts() {
+
+	var mutex sync.Mutex
+
 	mutex.Lock()
 	{
 		appointmentsSortedByTimeslot = generateTimeslotSortedAppts(appointments)
@@ -312,6 +323,7 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	// Get querystring values
 	apptId := req.FormValue("apptId")
 	action := req.FormValue("action")
+	source := req.FormValue("source")
 
 	// Form submit values
 	timeslot := req.FormValue("timeslot")
@@ -342,8 +354,7 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 				if action == "cancel" {
 					cancelAppointment(apptId)
 
-					if isAdmin {
-						fmt.Println("Admin deleted appt id:", apptId)
+					if isAdmin && source == "admin" {
 						http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
 					} else {
 						http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
@@ -376,8 +387,7 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 							theAppt.editAppointment(t, thePatient, chosenDoctor)
 
-							if isAdmin {
-								fmt.Println("Admin edited appt id:", apptId)
+							if isAdmin && source == "admin" {
 								http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
 							} else {
 								http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
@@ -389,12 +399,14 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 				// Anonymous payload
 				payload := struct {
+					PageTitle          string
 					User               *patient
 					Doctors            []*doctor
 					Appt               *appointment
 					ChosenDoctor       *doctor
 					TimeslotsAvailable []int64
 				}{
+					"Edit Appointment",
 					thePatient,
 					doctors,
 					theAppt,
@@ -422,8 +434,10 @@ func appointmentPage(res http.ResponseWriter, req *http.Request) {
 
 	// Anonymous payload
 	payload := struct {
-		User *patient
+		PageTitle string
+		User      *patient
 	}{
+		"My Appointments",
 		thePatient,
 	}
 
@@ -490,12 +504,14 @@ func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 	// Anonymous payload
 	payload := struct {
+		PageTitle          string
 		User               *patient
 		Doctors            []*doctor
 		ChosenDoctor       *doctor
 		TimeslotsAvailable []int64
 		ErrorMsg           string
 	}{
+		"New Appointment",
 		thePatient,
 		doctors,
 		chosenDoctor,

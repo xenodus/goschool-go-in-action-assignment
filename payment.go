@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -77,8 +76,6 @@ func (p *paymentQueue) PrintAllQueueIDs(skipFirst bool) string {
 
 	queueIds := p.getAllQueueID()
 
-	fmt.Println(queueIds)
-
 	if len(queueIds) > 0 {
 		if skipFirst {
 			return strings.Join(queueIds[1:], ", ")
@@ -144,10 +141,12 @@ func paymentQueuePage(res http.ResponseWriter, req *http.Request) {
 
 	// Anonymous payload
 	payload := struct {
+		PageTitle   string
 		Queue       *paymentQueue
 		MissedQueue *paymentQueue
 		User        *patient
 	}{
+		"Payment Queue",
 		&paymentQ,
 		&missedPaymentQ,
 		theUser,
