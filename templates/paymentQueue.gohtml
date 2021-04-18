@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {{template "header"}}
+    </head>
+    <body>
+        {{template "nav" .}}
+
+        <div class="container my-3">
+            <div class="mb-3">
+                <h1>Serving Queue No.</h1>
+                {{ if gt .Queue.Size 0 }}
+                    <div class="text-center mb-3" style="font-size: 8rem;">
+                        <div><strong>{{ .Queue.Front.Payment.Appointment.Id }}</strong></div>
+                        {{ if .User }}
+                            {{ if .User.IsAdmin }}
+                            <div class="text-center" style="font-size: 1rem;">
+                                <a class="btn btn-primary btn-sm" href="/admin/payment/dequeue" role="button">Dequeue</a>
+                                <a class="btn btn-primary btn-sm" href="/admin/payment/dequeueToMissedQueue" role="button">Missed Queue</a>
+                            </div>
+                            {{ end }}
+                        {{ end }}
+                    </div>
+
+                    {{ if .Queue.Front.Next }}
+                    <h1>Next</h1>
+                    <div class="text-center mb-3" style="font-size: 8rem;"><strong>{{ .Queue.Front.Next.Payment.Appointment.Id }}</div>
+                    {{ end }}
+                {{ else }}
+                    <div class="text-center mb-3" style="font-size: 8rem;">-</div>
+                {{ end }}
+
+                {{ if gt .MissedQueue.Size 0 }}
+                    <h1>Missed Queue</h1>
+                    <div>{{ .MissedQueue.PrintAllQueueIDs }}</div>
+                {{ end }}
+            </div>
+
+            {{template "footer"}}
+        </div>
+    </body>
+</html>

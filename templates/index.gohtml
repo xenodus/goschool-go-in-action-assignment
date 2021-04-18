@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {{template "header"}}
+    </head>
+    <body>
+        {{template "nav" .}}
+
+        <div class="container my-3">
+
+            <h2 class="mb-3">Clinic Services</h2>
+
+            <div id="menu" class="row mb-4">
+                <div class="col-12 col-lg-4 mb-3 mb-lg-0">
+                    <a href="/appointments">
+                        <div class="item border p-4">
+                            <div class="icon"><i class="far fa-calendar-alt"></i></div>
+                            <div class="label">My Appointments</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-12 col-lg-4 mb-3 mb-lg-0">
+                    <a href="/appointment/new">
+                        <div class="item border p-4">
+                            <div class="icon"><i class="far fa-calendar-check"></i></div>
+                            <div class="label">New Appointments</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-12 col-lg-4 mb-3 mb-lg-0">
+                    <a href="/doctors">
+                        <div class="item border p-4">
+                            <div class="icon"><i class="fas fa-user-md"></i></div>
+                            <div class="label">View Doctors</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            {{ if .User.IsAdmin }}
+
+            <h2 class="mb-3">Admin Services</h2>
+
+            <div id="menu" class="row mb-4">
+                <div class="col-12 col-lg-4 mb-3 mb-lg-0">
+                    <a href="/admin/appointments">
+                        <div class="item border p-4">
+                            <div class="icon"><i class="far fa-calendar"></i></div>
+                            <div class="label">Manage Appointments</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-12 col-lg-4 mb-3 mb-lg-0">
+                    <a href="/admin/sessions">
+                        <div class="item border p-4">
+                            <div class="icon"><i class="fas fa-cookie"></i></div>
+                            <div class="label">Manage Sessions</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-12 col-lg-4 mb-3 mb-lg-0">
+                    <a href="/admin/users">
+                        <div class="item border p-4">
+                            <div class="icon"><i class="fas fa-users"></i></div>
+                            <div class="label">Manage Users</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            {{ end }}
+
+            {{template "footer"}}
+        </div>
+    </body>
+</html>

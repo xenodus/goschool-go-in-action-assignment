@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {{template "header"}}
+    </head>
+    <body>
+        {{template "nav" .}}
+
+        <div class="container my-3">
+            <div class="mb-3">
+                <div><a href="/"><<< Back</a></div>
+                <h1>My Appointment</h1>
+            </div>
+
+            <hr/>
+
+            {{ if gt (len .User.Appointments) 0 }}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Appointment ID</th>
+                            <th scope="col">Time</th>
+                            <th scope="col">Dr.</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>  
+                    <tbody>          
+                    {{ range $key, $val := .User.Appointments }}             
+                        <tr>
+                            <td>{{ $val.Id }}</td>
+                            <td>{{ time2HumanReadable $val.Time }}</td>
+                            <td>{{ $val.Doctor.First_name }} {{ $val.Doctor.Last_name }}</td>
+                            <td><a href="/appointment/edit?apptId={{ $val.Id }}&action=edit">Edit</a> | <a href="/appointment/edit?apptId={{ $val.Id }}&action=cancel">Cancel</a></td>
+                        </tr>
+                    {{ end }}   
+                    </tbody>
+                </table>             
+            {{ else }}
+                <div>You have no upcoming appointments.</div>
+            {{ end }}
+
+            {{template "footer"}}
+        </div>
+    </body>
+</html>

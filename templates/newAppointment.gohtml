@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {{template "header"}}
+    </head>
+    <body>
+        {{template "nav" .}}
+
+        <div class="container my-3">
+            <div class="mb-3">
+                <div><a href="/"><<< Back</a></div>
+                <h1>New Appointment</h1>
+            </div>
+
+            <hr/>
+
+            {{ if .ErrorMsg }}
+            <div class="alert alert-danger" role="alert">
+                {{ .ErrorMsg }}
+            </div>            
+            {{ end }}
+
+            {{ $chosenDoctorId := -1 }}
+
+            {{ if .ChosenDoctor }}
+                {{ $chosenDoctorId = .ChosenDoctor.Id }}
+            {{ end }}
+
+            <form method="post" action="/appointment/new">
+                <div class="form-group mb-3">
+                    <label for="doctor" class="form-label">Select Doctor</label>
+                    <select class="form-select" name="doctor">
+                    {{ range .Doctors }}
+                        <option value="{{.Id}}" {{if eq $chosenDoctorId .Id }} selected {{end}}>{{.First_name}} {{.Last_name}}</option>    
+                    {{ end }}
+                    </select>
+                </div>
+
+                {{ if .ChosenDoctor }}
+                    {{ if gt (len .TimeslotsAvailable) 0 }}
+                    <div class="form-group mb-3">
+                        <label for="timeslot" class="form-label">Select Timeslot</label>
+                        <select class="form-select" name="timeslot">
+                        {{ range .TimeslotsAvailable }}
+                            <option value="{{.}}">{{time2HumanReadable .}}</option>    
+                        {{ end }}
+                        </select>
+                    </div>
+                    {{ else }}
+                    <div class="mb-3">There are no timeslots available.</div>
+                    {{ end }}
+                {{ end }}
+
+                {{ if .TimeslotsAvailable }}
+                    <div><button type="submit" class="btn btn-primary mb-3">Make Appointment</button></div>
+                {{else}}
+                    <div><button type="submit" class="btn btn-primary mb-3">Next</button></div>
+                {{end}}
+            </form> 
+
+            {{template "footer"}}
+        </div>
+    </body>
+</html>

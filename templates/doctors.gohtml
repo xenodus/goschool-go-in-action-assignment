@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {{template "header"}}
+    </head>
+    <body>
+        {{template "nav" .}}
+
+        <div class="container my-3">
+            {{ if .ChosenDoctor }}
+                <div class="mb-3">
+                    <div><a href="/doctors"><<< Back</a></div>
+                    <h1>Dr. {{ .ChosenDoctor.First_name }} {{ .ChosenDoctor.Last_name }}</h1>
+                </div>
+
+                <hr/>              
+
+                {{ if gt (len .TimeslotsAvailable) 0 }}
+                    <div>Available timeslots</div>
+
+                    <ul>
+                    {{ range .TimeslotsAvailable }}
+                        <li>{{time2HumanReadable .}}</li>
+                    {{ end }}                
+                    </ul>
+                {{ else }}
+                    <div>There are no more available timeslots for Dr. {{ .ChosenDoctor.First_name }} {{ .ChosenDoctor.Last_name }}</div>
+                {{ end }}                
+            {{ else }}
+                <div class="mb-3">
+                    <div><a href="/"><<< Back</a></div>
+                    <h1>Ours Doctors</h1>
+                    <div>Select a doctor to view his/her availability</div>
+                </div>
+
+                <hr/>       
+
+                <ul>
+                {{ range .Doctors }}
+                    <li><a href="/doctors?doctorID={{ .Id }}">{{ .First_name }} {{ .Last_name }}</a></li>
+                {{ end }}
+                </ul>
+            {{ end }}
+
+            {{template "footer"}}
+        </div>
+    </body>
+</html>

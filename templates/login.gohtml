@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {{template "header"}}
+    </head>
+    <body>
+        {{template "nav" .}}
+
+        <div class="container my-3">
+            <div class="mb-3">
+                <h1>Login</h1>
+            </div>
+
+            <hr/>
+
+            <div>
+                <form method="post">
+                    <div class="form-group mb-3">
+                        <label for="nric" class="form-label">NRIC</label>
+                        <input class="form-control" type="text" name="nric" id="nric" placeholder="nric">
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input class="form-control" type="password" name="password" placeholder="password">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary mb-3">Submit</button>
+                </form>
+            </div>
+
+            <div>
+                <a href="/register">Register</a> if you do not have an account</h2>
+            </div>
+
+            {{template "footer"}}
+        </div>
+    </body>
+</html>

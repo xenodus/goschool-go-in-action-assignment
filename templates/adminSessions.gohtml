@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {{template "header"}}
+    </head>
+    <body>
+        {{template "nav" .}}
+
+        <div class="container my-3">
+            <div class="mb-3">
+                <div><a href="/"><<< Back</a></div>
+                <h1>Clinic's Sessions</h1>
+            </div>
+
+            <hr/>
+
+            {{ if gt (len .Sessions) 0 }}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">User</th>
+                            <th scope="col">Is Admin</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>  
+                    <tbody>          
+                    {{ range $key, $val := .Sessions }}             
+                        <tr>
+                            <td>{{ $key }}</td>
+                            <td>{{ $val }}</td>
+                            <td>{{ if isUserAdminByID $val }}Yes{{ else }}No{{ end }}</td>
+                            <td><a href="/admin/sessions?action=delete&sessionId={{ $key }}">Delete</a></td>
+                        </tr>
+                    {{ end }}   
+                    </tbody>
+                </table>   
+
+                <div class="text-end">
+                    <a class="btn btn-danger" href="/admin/sessions?action=purge" role="button">Purge All</a>
+                </div>                          
+            {{ else }}
+                <div>There are no session records.</div>
+            {{ end }}
+
+            {{template "footer"}}
+        </div>
+    </body>
+</html>
