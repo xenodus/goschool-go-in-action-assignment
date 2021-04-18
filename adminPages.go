@@ -188,6 +188,8 @@ func adminPaymentEnqueuePage(res http.ResponseWriter, req *http.Request) {
 				pmy := payment{paymentCounter, appt, 19.99} // yup... flat rate
 				paymentQ.enqueue(&pmy)
 				cancelAppointment(apptId)
+				http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
+				return
 			}
 		}
 	}

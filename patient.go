@@ -341,45 +341,56 @@ func registerPage(res http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodPost {
 
 		// get form values
-		username := req.FormValue("nric")
+		username := strings.ToUpper(strings.TrimSpace(req.FormValue("nric")))
 		password := req.FormValue("password")
-		firstname := req.FormValue("firstname")
-		lastname := req.FormValue("lastname")
+		firstname := strings.TrimSpace(req.FormValue("firstname"))
+		lastname := strings.TrimSpace(req.FormValue("lastname"))
 
-		if username != "" {
+		if len(password) < minPasswordLength {
+			errorMsg = "Password length has to be >= " + strconv.Itoa(minPasswordLength) + " characters"
+		}
+
+		if firstname == "" || lastname == "" || password == "" {
+			errorMsg = "Please enter all the fields"
+		}
+
+		if errorMsg == "" {
 			if !isNRICValid(username) {
 				errorMsg = ErrInvalidNRIC.Error()
-			} else {
-				// check if username exist/ taken
-				if _, err := getPatientByID(username); err == nil {
-					errorMsg = ErrAlreadyRegistered.Error()
-				} else {
-					// create session
-					id, _ := uuid.NewV4()
-					myCookie := &http.Cookie{
-						Name:     cookieID,
-						Value:    id.String(),
-						Path:     pageIndex,
-						HttpOnly: true,
-					}
-					http.SetCookie(res, myCookie)
-					mapSessions[myCookie.Value] = username
-
-					bPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
-					if err == nil {
-						http.Redirect(res, req, pageError+"?err=ErrInternalServerError", http.StatusSeeOther)
-						return
-					}
-
-					wg.Add(1)
-					createPatient(username, firstname, lastname, bPassword)
-					wg.Wait()
-
-					// redirect to main index
-					http.Redirect(res, req, pageIndex, http.StatusSeeOther)
-					return
-				}
 			}
+		}
+
+		if errorMsg == "" {
+			if _, err := getPatientByID(username); err == nil {
+				errorMsg = ErrAlreadyRegistered.Error()
+			}
+		}
+
+		if errorMsg == "" {
+			// create session
+			id, _ := uuid.NewV4()
+			myCookie := &http.Cookie{
+				Name:     cookieID,
+				Value:    id.String(),
+				Path:     pageIndex,
+				HttpOnly: true,
+			}
+			http.SetCookie(res, myCookie)
+			mapSessions[myCookie.Value] = username
+
+			bPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+			if err != nil {
+				http.Redirect(res, req, pageError+"?err=ErrInternalServerError", http.StatusSeeOther)
+				return
+			}
+
+			wg.Add(1)
+			createPatient(username, firstname, lastname, bPassword)
+			wg.Wait()
+
+			// redirect to main index
+			http.Redirect(res, req, pageIndex, http.StatusSeeOther)
+			return
 		}
 	}
 
@@ -406,7 +417,7 @@ func loginPage(res http.ResponseWriter, req *http.Request) {
 	var errorMsg = ""
 	// process form submission
 	if req.Method == http.MethodPost {
-		username := req.FormValue("nric")
+		username := strings.ToUpper(req.FormValue("nric"))
 		password := req.FormValue("password")
 		// check if user exist with username
 		myUser, noPatientErr := getPatientByID(username)
@@ -491,23 +502,35 @@ func profilePage(res http.ResponseWriter, req *http.Request) {
 
 	thePatient := getLoggedInPatient(res, req)
 
+	var errorMsg = ""
+
 	// Form submit values
 	if req.Method == "POST" {
-		first_name := req.FormValue("firstname")
-		last_name := req.FormValue("lastname")
+		first_name := strings.TrimSpace(req.FormValue("firstname"))
+		last_name := strings.TrimSpace(req.FormValue("lastname"))
 		password := req.FormValue("password")
 
-		if first_name != "" {
-			thePatient.First_name = first_name
+		if len(password) < minPasswordLength {
+			errorMsg = "Password length has to be >= " + strconv.Itoa(minPasswordLength) + " characters"
 		}
 
-		if last_name != "" {
-			thePatient.Last_name = last_name
+		if first_name == "" || last_name == "" || password == "" {
+			errorMsg = "Please enter all the fields"
 		}
 
-		if password != "" {
-			bPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
-			thePatient.password = bPassword
+		if errorMsg == "" {
+			if first_name != "" {
+				thePatient.First_name = first_name
+			}
+
+			if last_name != "" {
+				thePatient.Last_name = last_name
+			}
+
+			if password != "" {
+				bPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+				thePatient.password = bPassword
+			}
 		}
 	}
 
@@ -515,9 +538,11 @@ func profilePage(res http.ResponseWriter, req *http.Request) {
 	payload := struct {
 		PageTitle string
 		User      *patient
+		ErrorMsg  string
 	}{
 		"Profile",
 		thePatient,
+		errorMsg,
 	}
 
 	tpl.ExecuteTemplate(res, "profile.gohtml", payload)

@@ -5,6 +5,8 @@ const startOperationHour = 8
 const endOperationHour = 22
 const appointmentIntervals = 30 // 30 mins between each consultations
 
+const minPasswordLength = 8
+
 // Disabled for ease of testing of assignment
 const strictNRIC = false
 
