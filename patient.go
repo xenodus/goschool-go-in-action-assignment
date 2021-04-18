@@ -335,6 +335,8 @@ func registerPage(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	var errorMsg = ""
+
 	// process form submission
 	if req.Method == http.MethodPost {
 
@@ -346,49 +348,50 @@ func registerPage(res http.ResponseWriter, req *http.Request) {
 
 		if username != "" {
 			if !isNRICValid(username) {
-				http.Error(res, "Invalid NRIC", http.StatusForbidden)
-				return
-			}
+				errorMsg = ErrInvalidNRIC.Error()
+			} else {
+				// check if username exist/ taken
+				if _, err := getPatientByID(username); err == nil {
+					errorMsg = ErrAlreadyRegistered.Error()
+				} else {
+					// create session
+					id, _ := uuid.NewV4()
+					myCookie := &http.Cookie{
+						Name:     cookieID,
+						Value:    id.String(),
+						Path:     pageIndex,
+						HttpOnly: true,
+					}
+					http.SetCookie(res, myCookie)
+					mapSessions[myCookie.Value] = username
 
-			// check if username exist/ taken
-			if _, err := getPatientByID(username); err == nil {
-				http.Error(res, "You are already registered.", http.StatusForbidden)
-				return
-			}
+					bPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+					if err == nil {
+						http.Redirect(res, req, pageError+"?err=ErrInternalServerError", http.StatusSeeOther)
+						return
+					}
 
-			// create session
-			id, _ := uuid.NewV4()
-			myCookie := &http.Cookie{
-				Name:     cookieID,
-				Value:    id.String(),
-				Path:     pageIndex,
-				HttpOnly: true,
-			}
-			http.SetCookie(res, myCookie)
-			mapSessions[myCookie.Value] = username
+					wg.Add(1)
+					createPatient(username, firstname, lastname, bPassword)
+					wg.Wait()
 
-			bPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
-			if err != nil {
-				http.Error(res, "Internal server error", http.StatusInternalServerError)
-				return
+					// redirect to main index
+					http.Redirect(res, req, pageIndex, http.StatusSeeOther)
+					return
+				}
 			}
-
-			wg.Add(1)
-			createPatient(username, firstname, lastname, bPassword)
-			wg.Wait()
 		}
-		// redirect to main index
-		http.Redirect(res, req, pageIndex, http.StatusSeeOther)
-		return
 	}
 
 	// Anonymous payload
 	payload := struct {
 		PageTitle string
 		User      *patient
+		ErrorMsg  string
 	}{
 		"Register",
 		nil,
+		errorMsg,
 	}
 
 	tpl.ExecuteTemplate(res, "register.gohtml", payload)
@@ -400,6 +403,7 @@ func loginPage(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	var errorMsg = ""
 	// process form submission
 	if req.Method == http.MethodPost {
 		username := req.FormValue("nric")
@@ -408,37 +412,45 @@ func loginPage(res http.ResponseWriter, req *http.Request) {
 		myUser, noPatientErr := getPatientByID(username)
 
 		if noPatientErr != nil {
-			http.Error(res, "NRIC and/or password do not match", http.StatusUnauthorized)
-			return
-		}
-		// Matching of password entered
-		err := bcrypt.CompareHashAndPassword(myUser.password, []byte(password))
-		if err != nil {
-			http.Error(res, "NRIC and/or password do not match", http.StatusForbidden)
-			return
-		}
-		// create session
-		id, _ := uuid.NewV4()
-		myCookie := &http.Cookie{
-			Name:     cookieID,
-			Value:    id.String(),
-			Path:     pageIndex,
-			HttpOnly: true,
+			errorMsg = ErrAuthFailure.Error()
+			res.WriteHeader(http.StatusForbidden)
 		}
 
-		http.SetCookie(res, myCookie)
-		mapSessions[myCookie.Value] = username
-		http.Redirect(res, req, pageIndex, http.StatusSeeOther)
-		return
+		if errorMsg == "" {
+			// Matching of password entered
+			err := bcrypt.CompareHashAndPassword(myUser.password, []byte(password))
+			if err != nil {
+				errorMsg = ErrAuthFailure.Error()
+				res.WriteHeader(http.StatusForbidden)
+			}
+		}
+
+		if errorMsg == "" {
+			// create session
+			id, _ := uuid.NewV4()
+			myCookie := &http.Cookie{
+				Name:     cookieID,
+				Value:    id.String(),
+				Path:     pageIndex,
+				HttpOnly: true,
+			}
+
+			http.SetCookie(res, myCookie)
+			mapSessions[myCookie.Value] = username
+			http.Redirect(res, req, pageIndex, http.StatusSeeOther)
+			return
+		}
 	}
 
 	// Anonymous payload
 	payload := struct {
 		PageTitle string
 		User      *patient
+		ErrorMsg  string
 	}{
 		"Login",
 		nil,
+		errorMsg,
 	}
 
 	tpl.ExecuteTemplate(res, "login.gohtml", payload)

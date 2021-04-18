@@ -9,6 +9,8 @@ func startHttpServer() {
 	fs := http.FileServer(http.Dir("./assets"))
 	http.Handle("/assets/", http.StripPrefix("/assets/", fs))
 
+	http.HandleFunc(pageError, errorPage)
+
 	// Index
 	http.HandleFunc(pageIndex, indexPage)
 

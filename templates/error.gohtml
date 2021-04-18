@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {{template "header" .}}
+    </head>
+    <body>
+        {{template "nav" .}}
+
+        <div class="container my-3">
+
+            <button onclick="history.back()" class="btn btn-dark btn-sm mb-1" type="submit"><i class="fas fa-reply"></i> Back</button>
+
+            {{ if .ErrorMsg }}
+            <div class="alert alert-danger" role="alert">
+                {{ .ErrorMsg }}
+            </div>
+            {{ end }}
+
+            {{template "footer"}}
+        </div>
+    </body>
+</html>

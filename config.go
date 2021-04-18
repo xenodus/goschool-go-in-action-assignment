@@ -19,6 +19,7 @@ const pageLogin = "/login"
 const pageLogout = "/logout"
 const pageRegister = "/register"
 const pageProfile = "/profile"
+const pageError = "/error"
 
 const pageMyAppointments = "/appointments"
 const pageNewAppointment = "/appointment/new"
