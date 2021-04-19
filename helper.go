@@ -2,6 +2,7 @@ package main
 
 import (
 	"time"
+	"unicode"
 
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -58,4 +59,13 @@ func isUserAdminByID(uid string) bool {
 	}
 
 	return false
+}
+
+func ucFirst(str string) string {
+	if len(str) == 0 {
+		return ""
+	}
+	tmp := []rune(str)
+	tmp[0] = unicode.ToUpper(tmp[0])
+	return string(tmp)
 }

@@ -42,8 +42,6 @@ func startHttpServer() {
 	// Payment Queue
 	http.HandleFunc(pagePaymentQueue, paymentQueuePage)
 
-	http.Handle("/favicon.ico", http.NotFoundHandler())
-
 	fmt.Println("Server starting on: http://" + serverHost + ":" + serverPort)
 
 	err := http.ListenAndServe(serverHost+":"+serverPort, nil)

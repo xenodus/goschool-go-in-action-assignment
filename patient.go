@@ -510,10 +510,6 @@ func profilePage(res http.ResponseWriter, req *http.Request) {
 		last_name := strings.TrimSpace(req.FormValue("lastname"))
 		password := req.FormValue("password")
 
-		if len(password) < minPasswordLength {
-			errorMsg = "Password length has to be >= " + strconv.Itoa(minPasswordLength) + " characters"
-		}
-
 		if first_name == "" || last_name == "" || password == "" {
 			errorMsg = "Please enter all the fields"
 		}
@@ -528,8 +524,12 @@ func profilePage(res http.ResponseWriter, req *http.Request) {
 			}
 
 			if password != "" {
-				bPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
-				thePatient.password = bPassword
+				if len(password) < minPasswordLength {
+					errorMsg = "Password length has to be >= " + strconv.Itoa(minPasswordLength) + " characters"
+				} else {
+					bPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+					thePatient.password = bPassword
+				}
 			}
 		}
 	}

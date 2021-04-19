@@ -41,6 +41,7 @@ func init() {
 	funcMap := template.FuncMap{
 		"time2HumanReadable": time2HumanReadable,
 		"isUserAdminByID":    isUserAdminByID,
+		"ucFirst":            ucFirst,
 	}
 
 	tpl = template.Must(template.New("").Funcs(funcMap).ParseGlob("templates/*"))

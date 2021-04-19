@@ -10,7 +10,7 @@
 
             {{ if .ErrorMsg }}
             <div class="alert alert-danger" role="alert">
-                {{ .ErrorMsg }}
+                {{ ucFirst .ErrorMsg }}
             </div>
             {{ end }}
 
