@@ -74,8 +74,6 @@ func (d *doctor) cancelAppointment(apptID int64) error {
 			}
 		}
 		mutex.Unlock()
-
-		return nil
 	}
 
 	return err

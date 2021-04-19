@@ -27,34 +27,44 @@
             {{ end }}
 
             <form method="post" action="/appointment/new">
-                <div class="form-group mb-3">
-                    <label for="doctor" class="form-label">Select Doctor</label>
-                    <select class="form-select" name="doctor">
-                    {{ range .Doctors }}
-                        <option value="{{.Id}}" {{if eq $chosenDoctorId .Id }} selected {{end}}>{{.First_name}} {{.Last_name}}</option>
-                    {{ end }}
-                    </select>
-                </div>
-
                 {{ if .ChosenDoctor }}
-                    {{ if gt (len .TimeslotsAvailable) 0 }}
                     <div class="form-group mb-3">
-                        <label for="timeslot" class="form-label">Select Timeslot</label>
-                        <select class="form-select" name="timeslot">
-                        {{ range .TimeslotsAvailable }}
-                            <option value="{{.}}">{{time2HumanReadable .}}</option>
+                        <h2>Dr. {{.ChosenDoctor.First_name}} {{.ChosenDoctor.Last_name}}</h2>
+                        <input class="form-control" type="hidden" name="doctor" placeholder="nric" value="{{.ChosenDoctor.Id}}" readonly>
+                    </div>
+                {{ else }}
+                    <div class="form-group mb-3">
+                        <label for="doctor" class="form-label">Select Doctor</label>
+                        <select class="form-select" name="doctor">
+                        {{ range .Doctors }}
+                            <option value="{{.Id}}" {{if eq $chosenDoctorId .Id }} selected {{end}}>{{.First_name}} {{.Last_name}}</option>
                         {{ end }}
                         </select>
                     </div>
-                    {{ else }}
-                    <div class="mb-3">There are no timeslots available.</div>
+                {{ end }}
+
+                {{ if .ChosenDoctor }}
+                    {{ if gt (len .TimeslotsAvailable) 0 }}
+                        <div class="form-group mb-3">
+                            <label for="timeslot" class="form-label">Select Timeslot</label>
+                            <select class="form-select" name="timeslot">
+                            {{ range .TimeslotsAvailable }}
+                                <option value="{{.}}">{{time2HumanReadable .}}</option>
+                            {{ end }}
+                            </select>
+                        </div>
                     {{ end }}
                 {{ end }}
 
                 {{ if .TimeslotsAvailable }}
-                    <div><button type="submit" class="btn btn-primary mb-3">Make Appointment</button></div>
+                    <div>
+                        <button type="submit" class="btn btn-primary">Make Appointment</button>
+                        {{ if .ChosenDoctor }}
+                            <a href="/appointment/new" class="btn btn-dark " role="button">Change Doctor</a>
+                        {{ end }}
+                    </div>
                 {{else}}
-                    <div><button type="submit" class="btn btn-primary mb-3">Next</button></div>
+                    <div><button type="submit" class="btn btn-primary">Next</button></div>
                 {{end}}
             </form>
 

@@ -27,3 +27,19 @@ func indexPage(res http.ResponseWriter, req *http.Request) {
 
 	tpl.ExecuteTemplate(res, "index.gohtml", payload)
 }
+
+func notFoundErrorHandler(res http.ResponseWriter, req *http.Request) {
+	// Anonymous payload
+	payload := struct {
+		PageTitle string
+		ErrorMsg  string
+		User      *patient
+	}{
+		"Page not found",
+		ErrStatusNotFound.Error(),
+		nil,
+	}
+
+	res.WriteHeader(http.StatusNotFound)
+	tpl.ExecuteTemplate(res, "404.gohtml", payload)
+}

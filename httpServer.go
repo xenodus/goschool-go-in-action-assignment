@@ -26,10 +26,10 @@ func startHttpServer() {
 	http.HandleFunc(pageRegister, registerPage)
 	http.HandleFunc(pageProfile, profilePage)
 
-	// Doctor
+	// Doctor - Handlers in doctor.go
 	http.HandleFunc(pageDoctors, viewDoctorsPage)
 
-	// Admins
+	// Admins - Handlers in patient.go
 	http.HandleFunc(pageAdminAllAppointments, adminAppointmentPage)
 	http.HandleFunc(pageAdminSessions, adminSessionsPage)
 	http.HandleFunc(pageAdminUsers, adminUsersPage)
@@ -39,7 +39,7 @@ func startHttpServer() {
 	http.HandleFunc(pageAdminPaymentDequeueToMissedQueue, adminPaymentDequeueToMissedQueuePage)
 	http.HandleFunc(pageAdminPaymentDequeueToPaymentQueue, adminPaymentDequeueToPaymentQueuePage)
 
-	// Payment Queue
+	// Payment Queue - Handlers in payment.go
 	http.HandleFunc(pagePaymentQueue, paymentQueuePage)
 
 	fmt.Println("Server starting on: http://" + serverHost + ":" + serverPort)

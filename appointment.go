@@ -497,7 +497,19 @@ func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 		if err == nil {
 			chosenDoctor = doc
+			patientTimeslotsAvailable := getAvailableTimeslot(thePatient.Appointments)
+			doctorTimeslotsAvailable := getAvailableTimeslot(chosenDoctor.Appointments)
 			timeslotsAvailable = getAvailableTimeslot(append(chosenDoctor.Appointments, thePatient.Appointments...))
+
+			if len(timeslotsAvailable) <= 0 {
+				if len(patientTimeslotsAvailable) <= 0 {
+					errorMsg = ErrPatientNoMoreTimeslot.Error()
+				} else if len(doctorTimeslotsAvailable) <= 0 {
+					errorMsg = ErrDoctorNoMoreTimeslot.Error()
+				} else {
+					errorMsg = ErrNoMoreTimeslot.Error()
+				}
+			}
 		} else {
 			errorMsg = err.Error()
 		}
