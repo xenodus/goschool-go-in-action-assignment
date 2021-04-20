@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	uuid "github.com/satori/go.uuid"
@@ -52,17 +51,13 @@ func (p *patient) delete() error {
 
 	if patientIDIndex >= 0 {
 
-		mutex.Lock()
-		{
-			if patientIDIndex == 0 {
-				patients = patients[1:]
-			} else if patientIDIndex == len(patients)-1 {
-				patients = patients[:patientIDIndex]
-			} else {
-				patients = append(patients[:patientIDIndex], patients[patientIDIndex+1:]...)
-			}
+		if patientIDIndex == 0 {
+			patients = patients[1:]
+		} else if patientIDIndex == len(patients)-1 {
+			patients = patients[:patientIDIndex]
+		} else {
+			patients = append(patients[:patientIDIndex], patients[patientIDIndex+1:]...)
 		}
-		mutex.Unlock()
 	}
 
 	return nil
@@ -84,16 +79,8 @@ func (p *patient) sortAppointments() {
 }
 
 func (p *patient) addAppointment(appt *appointment) {
-	defer wg.Done()
-
-	var mutex sync.Mutex
-
-	mutex.Lock()
-	{
-		p.Appointments = append(p.Appointments, appt)
-		p.sortAppointments()
-	}
-	mutex.Unlock()
+	p.Appointments = append(p.Appointments, appt)
+	p.sortAppointments()
 }
 
 func (p *patient) cancelAppointment(apptID int64) error {
@@ -103,17 +90,13 @@ func (p *patient) cancelAppointment(apptID int64) error {
 
 	if apptIDIndex >= 0 {
 
-		mutex.Lock()
-		{
-			if apptIDIndex == 0 {
-				p.Appointments = p.Appointments[1:]
-			} else if apptIDIndex == len(p.Appointments)-1 {
-				p.Appointments = p.Appointments[:apptIDIndex]
-			} else {
-				p.Appointments = append(p.Appointments[:apptIDIndex], p.Appointments[apptIDIndex+1:]...)
-			}
+		if apptIDIndex == 0 {
+			p.Appointments = p.Appointments[1:]
+		} else if apptIDIndex == len(p.Appointments)-1 {
+			p.Appointments = p.Appointments[:apptIDIndex]
+		} else {
+			p.Appointments = append(p.Appointments[:apptIDIndex], p.Appointments[apptIDIndex+1:]...)
 		}
-		mutex.Unlock()
 
 		return nil
 	}

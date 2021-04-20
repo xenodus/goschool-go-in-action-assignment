@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"sync"
 	"time"
 )
 
@@ -19,20 +18,16 @@ type appointment struct {
 
 func (appt *appointment) editAppointment(t int64, pat *patient, doc *doctor) error {
 
-	mutex.Lock()
-	{
-		// Update
-		appt.Patient = pat
-		appt.Doctor = doc
-		appt.Time = t
+	// Update
+	appt.Patient = pat
+	appt.Doctor = doc
+	appt.Time = t
 
-		// Re-sort appointmentsSortedByTimeslot by time
-		updateTimeslotSortedAppts()
-		// Re-sort doc and patient's appts
-		pat.sortAppointments()
-		doc.sortAppointments()
-	}
-	mutex.Unlock()
+	// Re-sort appointmentsSortedByTimeslot by time
+	updateTimeslotSortedAppts()
+	// Re-sort doc and patient's appts
+	pat.sortAppointments()
+	doc.sortAppointments()
 
 	return nil
 }
@@ -65,55 +60,23 @@ func makeAppointment(t int64, pat *patient, doc *doctor) (appointment, error) {
 
 	app := appointment{}
 
-	mutex.Lock()
-	{
-		appointment_start_id++
-		app = appointment{appointment_start_id, t, pat, doc}
+	appointment_start_id++
+	app = appointment{appointment_start_id, t, pat, doc}
 
-		// Concurrently handle adding of pointers to the individual slices
-		wg.Add(3)
-		go addAppointment(&app)
-		go pat.addAppointment(&app) // add to patient
-		go doc.addAppointment(&app) // add to doctor
-		wg.Wait()
+	appointments = append(appointments, &app) // add to global appointments
+	app.Doctor.addAppointment(&app)
+	app.Patient.addAppointment(&app)
 
-		// Re-sort appointmentsSortedByTimeslot by time
-		updateTimeslotSortedAppts()
-	}
-	mutex.Unlock()
+	updateTimeslotSortedAppts()
 
 	return app, nil
 }
 
-func addAppointment(app *appointment) {
-	defer wg.Done()
-
-	var mutex sync.Mutex
-
-	mutex.Lock()
-	{
-		appointments = append(appointments, app) // add to global appointments
-	}
-	mutex.Unlock()
-}
-
 func updateTimeslotSortedAppts() {
-
-	var mutex sync.Mutex
-
-	mutex.Lock()
-	{
-		appointmentsSortedByTimeslot = generateTimeslotSortedAppts(appointments)
-	}
-	mutex.Unlock()
-}
-
-func generateTimeslotSortedAppts(appt []*appointment) []*appointment {
-	tempAppts := make([]*appointment, len(appt))
-	copy(tempAppts, appt)
+	tempAppts := make([]*appointment, len(appointments))
+	copy(tempAppts, appointments)
 	mergeSort(tempAppts, 0, len(tempAppts)-1)
-
-	return tempAppts
+	appointmentsSortedByTimeslot = tempAppts
 }
 
 func cancelAppointment(apptID int64) error {
@@ -129,17 +92,13 @@ func cancelAppointment(apptID int64) error {
 		go appointments[apptIDIndex].Doctor.cancelAppointment(apptID)
 		wg.Wait()
 
-		mutex.Lock()
-		{
-			if apptIDIndex == 0 {
-				appointments = appointments[1:]
-			} else if apptIDIndex == len(appointments)-1 {
-				appointments = appointments[:apptIDIndex]
-			} else {
-				appointments = append(appointments[:apptIDIndex], appointments[apptIDIndex+1:]...)
-			}
+		if apptIDIndex == 0 {
+			appointments = appointments[1:]
+		} else if apptIDIndex == len(appointments)-1 {
+			appointments = appointments[:apptIDIndex]
+		} else {
+			appointments = append(appointments[:apptIDIndex], appointments[apptIDIndex+1:]...)
 		}
-		mutex.Unlock()
 
 		// Re-sort appointmentsSortedByTimeslot by time
 		updateTimeslotSortedAppts()

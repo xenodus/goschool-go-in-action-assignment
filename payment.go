@@ -31,18 +31,14 @@ func (p *paymentQueue) enqueue(pmy *payment) error {
 		Next:    nil,
 	}
 
-	mutex.Lock()
-	{
-		if p.Front == nil {
-			p.Front = newNode
-		} else {
-			p.Back.Next = newNode
-		}
-
-		p.Back = newNode
-		p.Size++
+	if p.Front == nil {
+		p.Front = newNode
+	} else {
+		p.Back.Next = newNode
 	}
-	mutex.Unlock()
+
+	p.Back = newNode
+	p.Size++
 
 	return nil
 }
@@ -50,24 +46,20 @@ func (p *paymentQueue) enqueue(pmy *payment) error {
 func (p *paymentQueue) dequeue() (*payment, error) {
 	var pmy *payment
 
-	mutex.Lock()
-	{
-		if p.Front == nil {
-			return nil, ErrEmptyPaymentQueue
-		}
-
-		pmy = p.Front.Payment
-
-		if p.Size == 1 {
-			p.Front = nil
-			p.Back = nil
-		} else {
-			p.Front = p.Front.Next
-		}
-
-		p.Size--
+	if p.Front == nil {
+		return nil, ErrEmptyPaymentQueue
 	}
-	mutex.Unlock()
+
+	pmy = p.Front.Payment
+
+	if p.Size == 1 {
+		p.Front = nil
+		p.Back = nil
+	} else {
+		p.Front = p.Front.Next
+	}
+
+	p.Size--
 
 	return pmy, nil
 }

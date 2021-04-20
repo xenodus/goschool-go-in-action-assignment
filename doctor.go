@@ -1,10 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
-	"sync"
 )
 
 var doctor_start_id int64 = 100
@@ -44,16 +42,8 @@ func (d *doctor) sortAppointments() {
 }
 
 func (d *doctor) addAppointment(appt *appointment) {
-	defer wg.Done()
-
-	var mutex sync.Mutex
-
-	mutex.Lock()
-	{
-		d.Appointments = append(d.Appointments, appt)
-		d.sortAppointments()
-	}
-	mutex.Unlock()
+	d.Appointments = append(d.Appointments, appt)
+	d.sortAppointments()
 }
 
 func (d *doctor) cancelAppointment(apptID int64) error {
@@ -63,17 +53,13 @@ func (d *doctor) cancelAppointment(apptID int64) error {
 
 	if apptIDIndex >= 0 {
 
-		mutex.Lock()
-		{
-			if apptIDIndex == 0 {
-				d.Appointments = d.Appointments[1:]
-			} else if apptIDIndex == len(d.Appointments)-1 {
-				d.Appointments = d.Appointments[:apptIDIndex]
-			} else {
-				d.Appointments = append(d.Appointments[:apptIDIndex], d.Appointments[apptIDIndex+1:]...)
-			}
+		if apptIDIndex == 0 {
+			d.Appointments = d.Appointments[1:]
+		} else if apptIDIndex == len(d.Appointments)-1 {
+			d.Appointments = d.Appointments[:apptIDIndex]
+		} else {
+			d.Appointments = append(d.Appointments[:apptIDIndex], d.Appointments[apptIDIndex+1:]...)
 		}
-		mutex.Unlock()
 	}
 
 	return err
@@ -167,8 +153,6 @@ func viewDoctorsPage(res http.ResponseWriter, req *http.Request) {
 	var chosenDoctor *doctor = nil
 	var timeslotsAvailable []int64
 	var errorMsg = ""
-
-	fmt.Println(errorMsg)
 
 	if doctorID != "" {
 		doctorID, _ := strconv.ParseInt(doctorID, 10, 64)

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"math/rand"
 	"time"
 	"unicode"
 
@@ -9,7 +11,13 @@ import (
 )
 
 func seedAdmins() {
-	admins = append(admins, []string{"S1234567A", "S0000000A", "S9999999C"}...)
+	adminIds := []string{
+		"S1234567A",
+		"S0000000A",
+		"S9999999C",
+	}
+
+	admins = append(admins, adminIds...)
 }
 
 func seedPatients() {
@@ -40,6 +48,27 @@ func seedDoctors() {
 	go addDoctor("Bruce", "Banner")
 	go addDoctor("Steven", "Strange")
 	wg.Wait()
+}
+
+func seedAppointments() {
+	no2seed := 10
+	rand.Seed(time.Now().Unix())
+
+	for no2seed > 0 {
+		randomPat := patients[rand.Intn(len(patients))]
+		randomDoc := doctors[rand.Intn(len(doctors))]
+
+		timeAvailable := getAvailableTimeslot(append(randomPat.Appointments, randomDoc.Appointments...))
+
+		if len(timeAvailable) > 0 {
+			randomTime := timeAvailable[rand.Intn(len(timeAvailable))]
+			makeAppointment(randomTime, randomPat, randomDoc)
+		} else {
+			fmt.Println("Seeding Appointment Error: No more timeslot for", randomPat.First_name, randomPat.Last_name, "by Dr.", randomDoc.First_name, randomDoc.Last_name)
+		}
+
+		no2seed--
+	}
 }
 
 func time2HumanReadable(t int64) string {

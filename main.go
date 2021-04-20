@@ -34,6 +34,8 @@ func init() {
 	seedAdmins()
 	seedPatients()
 
+	seedAppointments()
+
 	// Just randomizing the cookie name on each init
 	cookieID = getRandomCookiePrefix()
 
