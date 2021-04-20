@@ -8,18 +8,18 @@
 
         <div class="container my-4">
             <div>
-                <h1>Serving Queue No.</h1>
+                <div class="mb-3"><h1>Serving Queue No.</h1></div>
                 {{ if gt .Queue.Size 0 }}
-                    <div class="text-center mb-3" style="font-size: 8rem;">
-                        <div><strong>{{ .Queue.Front.Payment.Appointment.Id }}</strong></div>
-                        {{ if .User }}
-                            {{ if .User.IsAdmin }}
-                            <div class="text-center" style="font-size: 1rem;">
-                                <a class="btn btn-primary btn-sm" href="/admin/payment/dequeue" role="button">Dequeue</a>
-                                <a class="btn btn-primary btn-sm" href="/admin/payment/dequeueToMissedQueue" role="button">Missed Queue</a>
-                            </div>
-                            {{ end }}
+                    {{ if .User }}
+                        {{ if .User.IsAdmin }}
+                        <div style="font-size: 1rem;">
+                            <a class="btn btn-primary btn-sm" href="/admin/payment/dequeue" role="button">Dequeue</a>
+                            <a class="btn btn-primary btn-sm" href="/admin/payment/dequeueToMissedQueue" role="button">Missed Queue</a>
+                        </div>
                         {{ end }}
+                    {{ end }}
+                    <div class="mb-3" style="font-size: 8rem;">
+                        <div><strong>{{ .Queue.Front.Payment.Appointment.Id }}</strong></div>
                     </div>
 
                     {{ if .Queue.Front.Next }}
@@ -33,16 +33,16 @@
                 {{ end }}
 
                 {{ if gt .MissedQueue.Size 0 }}
-                    <h1>Missed Queue</h1>
+                    <div class="mb-3"><h1>Missed Queue</h1></div>
+                    {{ if .User }}
+                        {{ if .User.IsAdmin }}
+                        <div style="font-size: 1rem;">
+                            <a class="btn btn-primary btn-sm" href="/admin/payment/dequeueToPaymentQueue" role="button">Enqueue</a>
+                        </div>
+                        {{ end }}
+                    {{ end }}
                     <div class="mb-3" style="font-size: 8rem;">
                         <div><strong>{{ .MissedQueue.PrintAllQueueIDs false }}</strong></div>
-                        {{ if .User }}
-                            {{ if .User.IsAdmin }}
-                            <div class="text-center" style="font-size: 1rem;">
-                                <a class="btn btn-primary btn-sm" href="/admin/payment/dequeueToPaymentQueue" role="button">Enqueue</a>
-                            </div>
-                            {{ end }}
-                        {{ end }}
                     </div>
                 {{ end }}
             </div>
