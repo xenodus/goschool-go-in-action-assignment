@@ -75,7 +75,7 @@ func getPatientByID(patientID string) (*patient, error) {
 }
 
 func (p *patient) sortAppointments() {
-	mergeSort(p.Appointments, 0, len(p.Appointments)-1)
+	mergeSortByTime(p.Appointments, 0, len(p.Appointments)-1) // sorted by time
 }
 
 func (p *patient) addAppointment(appt *appointment) {

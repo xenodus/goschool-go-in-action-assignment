@@ -103,7 +103,7 @@ func isThereTimeslot(pat *patient, doc *doctor) (bool, error) {
 func updateTimeslotSortedAppts() {
 	tempAppts := make([]*appointment, len(appointments))
 	copy(tempAppts, appointments)
-	mergeSort(tempAppts, 0, len(tempAppts)-1)
+	mergeSortByTime(tempAppts, 0, len(tempAppts)-1)
 	appointmentsSortedByTimeslot = tempAppts
 }
 
@@ -212,16 +212,16 @@ func timeSlotsGenerator() []int64 {
 	return timeSlots
 }
 
-func mergeSort(arr []*appointment, first int, last int) {
+func mergeSortByTime(arr []*appointment, first int, last int) {
 	if first < last { // more than 1 items
-		mid := (first + last) / 2    // index of midpoint
-		mergeSort(arr, first, mid)   // sort left half
-		mergeSort(arr, mid+1, last)  // sort right half
-		merge(arr, first, mid, last) // merge the two halves
+		mid := (first + last) / 2          // index of midpoint
+		mergeSortByTime(arr, first, mid)   // sort left half
+		mergeSortByTime(arr, mid+1, last)  // sort right half
+		mergeByTime(arr, first, mid, last) // merge the two halves
 	}
 }
 
-func merge(arr []*appointment, first int, mid int, last int) {
+func mergeByTime(arr []*appointment, first int, mid int, last int) {
 
 	tempArr := make([]*appointment, len(arr))
 
@@ -273,6 +273,7 @@ func binarySearchApptID(arr []*appointment, first int, last int, apptID int64) i
 		return -1
 	} else {
 		mid := (first + last) / 2
+
 		if arr[mid].Id == apptID { // item found
 			return mid
 		} else {
@@ -326,41 +327,47 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 			errorMsg = ErrAppointmentIDNotFound.Error()
 		} else {
 			// Check if appt id is valid
-			patientApptIDIndex := binarySearchApptID(thePatient.Appointments, 0, len(thePatient.Appointments)-1, apptId)
+			// Note can't use patient's appoinments slice as it's sorted by time and not ApptID
+			patientApptIDIndex := binarySearchApptID(appointments, 0, len(appointments)-1, apptId)
 
 			if patientApptIDIndex < 0 {
 				errorMsg = ErrAppointmentIDNotFound.Error()
 			} else {
 
-				// Cancel Appt
-				if action == "cancel" {
-					cancelAppointment(apptId)
-					http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
-					return
-				}
+				theAppt = appointments[patientApptIDIndex]
 
-				// Edit Appt
-				if action == "edit" {
-
-					theAppt = thePatient.Appointments[patientApptIDIndex]
-					chosenDoctor = theAppt.Doctor
-
-					timeslotsAvailable = getAvailableTimeslot(append(chosenDoctor.Appointments, thePatient.Appointments...))
-					_, timeSlotErr := isThereTimeslot(thePatient, chosenDoctor)
-
-					if timeSlotErr != nil {
-						errorMsg = timeSlotErr.Error()
+				// Does not belong to logged in user
+				if theAppt.Patient != thePatient {
+					errorMsg = ErrAppointmentIDNotFound.Error()
+				} else {
+					// Cancel Appt
+					if action == "cancel" {
+						cancelAppointment(apptId)
+						http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
+						return
 					}
 
-					if timeslot != "" && chosenDoctor != nil {
-						t, _ := strconv.ParseInt(timeslot, 10, 64)
+					// Edit Appt
+					if action == "edit" {
 
-						if isApptTimeValid, isApptTimeValidErr := isApptTimeValid(t); isApptTimeValid {
-							theAppt.editAppointment(t, thePatient, chosenDoctor)
-							http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
-							return
-						} else {
-							errorMsg = isApptTimeValidErr.Error()
+						chosenDoctor = theAppt.Doctor
+						timeslotsAvailable = getAvailableTimeslot(append(chosenDoctor.Appointments, thePatient.Appointments...))
+						_, timeSlotErr := isThereTimeslot(thePatient, chosenDoctor)
+
+						if timeSlotErr != nil {
+							errorMsg = timeSlotErr.Error()
+						}
+
+						if timeslot != "" && chosenDoctor != nil {
+							t, _ := strconv.ParseInt(timeslot, 10, 64)
+
+							if isApptTimeValid, isApptTimeValidErr := isApptTimeValid(t); isApptTimeValid {
+								theAppt.editAppointment(t, thePatient, chosenDoctor)
+								http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
+								return
+							} else {
+								errorMsg = isApptTimeValidErr.Error()
+							}
 						}
 					}
 				}

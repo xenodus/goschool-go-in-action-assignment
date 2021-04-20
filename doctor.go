@@ -39,7 +39,7 @@ func (d *doctor) isFreeAt(t int64) bool {
 }
 
 func (d *doctor) sortAppointments() {
-	mergeSort(d.Appointments, 0, len(d.Appointments)-1)
+	mergeSortByTime(d.Appointments, 0, len(d.Appointments)-1) // sorted by time
 }
 
 func (d *doctor) addAppointment(appt *appointment) {
