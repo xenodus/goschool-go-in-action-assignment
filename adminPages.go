@@ -8,8 +8,6 @@ import (
 
 func adminSessionsPage(res http.ResponseWriter, req *http.Request) {
 
-	fmt.Println(mapSessions)
-
 	if !isLoggedIn(req) {
 		http.Redirect(res, req, pageLogin, http.StatusSeeOther)
 		return
