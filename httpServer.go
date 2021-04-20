@@ -35,6 +35,8 @@ func startHttpServer() {
 	http.HandleFunc(pageAdminSessions, adminSessionsPage)
 	http.HandleFunc(pageAdminUsers, adminUsersPage)
 
+	http.HandleFunc(pageAdminDebug, adminDebugPage)
+
 	http.HandleFunc(pageAdminPaymentEnqueue, adminPaymentEnqueuePage)
 	http.HandleFunc(pageAdminPaymentDequeue, adminPaymentDequeuePage)
 	http.HandleFunc(pageAdminPaymentDequeueToMissedQueue, adminPaymentDequeueToMissedQueuePage)

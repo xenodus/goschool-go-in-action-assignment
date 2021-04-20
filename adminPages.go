@@ -6,15 +6,6 @@ import (
 	"strconv"
 )
 
-func adminDebugPage(res http.ResponseWriter, req *http.Request) {
-
-	fmt.Println("Appointments:", len(appointments), appointments)
-	fmt.Println("Doctors:", len(doctors), doctors)
-	fmt.Println("Patients:", len(patients), patients)
-
-	http.Redirect(res, req, pageIndex, http.StatusSeeOther)
-}
-
 func adminSessionsPage(res http.ResponseWriter, req *http.Request) {
 
 	fmt.Println(mapSessions)
@@ -363,4 +354,49 @@ func adminPaymentDequeueToPaymentQueuePage(res http.ResponseWriter, req *http.Re
 	missedPaymentQ.dequeueToPaymentQueue()
 
 	http.Redirect(res, req, pagePaymentQueue, http.StatusSeeOther)
+}
+
+func adminDebugPage(res http.ResponseWriter, req *http.Request) {
+
+	fmt.Println(":::::::::::::: Debug Dump ::::::::::::::")
+	fmt.Println("======================================")
+	fmt.Println("Appointments:", len(appointments), appointments)
+	fmt.Println("Appoinments sorted by time:", len(appointmentsSortedByTimeslot), appointmentsSortedByTimeslot)
+	fmt.Println("Doctors:", len(doctors), doctors)
+	fmt.Println("Doctors BST:", doctorsBST)
+	fmt.Println("Patients:", len(patients), patients)
+	fmt.Println("PaymentQueue:", paymentQ.Size, paymentQ)
+	fmt.Println("MissedPaymentQueue:", missedPaymentQ.Size, missedPaymentQ)
+	fmt.Println("Sessions:", len(mapSessions), mapSessions)
+	fmt.Println("Admins:", len(admins), admins)
+
+	fmt.Println(":::::::::::::: Appointments ::::::::::::::")
+	fmt.Println("--- Id | Appt Time :::")
+
+	for _, v := range appointments {
+		fmt.Println(v.Id, time2HumanReadable(v.Time))
+	}
+
+	fmt.Println(":::::::::::::: Appointments By Time ::::::::::::::")
+	fmt.Println("--- Id | Appt Time :::")
+
+	for _, v := range appointmentsSortedByTimeslot {
+		fmt.Println(v.Id, time2HumanReadable(v.Time))
+	}
+
+	fmt.Println(":::::::::::::: Doctors ::::::::::::::")
+	fmt.Println("--- Id | # of Appts :::")
+
+	for _, v := range doctors {
+		fmt.Println(v.Id, len(v.Appointments))
+	}
+
+	fmt.Println(":::::::::::::: Patients ::::::::::::::")
+	fmt.Println("--- Id | # of Appts :::")
+
+	for _, v := range patients {
+		fmt.Println(v.Id, len(v.Appointments))
+	}
+
+	http.Redirect(res, req, pageIndex, http.StatusSeeOther)
 }
