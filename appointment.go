@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"sync/atomic"
 	"time"
 )
 
@@ -32,44 +33,71 @@ func (appt *appointment) editAppointment(t int64, pat *patient, doc *doctor) err
 	return nil
 }
 
-func isApptTimeValid(t int64) bool {
+func isApptTimeValid(t int64) (bool, error) {
 
-	if testFakeTime {
-		return true
+	if !testFakeTime {
+
+		// Check if time of appointment is in the past - e.g. process started at 3:55PM, use chose 4PM timeslot but submitted at 4:05PM
+		currTime := time.Now()
+		var lastPossibleTimeslot int64
+
+		if currTime.Minute() >= 30 {
+			lastPossibleTimeslot = time.Date(currTime.Year(), currTime.Month(), currTime.Day(), currTime.Hour(), 30, 0, 0, time.Local).Unix()
+		} else {
+			lastPossibleTimeslot = time.Date(currTime.Year(), currTime.Month(), currTime.Day(), currTime.Hour(), 0, 0, 0, time.Local).Unix()
+		}
+
+		if lastPossibleTimeslot > t {
+			return false, ErrTimeslotExpired
+		}
 	}
 
-	// Check if time of appointment is in the past - e.g. process started at 3:55PM, use chose 4PM timeslot but submitted at 4:05PM
-	currTime := time.Now()
-	var lastPossibleTimeslot int64
-
-	if currTime.Minute() >= 30 {
-		lastPossibleTimeslot = time.Date(currTime.Year(), currTime.Month(), currTime.Day(), currTime.Hour(), 30, 0, 0, time.Local).Unix()
-	} else {
-		lastPossibleTimeslot = time.Date(currTime.Year(), currTime.Month(), currTime.Day(), currTime.Hour(), 0, 0, 0, time.Local).Unix()
-	}
-
-	if lastPossibleTimeslot > t {
-		return false
-	}
-
-	return true
+	return true, nil
 }
 
 // Make and sort by appointment time
 func makeAppointment(t int64, pat *patient, doc *doctor) (appointment, error) {
 
 	app := appointment{}
+	_, err := isThereTimeslot(pat, doc)
 
-	appointment_start_id++
-	app = appointment{appointment_start_id, t, pat, doc}
+	if err == nil {
 
-	appointments = append(appointments, &app) // add to global appointments
-	app.Doctor.addAppointment(&app)
-	app.Patient.addAppointment(&app)
+		atomic.AddInt64(&appointment_start_id, 1)
+		app = appointment{appointment_start_id, t, pat, doc}
 
-	updateTimeslotSortedAppts()
+		appointments = append(appointments, &app) // add to global appointments
+		app.Doctor.addAppointment(&app)
+		app.Patient.addAppointment(&app)
 
-	return app, nil
+		updateTimeslotSortedAppts()
+
+		return app, nil
+	}
+
+	return app, err
+}
+
+func isThereTimeslot(pat *patient, doc *doctor) (bool, error) {
+	patientTimeslotsAvailable := getAvailableTimeslot(pat.Appointments)
+
+	if len(patientTimeslotsAvailable) <= 0 {
+		return false, ErrPatientNoMoreTimeslot
+	}
+
+	doctorTimeslotsAvailable := getAvailableTimeslot(doc.Appointments)
+
+	if len(doctorTimeslotsAvailable) <= 0 {
+		return false, ErrDoctorNoMoreTimeslot
+	}
+
+	timeslotsAvailable := getAvailableTimeslot(append(doc.Appointments, pat.Appointments...))
+
+	if len(timeslotsAvailable) <= 0 {
+		return false, ErrNoMoreTimeslot
+	}
+
+	return true, nil
 }
 
 func updateTimeslotSortedAppts() {
@@ -277,12 +305,10 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	}
 
 	thePatient := getLoggedInPatient(res, req)
-	isAdmin := thePatient.IsAdmin()
 
 	// Get querystring values
 	apptId := req.FormValue("apptId")
 	action := req.FormValue("action")
-	source := req.FormValue("source")
 
 	// Form submit values
 	timeslot := req.FormValue("timeslot")
@@ -291,92 +317,54 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	var theAppt *appointment = nil
 	var timeslotsAvailable []int64
 	var errorMsg = ""
-	var adminApptIDIndex = -1
 
 	if action == "edit" || action == "cancel" {
 
 		apptId, err := strconv.ParseInt(apptId, 10, 64)
 
-		if err == nil {
+		if err != nil {
+			errorMsg = ErrAppointmentIDNotFound.Error()
+		} else {
 			// Check if appt id is valid
-			isValidApptID := func(apptId int64) bool {
-				patientApptIDIndex := binarySearchApptID(thePatient.Appointments, 0, len(thePatient.Appointments)-1, apptId)
-				return patientApptIDIndex >= 0
-			}(apptId)
+			patientApptIDIndex := binarySearchApptID(thePatient.Appointments, 0, len(thePatient.Appointments)-1, apptId)
 
-			// if user is admin, appt id is valid although don't belong to him/her
-			if isAdmin {
-				adminApptIDIndex = binarySearchApptID(appointments, 0, len(appointments)-1, apptId)
-
-				if adminApptIDIndex >= 0 {
-					isValidApptID = true
-				}
-			}
-
-			if isValidApptID {
+			if patientApptIDIndex < 0 {
+				errorMsg = ErrAppointmentIDNotFound.Error()
+			} else {
 
 				// Cancel Appt
 				if action == "cancel" {
 					cancelAppointment(apptId)
-
-					if isAdmin && source == "admin" {
-						http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
-					} else {
-						http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
-					}
+					http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 					return
 				}
 
 				// Edit Appt
-				// Change thePatient to the actual patient since thePatient is Admin at the moment
 				if action == "edit" {
-					if thePatient.IsAdmin() {
-						appt := appointments[adminApptIDIndex]
-						thePatient = appt.Patient
+
+					theAppt = thePatient.Appointments[patientApptIDIndex]
+					chosenDoctor = theAppt.Doctor
+
+					timeslotsAvailable = getAvailableTimeslot(append(chosenDoctor.Appointments, thePatient.Appointments...))
+					_, timeSlotErr := isThereTimeslot(thePatient, chosenDoctor)
+
+					if timeSlotErr != nil {
+						errorMsg = timeSlotErr.Error()
 					}
 
-					patientApptIDIndex := binarySearchApptID(thePatient.Appointments, 0, len(thePatient.Appointments)-1, apptId)
+					if timeslot != "" && chosenDoctor != nil {
+						t, _ := strconv.ParseInt(timeslot, 10, 64)
 
-					if patientApptIDIndex >= 0 {
-						theAppt = thePatient.Appointments[patientApptIDIndex]
-						chosenDoctor = theAppt.Doctor
-
-						patientTimeslotsAvailable := getAvailableTimeslot(thePatient.Appointments)
-						doctorTimeslotsAvailable := getAvailableTimeslot(chosenDoctor.Appointments)
-						timeslotsAvailable = getAvailableTimeslot(append(chosenDoctor.Appointments, thePatient.Appointments...))
-
-						if len(timeslotsAvailable) <= 0 {
-							if len(patientTimeslotsAvailable) <= 0 {
-								errorMsg = ErrPatientNoMoreTimeslot.Error()
-							} else if len(doctorTimeslotsAvailable) <= 0 {
-								errorMsg = ErrDoctorNoMoreTimeslot.Error()
-							} else {
-								errorMsg = ErrNoMoreTimeslot.Error()
-							}
-						}
-
-						if timeslot != "" && chosenDoctor != nil {
-							t, _ := strconv.ParseInt(timeslot, 10, 64)
-
-							if isApptTimeValid(t) {
-
-								theAppt.editAppointment(t, thePatient, chosenDoctor)
-
-								if isAdmin && source == "admin" {
-									http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
-								} else {
-									http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
-								}
-								return
-							}
+						if isApptTimeValid, isApptTimeValidErr := isApptTimeValid(t); isApptTimeValid {
+							theAppt.editAppointment(t, thePatient, chosenDoctor)
+							http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
+							return
+						} else {
+							errorMsg = isApptTimeValidErr.Error()
 						}
 					}
 				}
-			} else {
-				errorMsg = ErrAppointmentIDNotFound.Error()
 			}
-		} else {
-			errorMsg = ErrAppointmentIDNotFound.Error()
 		}
 
 		// Anonymous payload
@@ -399,11 +387,6 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 		}
 
 		tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
-		return
-	}
-
-	if isAdmin && source == "admin" {
-		http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
 		return
 	}
 
@@ -454,23 +437,16 @@ func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 		doctorID, _ := strconv.ParseInt(doctorID, 10, 64)
 		doc, err := doctorsBST.getDoctorByIDBST(doctorID)
 
-		if err == nil {
-			chosenDoctor = doc
-			patientTimeslotsAvailable := getAvailableTimeslot(thePatient.Appointments)
-			doctorTimeslotsAvailable := getAvailableTimeslot(chosenDoctor.Appointments)
-			timeslotsAvailable = getAvailableTimeslot(append(chosenDoctor.Appointments, thePatient.Appointments...))
-
-			if len(timeslotsAvailable) <= 0 {
-				if len(patientTimeslotsAvailable) <= 0 {
-					errorMsg = ErrPatientNoMoreTimeslot.Error()
-				} else if len(doctorTimeslotsAvailable) <= 0 {
-					errorMsg = ErrDoctorNoMoreTimeslot.Error()
-				} else {
-					errorMsg = ErrNoMoreTimeslot.Error()
-				}
-			}
-		} else {
+		if err != nil {
 			errorMsg = err.Error()
+		} else {
+			chosenDoctor = doc
+			timeslotsAvailable = getAvailableTimeslot(append(chosenDoctor.Appointments, thePatient.Appointments...))
+			_, timeSlotErr := isThereTimeslot(thePatient, chosenDoctor)
+
+			if timeSlotErr != nil {
+				errorMsg = timeSlotErr.Error()
+			}
 		}
 	}
 
@@ -490,12 +466,16 @@ func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		if isApptTimeValid(t) {
-			makeAppointment(t, thePatient, chosenDoctor)
-		}
+		if isApptTimeValid, isApptTimeValidErr := isApptTimeValid(t); isApptTimeValid {
+			_, newApptErr := makeAppointment(t, thePatient, chosenDoctor)
 
-		http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
-		return
+			if newApptErr == nil {
+				http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
+				return
+			}
+		} else {
+			errorMsg = isApptTimeValidErr.Error()
+		}
 	}
 
 	if errorCode == "dnf" {

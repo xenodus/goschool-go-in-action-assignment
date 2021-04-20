@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"strconv"
+	"sync/atomic"
 )
 
 var doctor_start_id int64 = 100
@@ -19,7 +20,7 @@ func addDoctor(first_name string, last_name string) {
 
 	mutex.Lock()
 	{
-		doctor_start_id++
+		atomic.AddInt64(&doctor_start_id, 1)
 		doc := doctor{doctor_start_id, first_name, last_name, nil}
 		doctors = append(doctors, &doc)
 		doctorsBST = makeBST()

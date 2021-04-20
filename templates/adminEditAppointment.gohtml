@@ -9,7 +9,7 @@
         <div class="container my-4">
             <div class="mb-3">
                 <div class="mb-1"><a href="/appointments" class="btn btn-dark btn-sm mb-1" role="button"><i class="fas fa-reply"></i> Back</a></div>
-                <h1>Edit Appointment</h1>
+                <h1>Manage Appointment</h1>
             </div>
 
             <hr/>
@@ -21,7 +21,7 @@
             {{ end }}
 
             {{ if .ChosenDoctor }}
-            <div class="mb-3">Appointment ({{ .Appt.Id }}) with <strong>Dr. {{ .Appt.Doctor.First_name }} {{ .Appt.Doctor.Last_name }} ({{ .Appt.Doctor.Id }})</strong> is scheduled for <strong>{{ time2HumanReadable .Appt.Time }}</strong></div>
+            <div class="mb-3">Appointment ({{ .Appt.Id }}) for <strong>{{ .Appt.Patient.First_name }} {{ .Appt.Patient.Last_name }} ({{ .Appt.Patient.Id }})</strong> with <strong>Dr. {{ .Appt.Doctor.First_name }} {{ .Appt.Doctor.Last_name }} ({{ .Appt.Doctor.Id }})</strong> is scheduled for <strong>{{ time2HumanReadable .Appt.Time }}</strong></div>
 
             <form method="post">
                 {{ if gt (len .TimeslotsAvailable) 0 }}

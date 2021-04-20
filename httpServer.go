@@ -31,6 +31,7 @@ func startHttpServer() {
 
 	// Admins - Handlers in patient.go
 	http.HandleFunc(pageAdminAllAppointments, adminAppointmentPage)
+	http.HandleFunc(pageAdminEditAppointment, adminEditAppointmentPage)
 	http.HandleFunc(pageAdminSessions, adminSessionsPage)
 	http.HandleFunc(pageAdminUsers, adminUsersPage)
 

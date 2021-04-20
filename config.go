@@ -36,6 +36,7 @@ const pageEditAppointment = "/appointment/edit"
 const pageDoctors = "/doctors"
 
 const pageAdminAllAppointments = "/admin/appointments"
+const pageAdminEditAppointment = "/admin/appointment/edit"
 const pageAdminSessions = "/admin/sessions"
 const pageAdminUsers = "/admin/users"
 const pageAdminPaymentEnqueue = "/admin/payment/enqueue"
