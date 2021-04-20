@@ -25,26 +25,27 @@ func seedPatients() {
 
 	if err == nil {
 		wg.Add(7)
-		go createPatient("S0000000A", "Diana", "Prince", bPassword) // admin
 		go createPatient("S1111111B", "Barry", "Allen", bPassword)
 		go createPatient("S2222222C", "Bruce", "Wayne", bPassword)
 		go createPatient("S3333333D", "Hal", "Jordan", bPassword)
 		go createPatient("S4444444D", "Arthur", "Curry", bPassword)
-		go createPatient("S1234567A", "Clark", "Kent", bPassword)   // admin
-		go createPatient("S9999999C", "Oliver", "Queen", bPassword) // admin
+		// admins
+		go createPatient("S0000000A", "Diana", "Prince", bPassword)
+		go createPatient("S1234567A", "Clark", "Kent", bPassword)
+		go createPatient("S9999999C", "Oliver", "Queen", bPassword)
 		wg.Wait()
 	}
 }
 
 func seedDoctors() {
 	wg.Add(9)
-	go addDoctor("Ben", "Low")
-	go addDoctor("Dina", "Malyana")
-	go addDoctor("Lydia", "Ng")
-	go addDoctor("Max", "Wu")
-	go addDoctor("June", "Yeoh")
-	go addDoctor("Yonghao", "Fu")
-	go addDoctor("Geraldine", "Tee")
+	go addDoctor("Steve", "Rogers")
+	go addDoctor("Tony", "Stark")
+	go addDoctor("Peter", "Parker")
+	go addDoctor("Sam", "Wilson")
+	go addDoctor("Clint", "Barton")
+	go addDoctor("Wanda", "Maximoff")
+	go addDoctor("Scott", "Lang")
 	go addDoctor("Bruce", "Banner")
 	go addDoctor("Steven", "Strange")
 	wg.Wait()

@@ -19,16 +19,20 @@ type appointment struct {
 
 func (appt *appointment) editAppointment(t int64, pat *patient, doc *doctor) error {
 
-	// Update
-	appt.Patient = pat
-	appt.Doctor = doc
-	appt.Time = t
+	mutex.Lock()
+	{
+		// Update
+		appt.Patient = pat
+		appt.Doctor = doc
+		appt.Time = t
 
-	// Re-sort appointmentsSortedByTimeslot by time
-	updateTimeslotSortedAppts()
-	// Re-sort doc and patient's appts
-	pat.sortAppointments()
-	doc.sortAppointments()
+		// Re-sort appointmentsSortedByTimeslot by time
+		updateTimeslotSortedAppts()
+		// Re-sort doc and patient's appts
+		pat.sortAppointments()
+		doc.sortAppointments()
+	}
+	mutex.Unlock()
 
 	return nil
 }
@@ -63,19 +67,56 @@ func makeAppointment(t int64, pat *patient, doc *doctor) (appointment, error) {
 
 	if err == nil {
 
-		atomic.AddInt64(&appointment_start_id, 1)
-		app = appointment{appointment_start_id, t, pat, doc}
+		mutex.Lock()
+		{
+			atomic.AddInt64(&appointment_start_id, 1)
+			app := appointment{appointment_start_id, t, pat, doc}
 
-		appointments = append(appointments, &app) // add to global appointments
-		app.Doctor.addAppointment(&app)
-		app.Patient.addAppointment(&app)
-
-		updateTimeslotSortedAppts()
+			wg.Add(3)
+			go addAppointment(&app)
+			go app.Doctor.addAppointment(&app)
+			go app.Patient.addAppointment(&app)
+			wg.Wait()
+		}
+		mutex.Unlock()
 
 		return app, nil
 	}
 
 	return app, err
+}
+
+func addAppointment(appt *appointment) {
+	defer wg.Done()
+	appointments = append(appointments, appt)
+	updateTimeslotSortedAppts()
+}
+
+func cancelAppointment(apptID int64) {
+	mutex.Lock()
+	{
+		apptIDIndex := binarySearchApptID(appointments, 0, len(appointments)-1, apptID)
+
+		if apptIDIndex >= 0 {
+			// Remove from Patient & Doctor
+			wg.Add(2)
+			go appointments[apptIDIndex].Patient.cancelAppointment(apptID)
+			go appointments[apptIDIndex].Doctor.cancelAppointment(apptID)
+			wg.Wait()
+
+			if apptIDIndex == 0 {
+				appointments = appointments[1:]
+			} else if apptIDIndex == len(appointments)-1 {
+				appointments = appointments[:apptIDIndex]
+			} else {
+				appointments = append(appointments[:apptIDIndex], appointments[apptIDIndex+1:]...)
+			}
+
+			// Re-sort appointmentsSortedByTimeslot by time
+			updateTimeslotSortedAppts()
+		}
+	}
+	mutex.Unlock()
 }
 
 func isThereTimeslot(pat *patient, doc *doctor) (bool, error) {
@@ -105,35 +146,6 @@ func updateTimeslotSortedAppts() {
 	copy(tempAppts, appointments)
 	mergeSortByTime(tempAppts, 0, len(tempAppts)-1)
 	appointmentsSortedByTimeslot = tempAppts
-}
-
-func cancelAppointment(apptID int64) error {
-
-	apptIDIndex := binarySearchApptID(appointments, 0, len(appointments)-1, apptID)
-
-	if apptIDIndex >= 0 {
-
-		// Remove from Patient & Doctor
-		// Concurrently handle removal of pointer from the individual slices
-		wg.Add(2)
-		go appointments[apptIDIndex].Patient.cancelAppointment(apptID)
-		go appointments[apptIDIndex].Doctor.cancelAppointment(apptID)
-		wg.Wait()
-
-		if apptIDIndex == 0 {
-			appointments = appointments[1:]
-		} else if apptIDIndex == len(appointments)-1 {
-			appointments = appointments[:apptIDIndex]
-		} else {
-			appointments = append(appointments[:apptIDIndex], appointments[apptIDIndex+1:]...)
-		}
-
-		// Re-sort appointmentsSortedByTimeslot by time
-		updateTimeslotSortedAppts()
-		return nil
-	}
-
-	return ErrAppointmentIDNotFound
 }
 
 func getAvailableTimeslot(apptsToExclude []*appointment) []int64 {

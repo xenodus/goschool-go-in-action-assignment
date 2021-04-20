@@ -34,7 +34,6 @@ func (d *doctor) isFreeAt(t int64) bool {
 			return false
 		}
 	}
-
 	return true
 }
 
@@ -43,6 +42,7 @@ func (d *doctor) sortAppointments() {
 }
 
 func (d *doctor) addAppointment(appt *appointment) {
+	defer wg.Done()
 	d.Appointments = append(d.Appointments, appt)
 	d.sortAppointments()
 }

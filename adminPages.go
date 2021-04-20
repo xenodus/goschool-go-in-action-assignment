@@ -147,7 +147,7 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 				// Cancel Appt
 				if action == "cancel" {
 					cancelAppointment(apptId)
-					http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
+					http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
 					return
 				}
 

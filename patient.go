@@ -19,6 +19,32 @@ type patient struct {
 	Appointments []*appointment
 }
 
+func createPatient(username, first_name, last_name string, password []byte) {
+	defer wg.Done()
+
+	mutex.Lock()
+	{
+		thePatient := patient{username, first_name, last_name, password, nil}
+		patients = append(patients, &thePatient)
+		// Sort by patient id alphabetically
+		mergeSortPatient(patients, 0, len(patients)-1)
+	}
+	mutex.Unlock()
+}
+
+func (p *patient) editPatient(username, first_name, last_name string, password []byte) {
+	mutex.Lock()
+	{
+		p.Id = username
+		p.First_name = first_name
+		p.Last_name = last_name
+		p.password = password
+		// Sort by patient id alphabetically
+		mergeSortPatient(patients, 0, len(patients)-1)
+	}
+	mutex.Unlock()
+}
+
 func (p *patient) isFreeAt(t int64) bool {
 	for _, v := range p.Appointments {
 		if v.Time == t {
@@ -30,35 +56,38 @@ func (p *patient) isFreeAt(t int64) bool {
 }
 
 func (p *patient) delete() error {
+
 	// 1. remove all appointment from appointments slice with patient in em
-	if len(p.Appointments) > 0 {
-		for _, v := range p.Appointments {
-			cancelAppointment(v.Id)
-		}
+	for len(p.Appointments) > 0 {
+		cancelAppointment(p.Appointments[0].Id)
 	}
 
 	// 2. remove sessions with user id
-	if len(mapSessions) > 0 {
-		for k, v := range mapSessions {
-			if v.Id == p.Id {
-				delete(mapSessions, k)
+	mutex.Lock()
+	{
+		if len(mapSessions) > 0 {
+			for k, v := range mapSessions {
+				if v.Id == p.Id {
+					delete(mapSessions, k)
+				}
+			}
+		}
+
+		// 3. remove patient from patients slice
+		patientIDIndex := binarySearchPatientID(patients, 0, len(patients)-1, p.Id)
+
+		if patientIDIndex >= 0 {
+
+			if patientIDIndex == 0 {
+				patients = patients[1:]
+			} else if patientIDIndex == len(patients)-1 {
+				patients = patients[:patientIDIndex]
+			} else {
+				patients = append(patients[:patientIDIndex], patients[patientIDIndex+1:]...)
 			}
 		}
 	}
-
-	// 3. remove patient from patients slice
-	patientIDIndex := binarySearchPatientID(patients, 0, len(patients)-1, p.Id)
-
-	if patientIDIndex >= 0 {
-
-		if patientIDIndex == 0 {
-			patients = patients[1:]
-		} else if patientIDIndex == len(patients)-1 {
-			patients = patients[:patientIDIndex]
-		} else {
-			patients = append(patients[:patientIDIndex], patients[patientIDIndex+1:]...)
-		}
-	}
+	mutex.Unlock()
 
 	return nil
 }
@@ -79,6 +108,7 @@ func (p *patient) sortAppointments() {
 }
 
 func (p *patient) addAppointment(appt *appointment) {
+	defer wg.Done()
 	p.Appointments = append(p.Appointments, appt)
 	p.sortAppointments()
 }
@@ -303,21 +333,6 @@ func getLoggedInPatient(res http.ResponseWriter, req *http.Request) *patient {
 	return thePatient
 }
 
-func createPatient(username, first_name, last_name string, password []byte) *patient {
-	defer wg.Done()
-
-	thePatient := patient{username, first_name, last_name, password, nil}
-	mutex.Lock()
-	{
-		patients = append(patients, &thePatient)
-		// Sort by patient id alphabetically
-		mergeSortPatient(patients, 0, len(patients)-1)
-	}
-	mutex.Unlock()
-
-	return &thePatient
-}
-
 // Web Pages
 
 func registerPage(res http.ResponseWriter, req *http.Request) {
@@ -498,31 +513,19 @@ func profilePage(res http.ResponseWriter, req *http.Request) {
 
 	// Form submit values
 	if req.Method == "POST" {
-		first_name := strings.TrimSpace(req.FormValue("firstname"))
-		last_name := strings.TrimSpace(req.FormValue("lastname"))
+		firstName := strings.TrimSpace(req.FormValue("firstname"))
+		lastName := strings.TrimSpace(req.FormValue("lastname"))
 		password := req.FormValue("password")
 
-		if first_name == "" || last_name == "" || password == "" {
+		if firstName == "" || lastName == "" || password == "" {
 			errorMsg = "Please enter all the fields"
+		} else if len(password) < minPasswordLength {
+			errorMsg = "Password length has to be >= " + strconv.Itoa(minPasswordLength) + " characters"
 		}
 
 		if errorMsg == "" {
-			if first_name != "" {
-				thePatient.First_name = first_name
-			}
-
-			if last_name != "" {
-				thePatient.Last_name = last_name
-			}
-
-			if password != "" {
-				if len(password) < minPasswordLength {
-					errorMsg = "Password length has to be >= " + strconv.Itoa(minPasswordLength) + " characters"
-				} else {
-					bPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
-					thePatient.password = bPassword
-				}
-			}
+			bPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+			thePatient.editPatient(thePatient.Id, firstName, lastName, bPassword)
 		}
 	}
 
