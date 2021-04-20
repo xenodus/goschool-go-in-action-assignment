@@ -44,7 +44,7 @@ func init() {
 	// Adding helper functions to templates
 	funcMap := template.FuncMap{
 		"time2HumanReadable": time2HumanReadable,
-		"isUserAdminByID":    isUserAdminByID,
+		"getUserByID":        getUserByID,
 		"ucFirst":            ucFirst,
 	}
 

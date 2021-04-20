@@ -34,10 +34,11 @@
                     </thead>
                     <tbody>
                     {{ range $key, $val := .Sessions }}
+                        {{ $user := getUserByID $val.Id }}
                         <tr>
                             <td>{{ $key }}</td>
-                            <td>{{ $val.Id }}</td>
-                            <td>{{ if isUserAdminByID $val.Id }}Yes{{ else }}No{{ end }}</td>
+                            <td>{{ $val.Id }}{{if and $user.First_name $user.Last_name}}<br/>{{$user.First_name}} {{$user.Last_name}}{{end}}</td>
+                            <td>{{ if $user.IsAdmin }}Yes{{ else }}No{{ end }}</td>
                             <td>{{ time2HumanReadable $val.LastModified }}</td>
                             <td>{{ $val.LastVisited }}</td>
                             <td class="text-end"><a href="/admin/sessions?action=delete&sessionId={{ $key }}" class="btn btn-danger btn-sm" role="button">Delete</a></td>

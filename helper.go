@@ -105,14 +105,14 @@ func getRandomCookiePrefix() string {
 	return "CO-" + randomUUIDByte.String()
 }
 
-func isUserAdminByID(uid string) bool {
-	p, err := getPatientByID(uid)
+func getUserByID(uid string) *patient {
+	user, err := getPatientByID(uid)
 
 	if err == nil {
-		return p.IsAdmin()
+		return user
 	}
 
-	return false
+	return nil
 }
 
 func ucFirst(str string) string {
