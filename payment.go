@@ -27,6 +27,7 @@ type paymentQueue struct {
 }
 
 func createPayment(appt *appointment, amt float64) error {
+
 	atomic.AddInt64(&paymentCounter, 1)
 	pmy := payment{paymentCounter, appt, amt}
 	paymentQ.enqueue(&pmy)
@@ -36,40 +37,50 @@ func createPayment(appt *appointment, amt float64) error {
 }
 
 func (p *paymentQueue) enqueue(pmy *payment) error {
-	newNode := &paymentNode{
-		Payment: pmy,
-		Next:    nil,
-	}
 
-	if p.Front == nil {
-		p.Front = newNode
-	} else {
-		p.Back.Next = newNode
-	}
+	mutex.Lock()
+	{
+		newNode := &paymentNode{
+			Payment: pmy,
+			Next:    nil,
+		}
 
-	p.Back = newNode
-	p.Size++
+		if p.Front == nil {
+			p.Front = newNode
+		} else {
+			p.Back.Next = newNode
+		}
+
+		p.Back = newNode
+		p.Size++
+	}
+	mutex.Unlock()
 
 	return nil
 }
 
 func (p *paymentQueue) dequeue() (*payment, error) {
+
 	var pmy *payment
 
-	if p.Front == nil {
-		return nil, ErrEmptyPaymentQueue
+	mutex.Lock()
+	{
+		if p.Front == nil {
+			return nil, ErrEmptyPaymentQueue
+		}
+
+		pmy = p.Front.Payment
+
+		if p.Size == 1 {
+			p.Front = nil
+			p.Back = nil
+		} else {
+			p.Front = p.Front.Next
+		}
+
+		p.Size--
 	}
-
-	pmy = p.Front.Payment
-
-	if p.Size == 1 {
-		p.Front = nil
-		p.Back = nil
-	} else {
-		p.Front = p.Front.Next
-	}
-
-	p.Size--
+	mutex.Unlock()
 
 	return pmy, nil
 }
@@ -132,7 +143,6 @@ func (p *paymentQueue) dequeueToPaymentQueue() (*payment, error) {
 }
 
 // Web Pages
-
 func paymentQueuePage(res http.ResponseWriter, req *http.Request) {
 
 	var theUser *patient
