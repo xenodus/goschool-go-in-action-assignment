@@ -26,10 +26,13 @@ type paymentQueue struct {
 	Size  int
 }
 
-func addPayment(appt *appointment, amt float64) (*payment, error) {
+func createPayment(appt *appointment, amt float64) error {
 	atomic.AddInt64(&paymentCounter, 1)
 	pmy := payment{paymentCounter, appt, amt}
-	return &pmy, nil
+	paymentQ.enqueue(&pmy)
+	cancelAppointment(appt.Id)
+
+	return nil
 }
 
 func (p *paymentQueue) enqueue(pmy *payment) error {

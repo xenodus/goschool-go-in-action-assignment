@@ -71,6 +71,31 @@ func seedAppointments() {
 	}
 }
 
+func seedPaymentQueue() {
+	no2queue := 5
+	no2MissedQueue := 2
+	rand.Seed(time.Now().Unix())
+
+	for no2queue > 0 {
+
+		if len(appointments) > 0 {
+			appt := appointments[rand.Intn(len(appointments))]
+			createPayment(appt, 29.99)
+		}
+
+		no2queue--
+	}
+
+	for no2MissedQueue > 0 {
+
+		if paymentQ.Front != nil {
+			paymentQ.dequeueToMissedPaymentQueue()
+		}
+
+		no2MissedQueue--
+	}
+}
+
 func time2HumanReadable(t int64) string {
 	return time.Unix(t, 0).Format("3:04PM")
 }

@@ -285,9 +285,7 @@ func adminPaymentEnqueuePage(res http.ResponseWriter, req *http.Request) {
 
 			if apptIdIndex >= 0 {
 				appt := appointments[apptIdIndex]
-				pmy, _ := addPayment(appt, 19.99)
-				paymentQ.enqueue(pmy)
-				cancelAppointment(apptId)
+				createPayment(appt, 19.99)
 				http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
 				return
 			}

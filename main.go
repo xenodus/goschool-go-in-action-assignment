@@ -36,6 +36,7 @@ func init() {
 	// Optional Test Data
 	seedPatients()
 	seedAppointments()
+	seedPaymentQueue()
 
 	// Randomizing the cookie name on each init
 	cookieID = getRandomCookiePrefix()
