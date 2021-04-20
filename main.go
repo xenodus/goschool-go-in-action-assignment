@@ -24,19 +24,20 @@ var wg sync.WaitGroup
 var mutex sync.Mutex
 
 var tpl *template.Template
-var mapSessions = map[string]string{}
+var mapSessions = make(map[string]session)
 
 var cookieID string
 
 func init() {
-	// Essentials Test Data
+	// Mandatory Test Data
 	seedDoctors()
 	seedAdmins()
-	seedPatients()
 
+	// Optional Test Data
+	seedPatients()
 	seedAppointments()
 
-	// Just randomizing the cookie name on each init
+	// Randomizing the cookie name on each init
 	cookieID = getRandomCookiePrefix()
 
 	// Adding helper functions to templates

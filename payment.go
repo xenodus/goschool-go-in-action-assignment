@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync/atomic"
 )
 
 var paymentCounter int64 = 200
@@ -23,6 +24,12 @@ type paymentQueue struct {
 	Front *paymentNode
 	Back  *paymentNode
 	Size  int
+}
+
+func addPayment(appt *appointment, amt float64) (*payment, error) {
+	atomic.AddInt64(&paymentCounter, 1)
+	pmy := payment{paymentCounter, appt, amt}
+	return &pmy, nil
 }
 
 func (p *paymentQueue) enqueue(pmy *payment) error {

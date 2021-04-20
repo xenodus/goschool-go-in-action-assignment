@@ -27,6 +27,8 @@
                             <th scope="col">ID</th>
                             <th scope="col">User</th>
                             <th scope="col">Is Admin</th>
+                            <th scope="col">Last Active</th>
+                            <th scope="col">Last Visited</th>
                             <th scope="col" class="text-end">Actions</th>
                         </tr>
                     </thead>
@@ -34,13 +36,15 @@
                     {{ range $key, $val := .Sessions }}
                         <tr>
                             <td>{{ $key }}</td>
-                            <td>{{ $val }}</td>
-                            <td>{{ if isUserAdminByID $val }}Yes{{ else }}No{{ end }}</td>
+                            <td>{{ $val.Id }}</td>
+                            <td>{{ if isUserAdminByID $val.Id }}Yes{{ else }}No{{ end }}</td>
+                            <td>{{ time2HumanReadable $val.LastModified }}</td>
+                            <td>{{ $val.LastVisited }}</td>
                             <td class="text-end"><a href="/admin/sessions?action=delete&sessionId={{ $key }}" class="btn btn-danger btn-sm" role="button">Delete</a></td>
                         </tr>
                     {{ end }}
                     <tr>
-                        <td colspan="3"></td>
+                        <td colspan="5"></td>
                         <td class="text-end"><a href="/admin/sessions?action=purge" role="button" class="btn btn-danger btn-sm">Purge All Sessions</a></td>
                     </tr>
                     </tbody>

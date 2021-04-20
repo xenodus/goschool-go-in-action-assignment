@@ -39,9 +39,9 @@ func (p *patient) delete() error {
 
 	// 2. remove sessions with user id
 	if len(mapSessions) > 0 {
-		for _, v := range mapSessions {
-			if v == p.Id {
-				delete(mapSessions, v)
+		for k, v := range mapSessions {
+			if v.Id == p.Id {
+				delete(mapSessions, k)
 			}
 		}
 	}
@@ -262,8 +262,17 @@ func isLoggedIn(req *http.Request) bool {
 	if err != nil {
 		return false
 	}
-	username := mapSessions[myCookie.Value]
+
+	username := mapSessions[myCookie.Value].Id
 	_, noPatientErr := getPatientByID(username)
+
+	if noPatientErr == nil {
+		// also update session with last access datetime
+		session := mapSessions[myCookie.Value]
+		session.LastModified = time.Now().Unix()
+		session.LastVisited = req.URL
+		mapSessions[myCookie.Value] = session
+	}
 
 	return noPatientErr == nil
 }
@@ -287,8 +296,8 @@ func getLoggedInPatient(res http.ResponseWriter, req *http.Request) *patient {
 	// if the patient exists already, get patient
 	var thePatient *patient
 
-	if username, ok := mapSessions[myCookie.Value]; ok {
-		thePatient, _ = getPatientByID(username)
+	if session, ok := mapSessions[myCookie.Value]; ok {
+		thePatient, _ = getPatientByID(session.Id)
 	}
 
 	return thePatient
@@ -359,7 +368,7 @@ func registerPage(res http.ResponseWriter, req *http.Request) {
 				HttpOnly: true,
 			}
 			http.SetCookie(res, myCookie)
-			mapSessions[myCookie.Value] = username
+			mapSessions[myCookie.Value] = session{username, time.Now().Unix(), req.URL}
 
 			bPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 			if err != nil {
@@ -430,7 +439,7 @@ func loginPage(res http.ResponseWriter, req *http.Request) {
 			}
 
 			http.SetCookie(res, myCookie)
-			mapSessions[myCookie.Value] = username
+			mapSessions[myCookie.Value] = session{username, time.Now().Unix(), req.URL}
 			http.Redirect(res, req, pageIndex, http.StatusSeeOther)
 			return
 		}

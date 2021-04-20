@@ -1,12 +1,23 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
-	"sync/atomic"
 )
 
+func adminDebugPage(res http.ResponseWriter, req *http.Request) {
+
+	fmt.Println("Appointments:", len(appointments), appointments)
+	fmt.Println("Doctors:", len(doctors), doctors)
+	fmt.Println("Patients:", len(patients), patients)
+
+	http.Redirect(res, req, pageIndex, http.StatusSeeOther)
+}
+
 func adminSessionsPage(res http.ResponseWriter, req *http.Request) {
+
+	fmt.Println(mapSessions)
 
 	if !isLoggedIn(req) {
 		http.Redirect(res, req, pageLogin, http.StatusSeeOther)
@@ -37,7 +48,7 @@ func adminSessionsPage(res http.ResponseWriter, req *http.Request) {
 
 	// delete all sessions
 	if action == "purge" {
-		mapSessions = make(map[string]string)
+		mapSessions = make(map[string]session)
 	}
 
 	if action != "" {
@@ -52,7 +63,7 @@ func adminSessionsPage(res http.ResponseWriter, req *http.Request) {
 	payload := struct {
 		PageTitle string
 		User      *patient
-		Sessions  map[string]string
+		Sessions  map[string]session
 		ErrorMsg  string
 	}{
 		"Manage Sessions",
@@ -285,9 +296,8 @@ func adminPaymentEnqueuePage(res http.ResponseWriter, req *http.Request) {
 
 			if apptIdIndex >= 0 {
 				appt := appointments[apptIdIndex]
-				atomic.AddInt64(&paymentCounter, 1)
-				pmy := payment{paymentCounter, appt, 19.99} // yup... flat rate
-				paymentQ.enqueue(&pmy)
+				pmy, _ := addPayment(appt, 19.99)
+				paymentQ.enqueue(pmy)
 				cancelAppointment(apptId)
 				http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
 				return
