@@ -31,7 +31,7 @@ func createPayment(appt *appointment, amt float64) error {
 	atomic.AddInt64(&paymentCounter, 1)
 	pmy := payment{paymentCounter, appt, amt}
 	paymentQ.enqueue(&pmy)
-	cancelAppointment(appt.Id)
+	appt.cancelAppointment()
 
 	return nil
 }

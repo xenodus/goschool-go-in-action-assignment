@@ -17,48 +17,6 @@ type appointment struct {
 	Doctor  *doctor
 }
 
-func (appt *appointment) editAppointment(t int64, pat *patient, doc *doctor) error {
-
-	mutex.Lock()
-	{
-		// Update
-		appt.Patient = pat
-		appt.Doctor = doc
-		appt.Time = t
-
-		// Re-sort appointmentsSortedByTimeslot by time
-		updateTimeslotSortedAppts()
-		// Re-sort doc and patient's appts
-		pat.sortAppointments()
-		doc.sortAppointments()
-	}
-	mutex.Unlock()
-
-	return nil
-}
-
-func isApptTimeValid(t int64) (bool, error) {
-
-	if !testFakeTime {
-
-		// Check if time of appointment is in the past - e.g. process started at 3:55PM, use chose 4PM timeslot but submitted at 4:05PM
-		currTime := time.Now()
-		var lastPossibleTimeslot int64
-
-		if currTime.Minute() >= 30 {
-			lastPossibleTimeslot = time.Date(currTime.Year(), currTime.Month(), currTime.Day(), currTime.Hour(), 30, 0, 0, time.Local).Unix()
-		} else {
-			lastPossibleTimeslot = time.Date(currTime.Year(), currTime.Month(), currTime.Day(), currTime.Hour(), 0, 0, 0, time.Local).Unix()
-		}
-
-		if lastPossibleTimeslot > t {
-			return false, ErrTimeslotExpired
-		}
-	}
-
-	return true, nil
-}
-
 // Make and sort by appointment time
 func makeAppointment(t int64, pat *patient, doc *doctor) (appointment, error) {
 
@@ -92,16 +50,36 @@ func addAppointment(appt *appointment) {
 	updateTimeslotSortedAppts()
 }
 
-func cancelAppointment(apptID int64) {
+func (appt *appointment) editAppointment(t int64, pat *patient, doc *doctor) error {
+
 	mutex.Lock()
 	{
-		apptIDIndex := binarySearchApptID(appointments, 0, len(appointments)-1, apptID)
+		// Update
+		appt.Patient = pat
+		appt.Doctor = doc
+		appt.Time = t
+
+		// Re-sort appointmentsSortedByTimeslot by time
+		updateTimeslotSortedAppts()
+		// Re-sort doc and patient's appts
+		pat.sortAppointments()
+		doc.sortAppointments()
+	}
+	mutex.Unlock()
+
+	return nil
+}
+
+func (appt *appointment) cancelAppointment() {
+	mutex.Lock()
+	{
+		apptIDIndex := binarySearchApptID(appointments, 0, len(appointments)-1, appt.Id)
 
 		if apptIDIndex >= 0 {
 			// Remove from Patient & Doctor
 			wg.Add(2)
-			go appointments[apptIDIndex].Patient.cancelAppointment(apptID)
-			go appointments[apptIDIndex].Doctor.cancelAppointment(apptID)
+			go appointments[apptIDIndex].Patient.cancelAppointment(appt.Id)
+			go appointments[apptIDIndex].Doctor.cancelAppointment(appt.Id)
 			wg.Wait()
 
 			if apptIDIndex == 0 {
@@ -119,7 +97,30 @@ func cancelAppointment(apptID int64) {
 	mutex.Unlock()
 }
 
+// Check if time of appointment is in the past - e.g. process started at 3:55 PM, user chose 4 PM timeslot but submitted at 4:05 PM
+func isApptTimeValid(t int64) (bool, error) {
+
+	if !testFakeTime {
+
+		currTime := time.Now()
+		var lastPossibleTimeslot int64
+
+		if currTime.Minute() >= 30 {
+			lastPossibleTimeslot = time.Date(currTime.Year(), currTime.Month(), currTime.Day(), currTime.Hour(), 30, 0, 0, time.Local).Unix()
+		} else {
+			lastPossibleTimeslot = time.Date(currTime.Year(), currTime.Month(), currTime.Day(), currTime.Hour(), 0, 0, 0, time.Local).Unix()
+		}
+
+		if lastPossibleTimeslot > t {
+			return false, ErrTimeslotExpired
+		}
+	}
+
+	return true, nil
+}
+
 func isThereTimeslot(pat *patient, doc *doctor) (bool, error) {
+
 	patientTimeslotsAvailable := getAvailableTimeslot(pat.Appointments)
 
 	if len(patientTimeslotsAvailable) <= 0 {
@@ -354,7 +355,7 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 				} else {
 					// Cancel Appt
 					if action == "cancel" {
-						cancelAppointment(apptId)
+						theAppt.cancelAppointment()
 						http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 						return
 					}
@@ -464,12 +465,20 @@ func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 			_, timeSlotErr := isThereTimeslot(thePatient, chosenDoctor)
 
 			if timeSlotErr != nil {
-				errorMsg = timeSlotErr.Error()
+				if timeSlotErr == ErrDoctorNoMoreTimeslot {
+					errorMsg = "Dr. " + chosenDoctor.First_name + " " + chosenDoctor.Last_name + " has no more available timeslots for today"
+				} else if timeSlotErr == ErrPatientNoMoreTimeslot {
+					errorMsg = "You have no more available timeslots for today"
+				} else {
+					errorMsg = timeSlotErr.Error()
+				}
+
+				chosenDoctor = nil
 			}
 		}
 	}
 
-	if timeslot != "" && chosenDoctor != nil {
+	if timeslot != "" && chosenDoctor != nil && errorMsg == "" {
 		t, _ := strconv.ParseInt(timeslot, 10, 64)
 
 		// Check if slot truely exists

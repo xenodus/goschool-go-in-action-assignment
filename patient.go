@@ -59,7 +59,7 @@ func (p *patient) delete() error {
 
 	// 1. remove all appointment from appointments slice with patient in em
 	for len(p.Appointments) > 0 {
-		cancelAppointment(p.Appointments[0].Id)
+		p.Appointments[0].cancelAppointment()
 	}
 
 	// 2. remove sessions with user id
