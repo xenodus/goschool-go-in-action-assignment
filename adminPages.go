@@ -229,7 +229,7 @@ func adminUsersPage(res http.ResponseWriter, req *http.Request) {
 		theUser, err := getPatientByID(userId)
 
 		if err == nil {
-			theUser.delete()
+			theUser.deletePatient()
 		} else {
 			errorMsg = ErrPatientIDNotFound.Error()
 		}

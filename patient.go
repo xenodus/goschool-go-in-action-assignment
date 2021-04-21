@@ -55,7 +55,7 @@ func (p *patient) isFreeAt(t int64) bool {
 	return true
 }
 
-func (p *patient) delete() error {
+func (p *patient) deletePatient() error {
 
 	// 1. remove all appointment from appointments slice with patient in em
 	for len(p.Appointments) > 0 {
