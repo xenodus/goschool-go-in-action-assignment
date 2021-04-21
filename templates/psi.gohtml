@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {{template "header" .}}
+    </head>
+    <body>
+        {{template "nav" .}}
+
+        <div class="container my-4">
+            <div class="mb-3">
+                <h1>PSI (24h average)</h1>
+            </div>
+
+            <hr/>
+
+            {{ if .ErrorMsg }}
+            <div class="alert alert-danger" role="alert">
+                {{ ucFirst .ErrorMsg }}
+            </div>
+            {{ else }}
+            <div class="mb-3 text-center psi-{{ stripSpace .PsiDescription }}" style="font-size: 8rem; line-height: 10rem;">
+                <div>{{ .Psi }}</div>
+                <div>{{ .PsiDescription }}</div>
+            </div>
+            {{ end }}
+
+            {{template "footer"}}
+        </div>
+    </body>
+</html>

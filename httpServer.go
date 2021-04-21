@@ -45,6 +45,8 @@ func startHttpServer() {
 	// Payment Queue - Handlers in payment.go
 	http.HandleFunc(pagePaymentQueue, paymentQueuePage)
 
+	http.HandleFunc(pagePSI, psiPage)
+
 	fmt.Println("Server starting on: http://" + serverHost + ":" + serverPort)
 
 	err := http.ListenAndServe(serverHost+":"+serverPort, nil)

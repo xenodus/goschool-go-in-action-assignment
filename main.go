@@ -46,6 +46,7 @@ func init() {
 		"time2HumanReadable": time2HumanReadable,
 		"getUserByID":        getUserByID,
 		"ucFirst":            ucFirst,
+		"stripSpace":         stripSpace,
 	}
 
 	tpl = template.Must(template.New("").Funcs(funcMap).ParseGlob("templates/*"))

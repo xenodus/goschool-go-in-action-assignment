@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 	"unicode"
 
@@ -123,4 +124,8 @@ func ucFirst(str string) string {
 	tmp := []rune(str)
 	tmp[0] = unicode.ToUpper(tmp[0])
 	return string(tmp)
+}
+
+func stripSpace(str string) string {
+	return strings.ReplaceAll(str, " ", "")
 }

@@ -47,3 +47,4 @@ const pageAdminPaymentDequeueToMissedQueue = "/admin/payment/dequeueToMissedQueu
 const pageAdminPaymentDequeueToPaymentQueue = "/admin/payment/dequeueToPaymentQueue"
 
 const pagePaymentQueue = "/payment/queue"
+const pagePSI = "/psi"
