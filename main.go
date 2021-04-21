@@ -53,6 +53,5 @@ func init() {
 }
 
 func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
 	startHttpServer()
 }
