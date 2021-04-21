@@ -9,6 +9,7 @@
             {{ if .User }}
                 <div class="d-inline-block py-2 px-3 text-white">{{ .User.First_name }} {{ .User.Last_name }}{{ if .User.IsAdmin }} (Admin){{ end }}</div>
             {{ end }}
+                <a class="py-2 px-3 d-inline-block" href="/psi">PSI</a>
                 <a class="py-2 px-3 d-inline-block" href="/payment/queue">Payment Queue</a>
             {{ if .User }}
                 <a class="py-2 px-3 d-inline-block" href="/profile">My Profile</a>
