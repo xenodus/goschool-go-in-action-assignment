@@ -10,6 +10,12 @@ import (
 
 func psiPage(res http.ResponseWriter, req *http.Request) {
 
+	var theUser *patient
+
+	if isLoggedIn(req) {
+		theUser = getLoggedInPatient(res, req)
+	}
+
 	var psi = ""
 	var psiDescription = ""
 	var errorMsg = ""
@@ -55,7 +61,7 @@ func psiPage(res http.ResponseWriter, req *http.Request) {
 		Psi            string
 		PsiDescription string
 	}{
-		nil,
+		theUser,
 		"PSI",
 		errorMsg,
 		psi,
