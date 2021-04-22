@@ -4,7 +4,6 @@ package main
 
 import (
 	"html/template"
-	"runtime"
 	"sync"
 )
 
