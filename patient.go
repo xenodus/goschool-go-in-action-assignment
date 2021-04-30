@@ -226,7 +226,7 @@ func isAdminCheck(adminID string, index int) bool {
 	}
 }
 
-// Validate nric
+// Validate NRIC
 // Translated from https://gist.github.com/kamerk22/ed5e0778b3723311d8dd074c792834ef
 func isNRICValid(nric string) bool {
 
@@ -334,6 +334,28 @@ func getLoggedInPatient(res http.ResponseWriter, req *http.Request) *patient {
 }
 
 // Web Pages
+func areInputValid(username, firstname, lastname, password string, isRegister bool) error {
+
+	if firstname == "" || lastname == "" || password == "" {
+		return ErrMissingField
+	}
+
+	if len(password) < minPasswordLength {
+		return ErrPasswordLength
+	}
+
+	if !isNRICValid(username) {
+		return ErrInvalidNRIC
+	}
+
+	if isRegister {
+		if _, err := getPatientByID(username); err == nil {
+			return ErrAlreadyRegistered
+		}
+	}
+
+	return nil
+}
 
 func registerPage(res http.ResponseWriter, req *http.Request) {
 
@@ -342,39 +364,29 @@ func registerPage(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var errorMsg = ""
+	// Anonymous payload
+	payload := struct {
+		PageTitle string
+		User      *patient
+		ErrorMsg  string
+	}{
+		"Register", nil, "",
+	}
 
-	// process form submission
+	// Process form submission
 	if req.Method == http.MethodPost {
 
-		// get form values
 		username := strings.ToUpper(strings.TrimSpace(req.FormValue("nric")))
 		password := req.FormValue("password")
 		firstname := strings.TrimSpace(req.FormValue("firstname"))
 		lastname := strings.TrimSpace(req.FormValue("lastname"))
 
-		if len(password) < minPasswordLength {
-			errorMsg = "Password length has to be >= " + strconv.Itoa(minPasswordLength) + " characters"
-		}
+		inputErr := areInputValid(username, firstname, lastname, password, true)
 
-		if firstname == "" || lastname == "" || password == "" {
-			errorMsg = "Please enter all the fields"
-		}
-
-		if errorMsg == "" {
-			if !isNRICValid(username) {
-				errorMsg = ErrInvalidNRIC.Error()
-			}
-		}
-
-		if errorMsg == "" {
-			if _, err := getPatientByID(username); err == nil {
-				errorMsg = ErrAlreadyRegistered.Error()
-			}
-		}
-
-		if errorMsg == "" {
-			// create session
+		if inputErr != nil {
+			payload.ErrorMsg = inputErr.Error()
+		} else {
+			// Create session
 			id, _ := uuid.NewV4()
 			myCookie := &http.Cookie{
 				Name:     cookieID,
@@ -395,21 +407,10 @@ func registerPage(res http.ResponseWriter, req *http.Request) {
 			createPatient(username, firstname, lastname, bPassword)
 			wg.Wait()
 
-			// redirect to main index
+			// Redirect to main index
 			http.Redirect(res, req, pageIndex, http.StatusSeeOther)
 			return
 		}
-	}
-
-	// Anonymous payload
-	payload := struct {
-		PageTitle string
-		User      *patient
-		ErrorMsg  string
-	}{
-		"Register",
-		nil,
-		errorMsg,
 	}
 
 	tpl.ExecuteTemplate(res, "register.gohtml", payload)
@@ -421,30 +422,38 @@ func loginPage(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var errorMsg = ""
-	// process form submission
+	// Anonymous payload
+	payload := struct {
+		PageTitle string
+		User      *patient
+		ErrorMsg  string
+	}{
+		"Login", nil, "",
+	}
+
+	// Process form submission
 	if req.Method == http.MethodPost {
-		username := strings.ToUpper(req.FormValue("nric"))
+		username := strings.ToUpper(strings.TrimSpace(req.FormValue("nric")))
 		password := req.FormValue("password")
-		// check if user exist with username
+		// Check if user exist with username
 		myUser, noPatientErr := getPatientByID(username)
 
 		if noPatientErr != nil {
-			errorMsg = ErrAuthFailure.Error()
+			payload.ErrorMsg = ErrAuthFailure.Error()
 			res.WriteHeader(http.StatusForbidden)
 		}
 
-		if errorMsg == "" {
+		if payload.ErrorMsg == "" {
 			// Matching of password entered
 			err := bcrypt.CompareHashAndPassword(myUser.password, []byte(password))
 			if err != nil {
-				errorMsg = ErrAuthFailure.Error()
+				payload.ErrorMsg = ErrAuthFailure.Error()
 				res.WriteHeader(http.StatusForbidden)
 			}
 		}
 
-		if errorMsg == "" {
-			// create session
+		if payload.ErrorMsg == "" {
+			// Create session
 			id, _ := uuid.NewV4()
 			myCookie := &http.Cookie{
 				Name:     cookieID,
@@ -460,17 +469,6 @@ func loginPage(res http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	// Anonymous payload
-	payload := struct {
-		PageTitle string
-		User      *patient
-		ErrorMsg  string
-	}{
-		"Login",
-		nil,
-		errorMsg,
-	}
-
 	tpl.ExecuteTemplate(res, "login.gohtml", payload)
 }
 
@@ -480,20 +478,18 @@ func logoutPage(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	req.Cookies()
-
 	myCookie, _ := req.Cookie(cookieID)
-	// delete the session
+	// Delete the session
 	delete(mapSessions, myCookie.Value)
-	// remove the cookie
+	// Remove the cookie
 	expire := time.Now().Add(-7 * 24 * time.Hour)
 	myCookie = &http.Cookie{
 		Name:     cookieID,
 		Value:    "",
 		Path:     pageIndex,
-		HttpOnly: true,
 		MaxAge:   -1,
 		Expires:  expire,
+		HttpOnly: true,
 	}
 	http.SetCookie(res, myCookie)
 
@@ -509,35 +505,29 @@ func profilePage(res http.ResponseWriter, req *http.Request) {
 
 	thePatient := getLoggedInPatient(res, req)
 
-	var errorMsg = ""
-
-	// Form submit values
-	if req.Method == "POST" {
-		firstName := strings.TrimSpace(req.FormValue("firstname"))
-		lastName := strings.TrimSpace(req.FormValue("lastname"))
-		password := req.FormValue("password")
-
-		if firstName == "" || lastName == "" || password == "" {
-			errorMsg = "Please enter all the fields"
-		} else if len(password) < minPasswordLength {
-			errorMsg = "Password length has to be >= " + strconv.Itoa(minPasswordLength) + " characters"
-		}
-
-		if errorMsg == "" {
-			bPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
-			thePatient.editPatient(thePatient.Id, firstName, lastName, bPassword)
-		}
-	}
-
 	// Anonymous payload
 	payload := struct {
 		PageTitle string
 		User      *patient
 		ErrorMsg  string
 	}{
-		"Profile",
-		thePatient,
-		errorMsg,
+		"Profile", thePatient, "",
+	}
+
+	// Form submit values
+	if req.Method == http.MethodPost {
+		firstName := strings.TrimSpace(req.FormValue("firstname"))
+		lastName := strings.TrimSpace(req.FormValue("lastname"))
+		password := req.FormValue("password")
+
+		inputErr := areInputValid(thePatient.Id, firstName, lastName, password, false)
+
+		if inputErr != nil {
+			payload.ErrorMsg = inputErr.Error()
+		} else {
+			bPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+			thePatient.editPatient(thePatient.Id, firstName, lastName, bPassword)
+		}
 	}
 
 	tpl.ExecuteTemplate(res, "profile.gohtml", payload)

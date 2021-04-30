@@ -147,26 +147,6 @@ func viewDoctorsPage(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// Get querystring values
-	doctorID := req.FormValue("doctorID")
-	thePatient := getLoggedInPatient(res, req)
-
-	var chosenDoctor *doctor = nil
-	var timeslotsAvailable []int64
-	var errorMsg = ""
-
-	if doctorID != "" {
-		doctorID, _ := strconv.ParseInt(doctorID, 10, 64)
-		doc, err := doctorsBST.getDoctorByIDBST(doctorID)
-
-		if err == nil {
-			chosenDoctor = doc
-			timeslotsAvailable = getAvailableTimeslot(chosenDoctor.Appointments)
-		} else {
-			errorMsg = err.Error()
-		}
-	}
-
 	// Anonymous payload
 	payload := struct {
 		PageTitle          string
@@ -177,11 +157,27 @@ func viewDoctorsPage(res http.ResponseWriter, req *http.Request) {
 		Doctors            []*doctor
 	}{
 		"View Doctors",
-		errorMsg,
-		thePatient,
-		chosenDoctor,
-		timeslotsAvailable,
+		"",
+		nil,
+		nil,
+		nil,
 		doctors,
+	}
+
+	// Get querystring values
+	doctorID := req.FormValue("doctorID")
+	payload.User = getLoggedInPatient(res, req)
+
+	if doctorID != "" {
+		doctorID, _ := strconv.ParseInt(doctorID, 10, 64)
+		doc, err := doctorsBST.getDoctorByIDBST(doctorID)
+
+		if err == nil {
+			payload.ChosenDoctor = doc
+			payload.TimeslotsAvailable = getAvailableTimeslot(payload.ChosenDoctor.Appointments)
+		} else {
+			payload.ErrorMsg = err.Error()
+		}
 	}
 
 	tpl.ExecuteTemplate(res, "doctors.gohtml", payload)

@@ -50,6 +50,7 @@ func startHttpServer() {
 	fmt.Println("Server starting on: http://" + serverHost + ":" + serverPort)
 
 	err := http.ListenAndServe(serverHost+":"+serverPort, nil)
+	//err := http.ListenAndServeTLS(serverHost+":"+serverPort, "./cert/cert.pem", "./cert/key.pem", nil)
 	if err != nil {
 		log.Fatal(err)
 	}

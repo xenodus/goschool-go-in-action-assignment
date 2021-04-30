@@ -334,6 +334,19 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 	if action == "edit" || action == "cancel" {
 
+		// Anonymous payload
+		payload := struct {
+			PageTitle          string
+			User               *patient
+			Doctors            []*doctor
+			Appt               *appointment
+			ChosenDoctor       *doctor
+			TimeslotsAvailable []int64
+			ErrorMsg           string
+		}{
+			"Edit Appointment", thePatient, doctors, nil, nil, nil, "",
+		}
+
 		apptId, err := strconv.ParseInt(apptId, 10, 64)
 
 		if err != nil {
@@ -387,24 +400,10 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 			}
 		}
 
-		// Anonymous payload
-		payload := struct {
-			PageTitle          string
-			User               *patient
-			Doctors            []*doctor
-			Appt               *appointment
-			ChosenDoctor       *doctor
-			TimeslotsAvailable []int64
-			ErrorMsg           string
-		}{
-			"Edit Appointment",
-			thePatient,
-			doctors,
-			theAppt,
-			chosenDoctor,
-			timeslotsAvailable,
-			errorMsg,
-		}
+		payload.Appt = theAppt
+		payload.ChosenDoctor = chosenDoctor
+		payload.TimeslotsAvailable = timeslotsAvailable
+		payload.ErrorMsg = errorMsg
 
 		tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
 		return
