@@ -318,6 +318,7 @@ func getLoggedInPatient(res http.ResponseWriter, req *http.Request) *patient {
 			Value:    id.String(),
 			Path:     pageIndex,
 			HttpOnly: true,
+			Secure:   true,
 		}
 
 		http.SetCookie(res, myCookie)
@@ -393,6 +394,7 @@ func registerPage(res http.ResponseWriter, req *http.Request) {
 				Value:    id.String(),
 				Path:     pageIndex,
 				HttpOnly: true,
+				Secure:   true,
 			}
 			http.SetCookie(res, myCookie)
 			mapSessions[myCookie.Value] = session{username, time.Now().Unix(), req.URL}
@@ -460,6 +462,7 @@ func loginPage(res http.ResponseWriter, req *http.Request) {
 				Value:    id.String(),
 				Path:     pageIndex,
 				HttpOnly: true,
+				Secure:   true,
 			}
 
 			http.SetCookie(res, myCookie)
@@ -490,6 +493,7 @@ func logoutPage(res http.ResponseWriter, req *http.Request) {
 		MaxAge:   -1,
 		Expires:  expire,
 		HttpOnly: true,
+		Secure:   true,
 	}
 	http.SetCookie(res, myCookie)
 

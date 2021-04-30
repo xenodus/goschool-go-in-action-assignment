@@ -321,95 +321,99 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	thePatient := getLoggedInPatient(res, req)
 
 	// Get querystring values
-	apptId := req.FormValue("apptId")
+	inputApptId := req.FormValue("apptId")
 	action := req.FormValue("action")
 
 	// Form submit values
 	timeslot := req.FormValue("timeslot")
 
-	var chosenDoctor *doctor = nil
-	var theAppt *appointment = nil
-	var timeslotsAvailable []int64
-	var errorMsg = ""
+	if action != "edit" && action != "cancel" {
+		http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
+		return
+	}
 
-	if action == "edit" || action == "cancel" {
+	// Anonymous payload
+	payload := struct {
+		PageTitle          string
+		User               *patient
+		Appt               *appointment
+		TimeslotsAvailable []int64
+		ErrorMsg           string
+	}{
+		"Edit Appointment", thePatient, nil, nil, "",
+	}
 
-		// Anonymous payload
-		payload := struct {
-			PageTitle          string
-			User               *patient
-			Doctors            []*doctor
-			Appt               *appointment
-			ChosenDoctor       *doctor
-			TimeslotsAvailable []int64
-			ErrorMsg           string
-		}{
-			"Edit Appointment", thePatient, doctors, nil, nil, nil, "",
-		}
+	apptId, err := strconv.ParseInt(inputApptId, 10, 64)
 
-		apptId, err := strconv.ParseInt(apptId, 10, 64)
-
-		if err != nil {
-			errorMsg = ErrAppointmentIDNotFound.Error()
-		} else {
-			// Check if appt id is valid
-			// Note can't use patient's appoinments slice as it's sorted by time and not ApptID
-			patientApptIDIndex := binarySearchApptID(appointments, 0, len(appointments)-1, apptId)
-
-			if patientApptIDIndex < 0 {
-				errorMsg = ErrAppointmentIDNotFound.Error()
-			} else {
-
-				theAppt = appointments[patientApptIDIndex]
-
-				// Does not belong to logged in user
-				if theAppt.Patient != thePatient {
-					errorMsg = ErrAppointmentIDNotFound.Error()
-				} else {
-					// Cancel Appt
-					if action == "cancel" {
-						theAppt.cancelAppointment()
-						http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
-						return
-					}
-
-					// Edit Appt
-					if action == "edit" {
-
-						chosenDoctor = theAppt.Doctor
-						timeslotsAvailable = getAvailableTimeslot(append(chosenDoctor.Appointments, thePatient.Appointments...))
-						_, timeSlotErr := isThereTimeslot(thePatient, chosenDoctor)
-
-						if timeSlotErr != nil {
-							errorMsg = timeSlotErr.Error()
-						}
-
-						if timeslot != "" && chosenDoctor != nil {
-							t, _ := strconv.ParseInt(timeslot, 10, 64)
-
-							if isApptTimeValid, isApptTimeValidErr := isApptTimeValid(t); isApptTimeValid {
-								theAppt.editAppointment(t, thePatient, chosenDoctor)
-								http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
-								return
-							} else {
-								errorMsg = isApptTimeValidErr.Error()
-							}
-						}
-					}
-				}
-			}
-		}
-
-		payload.Appt = theAppt
-		payload.ChosenDoctor = chosenDoctor
-		payload.TimeslotsAvailable = timeslotsAvailable
-		payload.ErrorMsg = errorMsg
-
+	if err != nil {
+		payload.ErrorMsg = ErrAppointmentIDNotFound.Error()
 		tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
 		return
 	}
 
-	http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
+	// Check if appt id is valid
+	// Note can't use patient's appoinments slice as it's sorted by time and not ApptID
+	patientApptIDIndex := binarySearchApptID(appointments, 0, len(appointments)-1, apptId)
+
+	if patientApptIDIndex < 0 {
+		payload.ErrorMsg = ErrAppointmentIDNotFound.Error()
+		tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
+		return
+	}
+
+	payload.Appt = appointments[patientApptIDIndex]
+
+	// Does not belong to logged in user
+	if payload.Appt.Patient != thePatient {
+		payload.ErrorMsg = ErrAppointmentIDNotFound.Error()
+		tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
+		return
+	}
+
+	// Cancel Appt
+	if action == "cancel" {
+		payload.Appt.cancelAppointment()
+		http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
+		return
+	}
+
+	// Edit Appt
+	if action == "edit" {
+
+		payload.TimeslotsAvailable = getAvailableTimeslot(append(payload.Appt.Doctor.Appointments, payload.User.Appointments...))
+		_, timeSlotErr := isThereTimeslot(payload.User, payload.Appt.Doctor)
+
+		if timeSlotErr != nil {
+			payload.ErrorMsg = ErrNoMoreTimeslot.Error()
+			tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
+			return
+		}
+
+		if req.Method == http.MethodPost && timeslot != "" {
+			t, _ := strconv.ParseInt(timeslot, 10, 64)
+			_, isApptTimeValidErr := isApptTimeValid(t)
+
+			// Past time
+			if isApptTimeValidErr != nil {
+				payload.ErrorMsg = isApptTimeValidErr.Error()
+				tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
+				return
+			}
+
+			// Patient / Doctor time check
+			if !payload.Appt.Patient.isFreeAt(t) || !payload.Appt.Doctor.isFreeAt(t) {
+				payload.ErrorMsg = ErrDuplicateTimeslot.Error()
+				tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
+				return
+			}
+
+			payload.Appt.editAppointment(t, payload.Appt.Patient, payload.Appt.Doctor)
+			http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
+			return
+		}
+	}
+
+	tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
 }
 
 func appointmentPage(res http.ResponseWriter, req *http.Request) {

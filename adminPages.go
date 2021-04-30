@@ -110,7 +110,7 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	thePatient := getLoggedInPatient(res, req) // the admin
+	thePatient := getLoggedInPatient(res, req) // the admin (hopefully...)
 
 	if !thePatient.IsAdmin() {
 		http.Error(res, "Restricted Zone", http.StatusUnauthorized)
@@ -118,90 +118,92 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	}
 
 	// Get querystring values
-	apptId := req.FormValue("apptId")
+	inputApptId := req.FormValue("apptId")
 	action := req.FormValue("action")
 
 	// Form submit values
 	timeslot := req.FormValue("timeslot")
 
-	var chosenDoctor *doctor = nil
-	var theAppt *appointment = nil
-	var timeslotsAvailable []int64
-	var errorMsg = ""
+	if action != "edit" && action != "cancel" {
+		http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
+		return
+	}
 
-	if action == "edit" || action == "cancel" {
+	// Anonymous payload
+	payload := struct {
+		PageTitle          string
+		User               *patient
+		Appt               *appointment
+		TimeslotsAvailable []int64
+		ErrorMsg           string
+	}{
+		"Edit Appointment", thePatient, nil, nil, "",
+	}
 
-		apptId, err := strconv.ParseInt(apptId, 10, 64)
+	apptId, err := strconv.ParseInt(inputApptId, 10, 64)
 
-		if err != nil {
-			errorMsg = ErrAppointmentIDNotFound.Error()
-		} else {
-			// Check if appt id is valid
-			theApptIndex := binarySearchApptID(appointments, 0, len(appointments)-1, apptId)
-
-			if theApptIndex < 0 {
-				errorMsg = ErrAppointmentIDNotFound.Error()
-			} else {
-				theAppt = appointments[theApptIndex]
-
-				// Cancel Appt
-				if action == "cancel" {
-					theAppt.cancelAppointment()
-					http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
-					return
-				}
-
-				// Edit Appt
-				// Change thePatient to the actual patient since thePatient is Admin at the moment
-				if action == "edit" {
-
-					chosenDoctor = theAppt.Doctor
-					timeslotsAvailable = getAvailableTimeslot(append(chosenDoctor.Appointments, theAppt.Patient.Appointments...))
-					_, timeSlotErr := isThereTimeslot(theAppt.Patient, chosenDoctor)
-
-					if timeSlotErr != nil {
-						errorMsg = timeSlotErr.Error()
-					}
-
-					if timeslot != "" && chosenDoctor != nil {
-						t, _ := strconv.ParseInt(timeslot, 10, 64)
-
-						if isApptTimeValid, isApptTimeValidErr := isApptTimeValid(t); isApptTimeValid {
-							theAppt.editAppointment(t, theAppt.Patient, chosenDoctor)
-							http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
-							return
-						} else {
-							errorMsg = isApptTimeValidErr.Error()
-						}
-					}
-				}
-			}
-		}
-
-		// Anonymous payload
-		payload := struct {
-			PageTitle          string
-			User               *patient
-			Doctors            []*doctor
-			Appt               *appointment
-			ChosenDoctor       *doctor
-			TimeslotsAvailable []int64
-			ErrorMsg           string
-		}{
-			"Edit Appointment",
-			thePatient,
-			doctors,
-			theAppt,
-			chosenDoctor,
-			timeslotsAvailable,
-			errorMsg,
-		}
-
+	if err != nil {
+		payload.ErrorMsg = ErrAppointmentIDNotFound.Error()
 		tpl.ExecuteTemplate(res, "adminEditAppointment.gohtml", payload)
 		return
 	}
 
-	http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
+	// Check if appt id is valid
+	theApptIndex := binarySearchApptID(appointments, 0, len(appointments)-1, apptId)
+
+	if theApptIndex < 0 {
+		payload.ErrorMsg = ErrAppointmentIDNotFound.Error()
+		tpl.ExecuteTemplate(res, "adminEditAppointment.gohtml", payload)
+		return
+	}
+
+	payload.Appt = appointments[theApptIndex]
+
+	// Cancel Appt
+	if action == "cancel" {
+		payload.Appt.cancelAppointment()
+		http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
+		return
+	}
+
+	// Edit Appt
+	if action == "edit" {
+
+		payload.TimeslotsAvailable = getAvailableTimeslot(append(payload.Appt.Doctor.Appointments, payload.Appt.Patient.Appointments...))
+		_, timeSlotErr := isThereTimeslot(payload.Appt.Patient, payload.Appt.Doctor)
+
+		if timeSlotErr != nil {
+			payload.ErrorMsg = timeSlotErr.Error()
+			tpl.ExecuteTemplate(res, "adminEditAppointment.gohtml", payload)
+			return
+		}
+
+		if req.Method == http.MethodPost && timeslot != "" {
+			t, _ := strconv.ParseInt(timeslot, 10, 64)
+
+			_, isApptTimeValidErr := isApptTimeValid(t) // Is time in the past check
+
+			// Past time
+			if isApptTimeValidErr != nil {
+				payload.ErrorMsg = isApptTimeValidErr.Error()
+				tpl.ExecuteTemplate(res, "adminEditAppointment.gohtml", payload)
+				return
+			}
+
+			// Patient / Doctor time check
+			if !payload.Appt.Patient.isFreeAt(t) || !payload.Appt.Doctor.isFreeAt(t) {
+				payload.ErrorMsg = ErrDuplicateTimeslot.Error()
+				tpl.ExecuteTemplate(res, "adminEditAppointment.gohtml", payload)
+				return
+			}
+
+			payload.Appt.editAppointment(t, payload.Appt.Patient, payload.Appt.Doctor)
+			http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
+			return
+		}
+	}
+
+	tpl.ExecuteTemplate(res, "adminEditAppointment.gohtml", payload)
 }
 
 func adminUsersPage(res http.ResponseWriter, req *http.Request) {
