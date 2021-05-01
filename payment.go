@@ -145,11 +145,7 @@ func (p *paymentQueue) dequeueToPaymentQueue() (*payment, error) {
 // Web Pages
 func paymentQueuePage(res http.ResponseWriter, req *http.Request) {
 
-	var theUser *patient
-
-	if isLoggedIn(req) {
-		theUser = getLoggedInPatient(res, req)
-	}
+	thePatient, _ := isLoggedIn(req)
 
 	// Anonymous payload
 	payload := struct {
@@ -161,7 +157,7 @@ func paymentQueuePage(res http.ResponseWriter, req *http.Request) {
 		"Payment Queue",
 		&paymentQ,
 		&missedPaymentQ,
-		theUser,
+		thePatient,
 	}
 
 	tpl.ExecuteTemplate(res, "paymentQueue.gohtml", payload)

@@ -312,12 +312,12 @@ func searchApptID(arr []*appointment, apptID int64) (int, error) {
 
 func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
-	if !isLoggedIn(req) {
+	thePatient, isLoggedInCheck := isLoggedIn(req)
+
+	if !isLoggedInCheck {
 		http.Redirect(res, req, pageLogin, http.StatusSeeOther)
 		return
 	}
-
-	thePatient := getLoggedInPatient(res, req)
 
 	// Get querystring values
 	inputApptId := req.FormValue("apptId")
@@ -418,12 +418,12 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 func appointmentPage(res http.ResponseWriter, req *http.Request) {
 
-	if !isLoggedIn(req) {
+	thePatient, isLoggedInCheck := isLoggedIn(req)
+
+	if !isLoggedInCheck {
 		http.Redirect(res, req, pageLogin, http.StatusSeeOther)
 		return
 	}
-
-	thePatient := getLoggedInPatient(res, req)
 
 	// Anonymous payload
 	payload := struct {
@@ -439,12 +439,12 @@ func appointmentPage(res http.ResponseWriter, req *http.Request) {
 
 func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
-	if !isLoggedIn(req) {
+	thePatient, isLoggedInCheck := isLoggedIn(req)
+
+	if !isLoggedInCheck {
 		http.Redirect(res, req, pageLogin, http.StatusSeeOther)
 		return
 	}
-
-	thePatient := getLoggedInPatient(res, req)
 
 	// Form submit values
 	doctorID := req.FormValue("doctor")

@@ -9,12 +9,12 @@ func indexPage(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if !isLoggedIn(req) {
+	thePatient, isLoggedInCheck := isLoggedIn(req)
+
+	if !isLoggedInCheck {
 		http.Redirect(res, req, pageLogin, http.StatusSeeOther)
 		return
 	}
-
-	thePatient := getLoggedInPatient(res, req)
 
 	// Anonymous payload
 	payload := struct {

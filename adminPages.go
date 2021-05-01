@@ -8,12 +8,12 @@ import (
 
 func adminSessionsPage(res http.ResponseWriter, req *http.Request) {
 
-	if !isLoggedIn(req) {
+	thePatient, isLoggedInCheck := isLoggedIn(req)
+
+	if !isLoggedInCheck {
 		http.Redirect(res, req, pageLogin, http.StatusSeeOther)
 		return
 	}
-
-	thePatient := getLoggedInPatient(res, req)
 
 	if !thePatient.IsAdmin() {
 		http.Error(res, "Restricted Zone", http.StatusUnauthorized)
@@ -41,8 +41,9 @@ func adminSessionsPage(res http.ResponseWriter, req *http.Request) {
 	}
 
 	if action != "" {
+
 		// if user's session is gone, redirect away
-		if !isLoggedIn(req) {
+		if _, isLoggedInCheck := isLoggedIn(req); !isLoggedInCheck {
 			http.Redirect(res, req, pageLogin, http.StatusSeeOther)
 			return
 		}
@@ -66,12 +67,12 @@ func adminSessionsPage(res http.ResponseWriter, req *http.Request) {
 
 func adminAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
-	if !isLoggedIn(req) {
+	thePatient, isLoggedInCheck := isLoggedIn(req)
+
+	if !isLoggedInCheck {
 		http.Redirect(res, req, pageLogin, http.StatusSeeOther)
 		return
 	}
-
-	thePatient := getLoggedInPatient(res, req)
 
 	if !thePatient.IsAdmin() {
 		http.Error(res, "Restricted Zone", http.StatusUnauthorized)
@@ -105,12 +106,12 @@ func adminAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
-	if !isLoggedIn(req) {
+	thePatient, isLoggedInCheck := isLoggedIn(req)
+
+	if !isLoggedInCheck {
 		http.Redirect(res, req, pageLogin, http.StatusSeeOther)
 		return
 	}
-
-	thePatient := getLoggedInPatient(res, req) // the admin (hopefully...)
 
 	if !thePatient.IsAdmin() {
 		http.Error(res, "Restricted Zone", http.StatusUnauthorized)
@@ -208,12 +209,12 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 func adminUsersPage(res http.ResponseWriter, req *http.Request) {
 
-	if !isLoggedIn(req) {
+	thePatient, isLoggedInCheck := isLoggedIn(req)
+
+	if !isLoggedInCheck {
 		http.Redirect(res, req, pageLogin, http.StatusSeeOther)
 		return
 	}
-
-	thePatient := getLoggedInPatient(res, req)
 
 	if !thePatient.IsAdmin() {
 		http.Error(res, "Restricted Zone", http.StatusUnauthorized)
@@ -239,7 +240,7 @@ func adminUsersPage(res http.ResponseWriter, req *http.Request) {
 
 	if action != "" {
 		// if self is gone, bye bye
-		if !isLoggedIn(req) {
+		if _, isLoggedInCheck := isLoggedIn(req); !isLoggedInCheck {
 			http.Redirect(res, req, pageLogin, http.StatusSeeOther)
 			return
 		}
@@ -263,12 +264,12 @@ func adminUsersPage(res http.ResponseWriter, req *http.Request) {
 
 func adminPaymentEnqueuePage(res http.ResponseWriter, req *http.Request) {
 
-	if !isLoggedIn(req) {
+	thePatient, isLoggedInCheck := isLoggedIn(req)
+
+	if !isLoggedInCheck {
 		http.Redirect(res, req, pageLogin, http.StatusSeeOther)
 		return
 	}
-
-	thePatient := getLoggedInPatient(res, req)
 
 	if !thePatient.IsAdmin() {
 		http.Error(res, "Restricted Zone", http.StatusUnauthorized)
@@ -299,12 +300,12 @@ func adminPaymentEnqueuePage(res http.ResponseWriter, req *http.Request) {
 
 func adminPaymentDequeuePage(res http.ResponseWriter, req *http.Request) {
 
-	if !isLoggedIn(req) {
+	thePatient, isLoggedInCheck := isLoggedIn(req)
+
+	if !isLoggedInCheck {
 		http.Redirect(res, req, pageLogin, http.StatusSeeOther)
 		return
 	}
-
-	thePatient := getLoggedInPatient(res, req)
 
 	if !thePatient.IsAdmin() {
 		http.Error(res, "Restricted Zone", http.StatusUnauthorized)
@@ -318,12 +319,12 @@ func adminPaymentDequeuePage(res http.ResponseWriter, req *http.Request) {
 
 func adminPaymentDequeueToMissedQueuePage(res http.ResponseWriter, req *http.Request) {
 
-	if !isLoggedIn(req) {
+	thePatient, isLoggedInCheck := isLoggedIn(req)
+
+	if !isLoggedInCheck {
 		http.Redirect(res, req, pageLogin, http.StatusSeeOther)
 		return
 	}
-
-	thePatient := getLoggedInPatient(res, req)
 
 	if !thePatient.IsAdmin() {
 		http.Error(res, "Restricted Zone", http.StatusUnauthorized)
@@ -337,12 +338,12 @@ func adminPaymentDequeueToMissedQueuePage(res http.ResponseWriter, req *http.Req
 
 func adminPaymentDequeueToPaymentQueuePage(res http.ResponseWriter, req *http.Request) {
 
-	if !isLoggedIn(req) {
+	thePatient, isLoggedInCheck := isLoggedIn(req)
+
+	if !isLoggedInCheck {
 		http.Redirect(res, req, pageLogin, http.StatusSeeOther)
 		return
 	}
-
-	thePatient := getLoggedInPatient(res, req)
 
 	if !thePatient.IsAdmin() {
 		http.Error(res, "Restricted Zone", http.StatusUnauthorized)

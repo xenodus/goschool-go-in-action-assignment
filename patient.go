@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	uuid "github.com/satori/go.uuid"
+	"github.com/microcosm-cc/bluemonday"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -287,14 +287,14 @@ func isNRICValid(nric string) bool {
 	}
 }
 
-func isLoggedIn(req *http.Request) bool {
+func isLoggedIn(req *http.Request) (*patient, bool) {
 	myCookie, err := req.Cookie(cookieID)
 	if err != nil {
-		return false
+		return nil, false
 	}
 
 	username := mapSessions[myCookie.Value].Id
-	_, noPatientErr := getPatientByID(username)
+	patient, noPatientErr := getPatientByID(username)
 
 	if noPatientErr == nil {
 		// also update session with last access datetime
@@ -304,34 +304,7 @@ func isLoggedIn(req *http.Request) bool {
 		mapSessions[myCookie.Value] = session
 	}
 
-	return noPatientErr == nil
-}
-
-func getLoggedInPatient(res http.ResponseWriter, req *http.Request) *patient {
-	// get current session cookie
-	myCookie, err := req.Cookie(cookieID)
-	// not found
-	if err != nil {
-		id, _ := uuid.NewV4()
-		myCookie = &http.Cookie{
-			Name:     cookieID,
-			Value:    id.String(),
-			Path:     pageIndex,
-			HttpOnly: true,
-			Secure:   true,
-		}
-
-		http.SetCookie(res, myCookie)
-	}
-
-	// if the patient exists already, get patient
-	var thePatient *patient
-
-	if session, ok := mapSessions[myCookie.Value]; ok {
-		thePatient, _ = getPatientByID(session.Id)
-	}
-
-	return thePatient
+	return patient, noPatientErr == nil
 }
 
 // Web Pages
@@ -360,7 +333,7 @@ func areInputValid(username, firstname, lastname, password string, isRegister bo
 
 func registerPage(res http.ResponseWriter, req *http.Request) {
 
-	if isLoggedIn(req) {
+	if _, isLoggedInCheck := isLoggedIn(req); isLoggedInCheck {
 		http.Redirect(res, req, pageIndex, http.StatusSeeOther)
 		return
 	}
@@ -377,27 +350,21 @@ func registerPage(res http.ResponseWriter, req *http.Request) {
 	// Process form submission
 	if req.Method == http.MethodPost {
 
-		username := strings.ToUpper(strings.TrimSpace(req.FormValue("nric")))
+		// Policy to disallow and strip all tags - Similar to GO's unexported striptags
+		p := bluemonday.StrictPolicy()
+
+		username := p.Sanitize(strings.ToUpper(strings.TrimSpace(req.FormValue("nric"))))
+		firstname := p.Sanitize(strings.TrimSpace(req.FormValue("firstname")))
+		lastname := p.Sanitize(strings.TrimSpace(req.FormValue("lastname")))
 		password := req.FormValue("password")
-		firstname := strings.TrimSpace(req.FormValue("firstname"))
-		lastname := strings.TrimSpace(req.FormValue("lastname"))
 
 		inputErr := areInputValid(username, firstname, lastname, password, true)
 
 		if inputErr != nil {
 			payload.ErrorMsg = inputErr.Error()
 		} else {
-			// Create session
-			id, _ := uuid.NewV4()
-			myCookie := &http.Cookie{
-				Name:     cookieID,
-				Value:    id.String(),
-				Path:     pageIndex,
-				HttpOnly: true,
-				Secure:   true,
-			}
-			http.SetCookie(res, myCookie)
-			mapSessions[myCookie.Value] = session{username, time.Now().Unix(), req.URL}
+			// Create session + cookie
+			createSession(res, req, username)
 
 			bPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 			if err != nil {
@@ -419,7 +386,8 @@ func registerPage(res http.ResponseWriter, req *http.Request) {
 }
 
 func loginPage(res http.ResponseWriter, req *http.Request) {
-	if isLoggedIn(req) {
+
+	if _, isLoggedInCheck := isLoggedIn(req); isLoggedInCheck {
 		http.Redirect(res, req, pageIndex, http.StatusSeeOther)
 		return
 	}
@@ -455,18 +423,9 @@ func loginPage(res http.ResponseWriter, req *http.Request) {
 		}
 
 		if payload.ErrorMsg == "" {
-			// Create session
-			id, _ := uuid.NewV4()
-			myCookie := &http.Cookie{
-				Name:     cookieID,
-				Value:    id.String(),
-				Path:     pageIndex,
-				HttpOnly: true,
-				Secure:   true,
-			}
+			// Create session + cookie
+			createSession(res, req, username)
 
-			http.SetCookie(res, myCookie)
-			mapSessions[myCookie.Value] = session{username, time.Now().Unix(), req.URL}
 			http.Redirect(res, req, pageIndex, http.StatusSeeOther)
 			return
 		}
@@ -476,38 +435,26 @@ func loginPage(res http.ResponseWriter, req *http.Request) {
 }
 
 func logoutPage(res http.ResponseWriter, req *http.Request) {
-	if !isLoggedIn(req) {
+
+	if _, isLoggedInCheck := isLoggedIn(req); !isLoggedInCheck {
 		http.Redirect(res, req, pageIndex, http.StatusSeeOther)
 		return
 	}
 
-	myCookie, _ := req.Cookie(cookieID)
-	// Delete the session
-	delete(mapSessions, myCookie.Value)
-	// Remove the cookie
-	expire := time.Now().Add(-7 * 24 * time.Hour)
-	myCookie = &http.Cookie{
-		Name:     cookieID,
-		Value:    "",
-		Path:     pageIndex,
-		MaxAge:   -1,
-		Expires:  expire,
-		HttpOnly: true,
-		Secure:   true,
-	}
-	http.SetCookie(res, myCookie)
+	// Delete session + cookie
+	deleteSession(res, req)
 
 	http.Redirect(res, req, pageIndex, http.StatusSeeOther)
 }
 
 func profilePage(res http.ResponseWriter, req *http.Request) {
 
-	if !isLoggedIn(req) {
+	thePatient, isLoggedInCheck := isLoggedIn(req)
+
+	if !isLoggedInCheck {
 		http.Redirect(res, req, pageLogin, http.StatusSeeOther)
 		return
 	}
-
-	thePatient := getLoggedInPatient(res, req)
 
 	// Anonymous payload
 	payload := struct {

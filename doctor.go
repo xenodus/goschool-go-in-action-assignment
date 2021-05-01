@@ -142,7 +142,9 @@ func (bst *BST) getDoctorByIDBST(docID int64) (*doctor, error) {
 
 func viewDoctorsPage(res http.ResponseWriter, req *http.Request) {
 
-	if !isLoggedIn(req) {
+	thePatient, isLoggedInCheck := isLoggedIn(req)
+
+	if !isLoggedInCheck {
 		http.Redirect(res, req, pageLogin, http.StatusSeeOther)
 		return
 	}
@@ -158,7 +160,7 @@ func viewDoctorsPage(res http.ResponseWriter, req *http.Request) {
 	}{
 		"View Doctors",
 		"",
-		nil,
+		thePatient,
 		nil,
 		nil,
 		doctors,
@@ -166,7 +168,6 @@ func viewDoctorsPage(res http.ResponseWriter, req *http.Request) {
 
 	// Get querystring values
 	doctorID := req.FormValue("doctorID")
-	payload.User = getLoggedInPatient(res, req)
 
 	if doctorID != "" {
 		doctorID, _ := strconv.ParseInt(doctorID, 10, 64)

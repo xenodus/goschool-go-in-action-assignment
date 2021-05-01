@@ -10,6 +10,8 @@ import (
 
 func psiPage(res http.ResponseWriter, req *http.Request) {
 
+	thePatient, _ := isLoggedIn(req)
+
 	// Anonymous payload
 	payload := struct {
 		User           *patient
@@ -18,11 +20,7 @@ func psiPage(res http.ResponseWriter, req *http.Request) {
 		Psi            string
 		PsiDescription string
 	}{
-		nil, "PSI", "", "", "",
-	}
-
-	if isLoggedIn(req) {
-		payload.User = getLoggedInPatient(res, req)
+		thePatient, "PSI", "", "", "",
 	}
 
 	var jsonResult map[string]interface{}
