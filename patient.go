@@ -466,11 +466,12 @@ func profilePage(res http.ResponseWriter, req *http.Request) {
 
 	// Anonymous payload
 	payload := struct {
-		PageTitle string
-		User      *patient
-		ErrorMsg  string
+		PageTitle  string
+		User       *patient
+		ErrorMsg   string
+		SuccessMsg string
 	}{
-		"Profile", thePatient, "",
+		"Profile", thePatient, "", "",
 	}
 
 	// Form submit values
@@ -490,6 +491,7 @@ func profilePage(res http.ResponseWriter, req *http.Request) {
 		} else {
 			bPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 			thePatient.editPatient(thePatient.Id, firstname, lastname, bPassword)
+			payload.SuccessMsg = "Profile updated!"
 		}
 	}
 

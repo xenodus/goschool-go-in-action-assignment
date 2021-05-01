@@ -14,6 +14,18 @@
 
             <hr/>
 
+            {{ if .SuccessMsg }}
+            <div class="alert alert-success" role="alert">
+                {{ ucFirst .SuccessMsg }}
+            </div>
+            {{ end }}
+
+            {{ if .ErrorMsg }}
+            <div class="alert alert-danger" role="alert">
+                {{ ucFirst .ErrorMsg }}
+            </div>
+            {{ end }}
+
             {{ if gt (len .User.Appointments) 0 }}
                 <table class="table">
                     <thead>

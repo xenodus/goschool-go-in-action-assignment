@@ -8,10 +8,18 @@
 
         <div class="container my-4">
             <div class="mb-3">
+                <div class="mb-1"><a href="/" class="btn btn-dark btn-sm mb-1" role="button"><i class="fas fa-reply"></i> Back</a></div>
                 <h1>My Profile</h1>
             </div>
 
             <hr/>
+
+            {{ if .SuccessMsg }}
+            <div class="alert alert-success" role="alert">
+                {{ ucFirst .SuccessMsg }}
+            </div>
+            {{ end }}
+
 
             {{ if .ErrorMsg }}
             <div class="alert alert-danger" role="alert">

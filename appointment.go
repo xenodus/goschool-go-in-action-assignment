@@ -342,25 +342,25 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 		Appt               *appointment
 		TimeslotsAvailable []int64
 		ErrorMsg           string
+		SuccessMsg         string
 	}{
-		"Edit Appointment", thePatient, nil, nil, "",
+		"Edit Appointment", thePatient, nil, nil, "", "",
 	}
 
 	apptId, err := strconv.ParseInt(inputApptId, 10, 64)
 
 	if err != nil {
-		payload.ErrorMsg = ErrAppointmentIDNotFound.Error()
-		tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
+		setNotification(req, ErrAppointmentIDNotFound.Error(), "Error")
+		http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 		return
 	}
 
 	// Check if appt id is valid
-	// Note can't use patient's appoinments slice as it's sorted by time and not ApptID
 	patientApptIDIndex := binarySearchApptID(apptId)
 
 	if patientApptIDIndex < 0 {
-		payload.ErrorMsg = ErrAppointmentIDNotFound.Error()
-		tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
+		setNotification(req, ErrAppointmentIDNotFound.Error(), "Error")
+		http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 		return
 	}
 
@@ -368,14 +368,15 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 	// Does not belong to logged in user
 	if payload.Appt.Patient != thePatient {
-		payload.ErrorMsg = ErrAppointmentIDNotFound.Error()
-		tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
+		setNotification(req, ErrAppointmentIDNotFound.Error(), "Error")
+		http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 		return
 	}
 
 	// Cancel Appt
 	if action == "cancel" {
 		if req.Method == http.MethodPost {
+			setNotification(req, "Appointment cancelled!", "Success")
 			payload.Appt.cancelAppointment()
 		}
 
@@ -421,6 +422,7 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 				}
 
 				payload.Appt.editAppointment(t, payload.Appt.Patient, payload.Appt.Doctor)
+				setNotification(req, "Appointment updated!", "Success")
 				http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 				return
 			}
@@ -441,11 +443,24 @@ func appointmentPage(res http.ResponseWriter, req *http.Request) {
 
 	// Anonymous payload
 	payload := struct {
-		PageTitle string
-		User      *patient
+		PageTitle  string
+		User       *patient
+		SuccessMsg string
+		ErrorMsg   string
 	}{
-		"My Appointments",
-		thePatient,
+		"My Appointments", thePatient, "", "",
+	}
+
+	// Get notifications from session
+	if notify, notifyErr := getNotification(req); notifyErr == nil {
+		if notify != nil {
+			if notify.Type == "Success" {
+				payload.SuccessMsg = notify.Message
+			} else if notify.Type == "Error" {
+				payload.ErrorMsg = notify.Message
+			}
+			clearNotification(req)
+		}
 	}
 
 	tpl.ExecuteTemplate(res, "appointments.gohtml", payload)
@@ -529,6 +544,7 @@ func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 			_, newApptErr := makeAppointment(t, thePatient, payload.ChosenDoctor)
 
 			if newApptErr == nil {
+				setNotification(req, "Appointment scheduled!", "Success")
 				http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 				return
 			}

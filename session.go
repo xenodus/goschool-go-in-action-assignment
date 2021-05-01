@@ -12,6 +12,7 @@ type session struct {
 	Id           string
 	LastModified int64
 	LastVisited  *url.URL
+	Notification *notification
 }
 
 // Globals
@@ -35,26 +36,29 @@ func createSession(res http.ResponseWriter, req *http.Request, username string) 
 		SameSite: 3,
 	}
 	http.SetCookie(res, myCookie)
-	mapSessions[myCookie.Value] = session{username, time.Now().Unix(), req.URL}
+	mapSessions[myCookie.Value] = session{username, time.Now().Unix(), req.URL, nil}
 }
 
 func deleteSession(res http.ResponseWriter, req *http.Request) {
-	myCookie, _ := req.Cookie(cookieID)
-	// Delete the Session
-	delete(mapSessions, myCookie.Value)
-	// Expire the Cookie
-	expire := time.Now().Add(-7 * 24 * time.Hour)
-	myCookie = &http.Cookie{
-		Name:     cookieID,
-		Value:    "",
-		Path:     pageIndex,
-		MaxAge:   -1,
-		Expires:  expire,
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: 3,
+	myCookie, err := req.Cookie(cookieID)
+
+	if err == nil {
+		// Delete the Session
+		delete(mapSessions, myCookie.Value)
+		// Expire the Cookie
+		expire := time.Now().Add(-7 * 24 * time.Hour)
+		myCookie = &http.Cookie{
+			Name:     cookieID,
+			Value:    "",
+			Path:     pageIndex,
+			MaxAge:   -1,
+			Expires:  expire,
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: 3,
+		}
+		http.SetCookie(res, myCookie)
 	}
-	http.SetCookie(res, myCookie)
 }
 
 func getRandomCookiePrefix() string {

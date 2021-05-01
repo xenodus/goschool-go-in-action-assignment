@@ -20,7 +20,20 @@ func adminSessionsPage(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var errorMsg = ""
+	// Anonymous payload
+	payload := struct {
+		PageTitle  string
+		User       *patient
+		Sessions   map[string]session
+		ErrorMsg   string
+		SuccessMsg string
+	}{
+		"Manage Sessions",
+		thePatient,
+		mapSessions,
+		"",
+		"",
+	}
 
 	if req.Method == http.MethodPost {
 		// Get querystring values
@@ -31,8 +44,9 @@ func adminSessionsPage(res http.ResponseWriter, req *http.Request) {
 		if action == "delete" && sessionId != "" {
 			if _, ok := mapSessions[sessionId]; ok {
 				delete(mapSessions, sessionId)
+				payload.SuccessMsg = "Session deleted!"
 			} else {
-				errorMsg = ErrSessionNotFound.Error()
+				payload.ErrorMsg = ErrSessionNotFound.Error()
 			}
 		}
 
@@ -48,19 +62,6 @@ func adminSessionsPage(res http.ResponseWriter, req *http.Request) {
 				return
 			}
 		}
-	}
-
-	// Anonymous payload
-	payload := struct {
-		PageTitle string
-		User      *patient
-		Sessions  map[string]session
-		ErrorMsg  string
-	}{
-		"Manage Sessions",
-		thePatient,
-		mapSessions,
-		errorMsg,
 	}
 
 	tpl.ExecuteTemplate(res, "adminSessions.gohtml", payload)
@@ -80,26 +81,31 @@ func adminAppointmentPage(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var errorMsg = ""
-
-	// Get querystring values
-	err := req.FormValue("error")
-
-	if err == "ErrAppointmentIDNotFound" {
-		errorMsg = ErrAppointmentIDNotFound.Error()
-	}
-
 	// Anonymous payload
 	payload := struct {
 		PageTitle    string
 		User         *patient
 		Appointments []*appointment
 		ErrorMsg     string
+		SuccessMsg   string
 	}{
 		"Manage Appointments",
 		thePatient,
 		appointmentsSortedByTimeslot,
-		errorMsg,
+		"",
+		"",
+	}
+
+	// Get notifications from session
+	if notify, notifyErr := getNotification(req); notifyErr == nil {
+		if notify != nil {
+			if notify.Type == "Success" {
+				payload.SuccessMsg = notify.Message
+			} else if notify.Type == "Error" {
+				payload.ErrorMsg = notify.Message
+			}
+			clearNotification(req)
+		}
 	}
 
 	tpl.ExecuteTemplate(res, "adminAppointments.gohtml", payload)
@@ -142,8 +148,8 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	apptId, err := strconv.ParseInt(inputApptId, 10, 64)
 
 	if err != nil {
-		payload.ErrorMsg = ErrAppointmentIDNotFound.Error()
-		tpl.ExecuteTemplate(res, "adminEditAppointment.gohtml", payload)
+		setNotification(req, ErrAppointmentIDNotFound.Error(), "Error")
+		http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
 		return
 	}
 
@@ -151,8 +157,8 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	theApptIndex := binarySearchApptID(apptId)
 
 	if theApptIndex < 0 {
-		payload.ErrorMsg = ErrAppointmentIDNotFound.Error()
-		tpl.ExecuteTemplate(res, "adminEditAppointment.gohtml", payload)
+		setNotification(req, ErrAppointmentIDNotFound.Error(), "Error")
+		http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
 		return
 	}
 
@@ -161,6 +167,7 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	// Cancel Appt
 	if action == "cancel" {
 		if req.Method == http.MethodPost {
+			setNotification(req, "Appointment cancelled!", "Success")
 			payload.Appt.cancelAppointment()
 		}
 
@@ -206,6 +213,7 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 				}
 
 				payload.Appt.editAppointment(t, payload.Appt.Patient, payload.Appt.Doctor)
+				setNotification(req, "Appointment updated!", "Success")
 				http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
 				return
 			}
@@ -229,7 +237,20 @@ func adminUsersPage(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var errorMsg = ""
+	// Anonymous payload
+	payload := struct {
+		PageTitle  string
+		User       *patient
+		Patients   []*patient
+		ErrorMsg   string
+		SuccessMsg string
+	}{
+		"Manage Users",
+		thePatient,
+		patients,
+		"",
+		"",
+	}
 
 	if req.Method == http.MethodPost {
 		// Get querystring values
@@ -242,8 +263,10 @@ func adminUsersPage(res http.ResponseWriter, req *http.Request) {
 
 			if err == nil {
 				theUser.deletePatient()
+				payload.Patients = patients
+				payload.SuccessMsg = "User deleted!"
 			} else {
-				errorMsg = ErrPatientIDNotFound.Error()
+				payload.ErrorMsg = ErrPatientIDNotFound.Error()
 			}
 		}
 
@@ -254,19 +277,6 @@ func adminUsersPage(res http.ResponseWriter, req *http.Request) {
 				return
 			}
 		}
-	}
-
-	// Anonymous payload
-	payload := struct {
-		PageTitle string
-		User      *patient
-		Patients  []*patient
-		ErrorMsg  string
-	}{
-		"Manage Users",
-		thePatient,
-		patients,
-		errorMsg,
 	}
 
 	tpl.ExecuteTemplate(res, "adminUsers.gohtml", payload)
@@ -298,12 +308,14 @@ func adminPaymentEnqueuePage(res http.ResponseWriter, req *http.Request) {
 				apptIdIndex := binarySearchApptID(apptId)
 
 				if apptIdIndex < 0 {
-					http.Redirect(res, req, pageAdminAllAppointments+"?error=ErrAppointmentIDNotFound", http.StatusSeeOther)
+					setNotification(req, "Error adding to payment queue! Appointment ID not found.", "Error")
+					http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
 					return
 				}
 
 				appt := appointments[apptIdIndex]
 				createPayment(appt, 19.99)
+				setNotification(req, "Appointment added to payment queue!", "Success")
 				http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
 				return
 			}

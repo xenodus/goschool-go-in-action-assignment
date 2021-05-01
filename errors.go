@@ -8,7 +8,7 @@ import (
 var ErrInvalidTimeslot = errors.New("invalid timeslots entered")
 var ErrDoctorNoMoreTimeslot = errors.New("doctor has no more timeslots available for today")
 var ErrPatientNoMoreTimeslot = errors.New("patient has no more timeslots available for today")
-var ErrNoMoreTimeslot = errors.New("there are no more timeslots available for today")
+var ErrNoMoreTimeslot = errors.New("there are no more timeslots available with the chosen doctor")
 var ErrDuplicateTimeslot = errors.New("there's already an appointment scheduled for that timeslot")
 var ErrTimeslotExpired = errors.New("timeslot has already expired")
 var ErrAppointmentIDNotFound = errors.New("appointment id not found")
