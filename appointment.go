@@ -7,6 +7,9 @@ import (
 	"time"
 )
 
+// Globals
+var appointments = []*appointment{}
+var appointmentsSortedByTimeslot = []*appointment{}
 var appointment_start_id int64 = 1000
 
 type appointment struct {

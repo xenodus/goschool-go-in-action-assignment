@@ -2,9 +2,23 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 )
+
+func init() {
+
+	// Adding helper functions to templates
+	funcMap := template.FuncMap{
+		"time2HumanReadable": time2HumanReadable,
+		"getUserByID":        getUserByID,
+		"ucFirst":            ucFirst,
+		"stripSpace":         stripSpace,
+	}
+
+	tpl = template.Must(template.New("").Funcs(funcMap).ParseGlob("templates/*"))
+}
 
 func startHttpServer() {
 	fs := http.FileServer(http.Dir("./assets"))
@@ -35,8 +49,6 @@ func startHttpServer() {
 	http.HandleFunc(pageAdminSessions, adminSessionsPage)
 	http.HandleFunc(pageAdminUsers, adminUsersPage)
 
-	http.HandleFunc(pageAdminDebug, adminDebugPage)
-
 	http.HandleFunc(pageAdminPaymentEnqueue, adminPaymentEnqueuePage)
 	http.HandleFunc(pageAdminPaymentDequeue, adminPaymentDequeuePage)
 	http.HandleFunc(pageAdminPaymentDequeueToMissedQueue, adminPaymentDequeueToMissedQueuePage)
@@ -45,11 +57,14 @@ func startHttpServer() {
 	// Payment Queue - Handlers in payment.go
 	http.HandleFunc(pagePaymentQueue, paymentQueuePage)
 
+	// PSI
 	http.HandleFunc(pagePSI, psiPage)
 
-	fmt.Println("Server starting on: http://" + serverHost + ":" + serverPort)
+	// Debug Page
+	http.HandleFunc(pageAdminDebug, adminDebugPage)
 
-	//err := http.ListenAndServe(serverHost+":"+serverPort, nil)
+	fmt.Println("Server starting on: https://" + serverHost + ":" + serverPort)
+
 	err := http.ListenAndServeTLS(serverHost+":"+serverPort, "./.cert/.cert.pem", "./.cert/.key.pem", nil)
 
 	if err != nil {

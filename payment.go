@@ -7,6 +7,9 @@ import (
 	"sync/atomic"
 )
 
+// Globals
+var paymentQ = paymentQueue{}
+var missedPaymentQ = paymentQueue{}
 var paymentCounter int64 = 200
 
 type payment struct {

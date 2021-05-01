@@ -11,6 +11,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// Globals
+var patients = []*patient{}
+var admins = []string{}
+
 type patient struct {
 	Id           string
 	First_name   string

@@ -6,6 +6,9 @@ import (
 	"sync/atomic"
 )
 
+// Globals
+var doctors = []*doctor{}
+var doctorsBST *BST
 var doctor_start_id int64 = 100
 
 type doctor struct {

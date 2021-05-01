@@ -7,7 +7,6 @@ import (
 	"time"
 	"unicode"
 
-	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -100,11 +99,6 @@ func seedPaymentQueue() {
 
 func time2HumanReadable(t int64) string {
 	return time.Unix(t, 0).Format("3:04PM")
-}
-
-func getRandomCookiePrefix() string {
-	randomUUIDByte, _ := uuid.NewV4()
-	return "CO-" + randomUUIDByte.String()
 }
 
 func getUserByID(uid string) *patient {
