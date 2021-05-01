@@ -78,7 +78,7 @@ func (p *patient) deletePatient() error {
 		}
 
 		// 3. remove patient from patients slice
-		patientIDIndex := binarySearchPatientID(patients, 0, len(patients)-1, p.Id)
+		patientIDIndex := binarySearchPatientID(p.Id)
 
 		if patientIDIndex >= 0 {
 
@@ -98,7 +98,7 @@ func (p *patient) deletePatient() error {
 
 func getPatientByID(patientID string) (*patient, error) {
 
-	patientIDIndex := binarySearchPatientID(patients, 0, len(patients)-1, patientID)
+	patientIDIndex := binarySearchPatientID(patientID)
 
 	if patientIDIndex >= 0 {
 		return patients[patientIDIndex], nil
@@ -195,7 +195,11 @@ func mergePatient(arr []*patient, first int, mid int, last int) {
 }
 
 // Binary search for patient id in sorted slice
-func binarySearchPatientID(arr []*patient, first int, last int, patientID string) int {
+func binarySearchPatientID(patientID string) int {
+	return binarySearchPatient(patients, 0, len(patients)-1, patientID)
+}
+
+func binarySearchPatient(arr []*patient, first int, last int, patientID string) int {
 	if first > last { // item not found
 		return -1
 	} else {
@@ -204,9 +208,9 @@ func binarySearchPatientID(arr []*patient, first int, last int, patientID string
 			return mid
 		} else {
 			if patientID < arr[mid].Id { // item in first half
-				return binarySearchPatientID(arr, first, mid-1, patientID) // search in first half
+				return binarySearchPatient(arr, first, mid-1, patientID) // search in first half
 			} else { // item in second half
-				return binarySearchPatientID(arr, mid+1, last, patientID) // search in second half
+				return binarySearchPatient(arr, mid+1, last, patientID) // search in second half
 			}
 		}
 	}

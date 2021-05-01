@@ -75,7 +75,7 @@ func (appt *appointment) editAppointment(t int64, pat *patient, doc *doctor) err
 func (appt *appointment) cancelAppointment() {
 	mutex.Lock()
 	{
-		apptIDIndex := binarySearchApptID(appointments, 0, len(appointments)-1, appt.Id)
+		apptIDIndex := binarySearchApptID(appt.Id)
 
 		if apptIDIndex >= 0 {
 			// Remove from Patient & Doctor
@@ -283,7 +283,11 @@ func mergeByTime(arr []*appointment, first int, mid int, last int) {
 }
 
 // Binary search for appointment id in sorted slice
-func binarySearchApptID(arr []*appointment, first int, last int, apptID int64) int {
+func binarySearchApptID(apptID int64) int {
+	return binarySearchAppt(appointments, 0, len(appointments)-1, apptID)
+}
+
+func binarySearchAppt(arr []*appointment, first int, last int, apptID int64) int {
 	if first > last { // item not found
 		return -1
 	} else {
@@ -293,9 +297,9 @@ func binarySearchApptID(arr []*appointment, first int, last int, apptID int64) i
 			return mid
 		} else {
 			if apptID < arr[mid].Id { // item in first half
-				return binarySearchApptID(arr, first, mid-1, apptID) // search in first half
+				return binarySearchAppt(arr, first, mid-1, apptID) // search in first half
 			} else { // item in second half
-				return binarySearchApptID(arr, mid+1, last, apptID) // search in second half
+				return binarySearchAppt(arr, mid+1, last, apptID) // search in second half
 			}
 		}
 	}
@@ -352,7 +356,7 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 	// Check if appt id is valid
 	// Note can't use patient's appoinments slice as it's sorted by time and not ApptID
-	patientApptIDIndex := binarySearchApptID(appointments, 0, len(appointments)-1, apptId)
+	patientApptIDIndex := binarySearchApptID(apptId)
 
 	if patientApptIDIndex < 0 {
 		payload.ErrorMsg = ErrAppointmentIDNotFound.Error()

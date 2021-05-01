@@ -148,7 +148,7 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	}
 
 	// Check if appt id is valid
-	theApptIndex := binarySearchApptID(appointments, 0, len(appointments)-1, apptId)
+	theApptIndex := binarySearchApptID(apptId)
 
 	if theApptIndex < 0 {
 		payload.ErrorMsg = ErrAppointmentIDNotFound.Error()
@@ -295,7 +295,7 @@ func adminPaymentEnqueuePage(res http.ResponseWriter, req *http.Request) {
 
 			if err == nil {
 				// Adding appt to global payment queue
-				apptIdIndex := binarySearchApptID(appointments, 0, len(appointments)-1, apptId)
+				apptIdIndex := binarySearchApptID(apptId)
 
 				if apptIdIndex < 0 {
 					http.Redirect(res, req, pageAdminAllAppointments+"?error=ErrAppointmentIDNotFound", http.StatusSeeOther)
