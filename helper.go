@@ -2,38 +2,50 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
+	"os"
 	"strings"
 	"time"
 	"unicode"
 
+	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
 )
 
 func seedAdmins() {
-	adminIds := []string{
-		"S1234567A",
-		"S0000000A",
-		"S9999999C",
-	}
 
-	admins = append(admins, adminIds...)
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	} else {
+		adminIdsString := os.Getenv("ADMIN_IDS")
+		adminIds := strings.Split(adminIdsString, ",")
+		admins = append(admins, adminIds...)
+	}
 }
 
 func seedPatients() {
-	bPassword, err := bcrypt.GenerateFromPassword([]byte("12345678"), bcrypt.MinCost)
 
-	if err == nil {
-		wg.Add(7)
-		go createPatient("S1111111B", "Barry", "Allen", bPassword)
-		go createPatient("S2222222C", "Bruce", "Wayne", bPassword)
-		go createPatient("S3333333D", "Hal", "Jordan", bPassword)
-		go createPatient("S4444444D", "Arthur", "Curry", bPassword)
-		// admins
-		go createPatient("S0000000A", "Diana", "Prince", bPassword)
-		go createPatient("S1234567A", "Clark", "Kent", bPassword)
-		go createPatient("S9999999C", "Oliver", "Queen", bPassword)
-		wg.Wait()
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	} else {
+		testAcctPasswordString := os.Getenv("DEFAULT_TEST_PASSWORD")
+		bPassword, err := bcrypt.GenerateFromPassword([]byte(testAcctPasswordString), bcrypt.MinCost)
+
+		if err == nil {
+			wg.Add(7)
+			go createPatient("S1111111B", "Barry", "Allen", bPassword)
+			go createPatient("S2222222C", "Bruce", "Wayne", bPassword)
+			go createPatient("S3333333D", "Hal", "Jordan", bPassword)
+			go createPatient("S4444444D", "Arthur", "Curry", bPassword)
+			// admins
+			go createPatient("S0000000A", "Diana", "Prince", bPassword)
+			go createPatient("S1234567A", "Clark", "Kent", bPassword)
+			go createPatient("S9999999C", "Oliver", "Queen", bPassword)
+			wg.Wait()
+		}
 	}
 }
 
