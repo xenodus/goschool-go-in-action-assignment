@@ -475,17 +475,21 @@ func profilePage(res http.ResponseWriter, req *http.Request) {
 
 	// Form submit values
 	if req.Method == http.MethodPost {
-		firstName := strings.TrimSpace(req.FormValue("firstname"))
-		lastName := strings.TrimSpace(req.FormValue("lastname"))
+
+		// Policy to disallow and strip all tags - Similar to GO's unexported striptags
+		p := bluemonday.StrictPolicy()
+
+		firstname := p.Sanitize(strings.TrimSpace(req.FormValue("firstname")))
+		lastname := p.Sanitize(strings.TrimSpace(req.FormValue("lastname")))
 		password := req.FormValue("password")
 
-		inputErr := areInputValid(thePatient.Id, firstName, lastName, password, false)
+		inputErr := areInputValid(thePatient.Id, firstname, lastname, password, false)
 
 		if inputErr != nil {
 			payload.ErrorMsg = inputErr.Error()
 		} else {
 			bPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
-			thePatient.editPatient(thePatient.Id, firstName, lastName, bPassword)
+			thePatient.editPatient(thePatient.Id, firstname, lastname, bPassword)
 		}
 	}
 
