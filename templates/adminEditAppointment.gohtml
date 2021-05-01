@@ -20,22 +20,26 @@
             </div>
             {{ end }}
 
-            <div class="mb-3">Appointment ({{ .Appt.Id }}) for <strong>{{ .Appt.Patient.First_name }} {{ .Appt.Patient.Last_name }} ({{ .Appt.Patient.Id }})</strong> with <strong>Dr. {{ .Appt.Doctor.First_name }} {{ .Appt.Doctor.Last_name }} ({{ .Appt.Doctor.Id }})</strong> is scheduled for <strong>{{ time2HumanReadable .Appt.Time }}</strong></div>
+            {{ if .Appt }}
+                <div class="mb-3">Appointment (<strong>{{ .Appt.Id }}</strong>) for <strong>{{ .Appt.Patient.First_name }} {{ .Appt.Patient.Last_name }} ({{ .Appt.Patient.Id }})</strong> with <strong>Dr. {{ .Appt.Doctor.First_name }} {{ .Appt.Doctor.Last_name }} ({{ .Appt.Doctor.Id }})</strong> is scheduled for <strong>{{ time2HumanReadable .Appt.Time }}</strong></div>
 
-            <form method="post">
-                {{ if gt (len .TimeslotsAvailable) 0 }}
-                <div class="form-group mb-3">
-                    <label for="timeslot" class="form-label">Change Timeslot</label>
-                    <select class="form-select" name="timeslot">
-                    {{ range .TimeslotsAvailable }}
-                        <option value="{{.}}">{{time2HumanReadable .}}</option>
+                <form method="post">
+                    <input class="form-control" type="hidden" name="apptId" value="{{.Appt.Id}}" readonly>
+
+                    {{ if gt (len .TimeslotsAvailable) 0 }}
+                    <div class="form-group mb-3">
+                        <label for="timeslot" class="form-label">Change Timeslot</label>
+                        <select class="form-select" name="timeslot">
+                        {{ range .TimeslotsAvailable }}
+                            <option value="{{.}}">{{time2HumanReadable .}}</option>
+                        {{ end }}
+                        </select>
+                    </div>
+
+                    <div><button type="submit" class="btn btn-primary mb-3">Edit Appointment</button></div>
                     {{ end }}
-                    </select>
-                </div>
-
-                <div><button type="submit" class="btn btn-primary mb-3">Edit Appointment</button></div>
-                {{ end }}
-            </form>
+                </form>
+            {{end}}
 
             {{template "footer"}}
         </div>

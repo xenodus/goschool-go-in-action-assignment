@@ -326,9 +326,6 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	inputApptId := req.FormValue("apptId")
 	action := req.FormValue("action")
 
-	// Form submit values
-	timeslot := req.FormValue("timeslot")
-
 	if action != "edit" && action != "cancel" {
 		http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 		return
@@ -374,7 +371,10 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 	// Cancel Appt
 	if action == "cancel" {
-		payload.Appt.cancelAppointment()
+		if req.Method == http.MethodPost {
+			payload.Appt.cancelAppointment()
+		}
+
 		http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 		return
 	}
@@ -391,28 +391,35 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		if req.Method == http.MethodPost && timeslot != "" {
-			t, _ := strconv.ParseInt(timeslot, 10, 64)
+		if req.Method == http.MethodPost {
 
-			// Patient / Doctor time check
-			if !payload.Appt.Patient.isFreeAt(t) || !payload.Appt.Doctor.isFreeAt(t) {
-				payload.ErrorMsg = ErrDuplicateTimeslot.Error()
-				tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
+			// Form submit values
+			timeslot := req.FormValue("timeslot")
+
+			if timeslot != "" {
+
+				t, _ := strconv.ParseInt(timeslot, 10, 64)
+
+				// Patient / Doctor time check
+				if !payload.Appt.Patient.isFreeAt(t) || !payload.Appt.Doctor.isFreeAt(t) {
+					payload.ErrorMsg = ErrDuplicateTimeslot.Error()
+					tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
+					return
+				}
+
+				_, isApptTimeValidErr := isApptTimeValid(t)
+
+				// Past time
+				if isApptTimeValidErr != nil {
+					payload.ErrorMsg = isApptTimeValidErr.Error()
+					tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
+					return
+				}
+
+				payload.Appt.editAppointment(t, payload.Appt.Patient, payload.Appt.Doctor)
+				http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 				return
 			}
-
-			_, isApptTimeValidErr := isApptTimeValid(t)
-
-			// Past time
-			if isApptTimeValidErr != nil {
-				payload.ErrorMsg = isApptTimeValidErr.Error()
-				tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
-				return
-			}
-
-			payload.Appt.editAppointment(t, payload.Appt.Patient, payload.Appt.Doctor)
-			http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
-			return
 		}
 	}
 

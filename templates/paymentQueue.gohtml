@@ -13,8 +13,13 @@
                     {{ if .User }}
                         {{ if .User.IsAdmin }}
                         <div style="font-size: 1rem;">
-                            <a class="btn btn-primary btn-sm" href="/admin/payment/dequeue" role="button">Dequeue</a>
-                            <a class="btn btn-primary btn-sm" href="/admin/payment/dequeueToMissedQueue" role="button">Missed Queue</a>
+                            <form class="d-inline-block" method="post" action="/admin/payment/dequeue">
+                                <button type="submit" class="btn btn-primary btn-sm">Dequeue</button>
+                            </form>
+
+                            <form class="d-inline-block" method="post" action="/admin/payment/dequeueToMissedQueue">
+                                <button type="submit" class="btn btn-primary btn-sm">Missed Queue</button>
+                            </form>
                         </div>
                         {{ end }}
                     {{ end }}
@@ -37,7 +42,9 @@
                     {{ if .User }}
                         {{ if .User.IsAdmin }}
                         <div style="font-size: 1rem;">
-                            <a class="btn btn-primary btn-sm" href="/admin/payment/dequeueToPaymentQueue" role="button">Enqueue</a>
+                            <form class="d-inline-block" method="post" action="/admin/payment/dequeueToPaymentQueue">
+                                <button type="submit" class="btn btn-primary btn-sm">Enqueue</button>
+                            </form>
                         </div>
                         {{ end }}
                     {{ end }}

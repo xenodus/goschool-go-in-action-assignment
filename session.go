@@ -32,6 +32,7 @@ func createSession(res http.ResponseWriter, req *http.Request, username string) 
 		Path:     pageIndex,
 		HttpOnly: true,
 		Secure:   true,
+		SameSite: 3,
 	}
 	http.SetCookie(res, myCookie)
 	mapSessions[myCookie.Value] = session{username, time.Now().Unix(), req.URL}
@@ -51,6 +52,7 @@ func deleteSession(res http.ResponseWriter, req *http.Request) {
 		Expires:  expire,
 		HttpOnly: true,
 		Secure:   true,
+		SameSite: 3,
 	}
 	http.SetCookie(res, myCookie)
 }

@@ -36,7 +36,13 @@
                             <td>{{ .Id }}</td>
                             <td>{{ .First_name }} {{ .Last_name }}</td>
                             <td>{{ if .IsAdmin }}Yes{{ else }}No{{ end }}</td>
-                            <td><a href="/admin/users?action=delete&userId={{ .Id }}" role="button" class="btn btn-danger btn-sm">Delete</a></td>
+                            <td>
+                                <form method="post" action="/admin/users">
+                                    <input class="form-control" type="hidden" name="userId" value="{{.Id}}" readonly>
+                                    <input class="form-control" type="hidden" name="action" value="delete" readonly>
+                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                </form>
+                            </td>
                         </tr>
                     {{ end }}
                     </tbody>

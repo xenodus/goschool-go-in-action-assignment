@@ -30,7 +30,15 @@
                             <td>{{ $val.Id }}</td>
                             <td>{{ time2HumanReadable $val.Time }}</td>
                             <td>{{ $val.Doctor.First_name }} {{ $val.Doctor.Last_name }}</td>
-                            <td><a href="/appointment/edit?apptId={{ $val.Id }}&action=edit" class="btn btn-primary btn-sm" role="button">Edit</a> <a href="/appointment/edit?apptId={{ $val.Id }}&action=cancel" class="btn btn-danger btn-sm" role="button">Cancel</a></td>
+                            <td>
+                                <form class="d-inline-block" method="post" action="/appointment/edit?apptId={{$val.Id}}&action=edit">
+                                    <button type="submit" class="btn btn-primary btn-sm">Edit</button>
+                                </form>
+
+                                <form class="d-inline-block" method="post" action="/appointment/edit?apptId={{$val.Id}}&action=cancel">
+                                    <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
+                                </form>
+                            </td>
                         </tr>
                     {{ end }}
                     </tbody>

@@ -216,7 +216,7 @@ func (p patient) IsAdmin() bool {
 	return isAdminCheck(p.Id, 0)
 }
 
-// recursion
+// Recursion
 func isAdminCheck(adminID string, index int) bool {
 
 	if index >= len(admins) {

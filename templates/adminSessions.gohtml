@@ -41,12 +41,21 @@
                             <td>{{ if $user.IsAdmin }}Yes{{ else }}No{{ end }}</td>
                             <td>{{ time2HumanReadable $val.LastModified }}</td>
                             <td>{{ $val.LastVisited }}</td>
-                            <td class="text-end"><a href="/admin/sessions?action=delete&sessionId={{ $key }}" class="btn btn-danger btn-sm" role="button">Delete</a></td>
+                            <td class="text-end">
+                                <form method="post" action="/admin/sessions?action=delete">
+                                    <input class="form-control" type="hidden" name="sessionId" value="{{$key}}" readonly>
+                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                </form>
+                            </td>
                         </tr>
                     {{ end }}
                     <tr>
                         <td colspan="5"></td>
-                        <td class="text-end"><a href="/admin/sessions?action=purge" role="button" class="btn btn-danger btn-sm">Purge All Sessions</a></td>
+                        <td class="text-end">
+                            <form method="post" action="/admin/sessions?action=purge">
+                                <button type="submit" class="btn btn-danger btn-sm">Purge All Sessions</button>
+                            </form>
+                        </td>
                     </tr>
                     </tbody>
                 </table>

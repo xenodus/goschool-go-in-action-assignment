@@ -22,30 +22,31 @@ func adminSessionsPage(res http.ResponseWriter, req *http.Request) {
 
 	var errorMsg = ""
 
-	// Get querystring values
-	action := req.FormValue("action")
-	sessionId := req.FormValue("sessionId")
+	if req.Method == http.MethodPost {
+		// Get querystring values
+		action := req.FormValue("action")
+		sessionId := req.FormValue("sessionId")
 
-	// delete single session
-	if action == "delete" && sessionId != "" {
-		if _, ok := mapSessions[sessionId]; ok {
-			delete(mapSessions, sessionId)
-		} else {
-			errorMsg = ErrSessionNotFound.Error()
+		// delete single session
+		if action == "delete" && sessionId != "" {
+			if _, ok := mapSessions[sessionId]; ok {
+				delete(mapSessions, sessionId)
+			} else {
+				errorMsg = ErrSessionNotFound.Error()
+			}
 		}
-	}
 
-	// delete all sessions
-	if action == "purge" {
-		mapSessions = make(map[string]session)
-	}
+		// delete all sessions
+		if action == "purge" {
+			mapSessions = make(map[string]session)
+		}
 
-	if action != "" {
-
-		// if user's session is gone, redirect away
-		if _, isLoggedInCheck := isLoggedIn(req); !isLoggedInCheck {
-			http.Redirect(res, req, pageLogin, http.StatusSeeOther)
-			return
+		if action != "" {
+			// if user's session is gone, redirect away
+			if _, isLoggedInCheck := isLoggedIn(req); !isLoggedInCheck {
+				http.Redirect(res, req, pageLogin, http.StatusSeeOther)
+				return
+			}
 		}
 	}
 
@@ -118,18 +119,6 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// Get querystring values
-	inputApptId := req.FormValue("apptId")
-	action := req.FormValue("action")
-
-	// Form submit values
-	timeslot := req.FormValue("timeslot")
-
-	if action != "edit" && action != "cancel" {
-		http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
-		return
-	}
-
 	// Anonymous payload
 	payload := struct {
 		PageTitle          string
@@ -139,6 +128,15 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 		ErrorMsg           string
 	}{
 		"Edit Appointment", thePatient, nil, nil, "",
+	}
+
+	// Get querystring values
+	inputApptId := req.FormValue("apptId")
+	action := req.FormValue("action")
+
+	if action != "edit" && action != "cancel" {
+		http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
+		return
 	}
 
 	apptId, err := strconv.ParseInt(inputApptId, 10, 64)
@@ -162,7 +160,10 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 	// Cancel Appt
 	if action == "cancel" {
-		payload.Appt.cancelAppointment()
+		if req.Method == http.MethodPost {
+			payload.Appt.cancelAppointment()
+		}
+
 		http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
 		return
 	}
@@ -179,28 +180,35 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		if req.Method == http.MethodPost && timeslot != "" {
-			t, _ := strconv.ParseInt(timeslot, 10, 64)
+		if req.Method == http.MethodPost {
 
-			_, isApptTimeValidErr := isApptTimeValid(t) // Is time in the past check
+			// Form submit values
+			timeslot := req.FormValue("timeslot")
 
-			// Past time
-			if isApptTimeValidErr != nil {
-				payload.ErrorMsg = isApptTimeValidErr.Error()
-				tpl.ExecuteTemplate(res, "adminEditAppointment.gohtml", payload)
+			if timeslot != "" {
+
+				t, _ := strconv.ParseInt(timeslot, 10, 64)
+
+				_, isApptTimeValidErr := isApptTimeValid(t) // Is time in the past check
+
+				// Past time
+				if isApptTimeValidErr != nil {
+					payload.ErrorMsg = isApptTimeValidErr.Error()
+					tpl.ExecuteTemplate(res, "adminEditAppointment.gohtml", payload)
+					return
+				}
+
+				// Patient / Doctor time check
+				if !payload.Appt.Patient.isFreeAt(t) || !payload.Appt.Doctor.isFreeAt(t) {
+					payload.ErrorMsg = ErrDuplicateTimeslot.Error()
+					tpl.ExecuteTemplate(res, "adminEditAppointment.gohtml", payload)
+					return
+				}
+
+				payload.Appt.editAppointment(t, payload.Appt.Patient, payload.Appt.Doctor)
+				http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
 				return
 			}
-
-			// Patient / Doctor time check
-			if !payload.Appt.Patient.isFreeAt(t) || !payload.Appt.Doctor.isFreeAt(t) {
-				payload.ErrorMsg = ErrDuplicateTimeslot.Error()
-				tpl.ExecuteTemplate(res, "adminEditAppointment.gohtml", payload)
-				return
-			}
-
-			payload.Appt.editAppointment(t, payload.Appt.Patient, payload.Appt.Doctor)
-			http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
-			return
 		}
 	}
 
@@ -223,26 +231,28 @@ func adminUsersPage(res http.ResponseWriter, req *http.Request) {
 
 	var errorMsg = ""
 
-	// Get querystring values
-	action := req.FormValue("action")
-	userId := req.FormValue("userId")
+	if req.Method == http.MethodPost {
+		// Get querystring values
+		action := req.FormValue("action")
+		userId := req.FormValue("userId")
 
-	// delete single users
-	if action == "delete" && userId != "" {
-		theUser, err := getPatientByID(userId)
+		// delete single users
+		if action == "delete" && userId != "" {
+			theUser, err := getPatientByID(userId)
 
-		if err == nil {
-			theUser.deletePatient()
-		} else {
-			errorMsg = ErrPatientIDNotFound.Error()
+			if err == nil {
+				theUser.deletePatient()
+			} else {
+				errorMsg = ErrPatientIDNotFound.Error()
+			}
 		}
-	}
 
-	if action != "" {
-		// if self is gone, bye bye
-		if _, isLoggedInCheck := isLoggedIn(req); !isLoggedInCheck {
-			http.Redirect(res, req, pageLogin, http.StatusSeeOther)
-			return
+		if action != "" {
+			// if self is gone, bye bye
+			if _, isLoggedInCheck := isLoggedIn(req); !isLoggedInCheck {
+				http.Redirect(res, req, pageLogin, http.StatusSeeOther)
+				return
+			}
 		}
 	}
 
@@ -276,17 +286,22 @@ func adminPaymentEnqueuePage(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// Get querystring values
-	apptId := req.FormValue("apptId")
+	if req.Method == http.MethodPost {
+		// Get querystring values
+		apptId := req.FormValue("apptId")
 
-	if apptId != "" {
-		apptId, err := strconv.ParseInt(apptId, 10, 64)
+		if apptId != "" {
+			apptId, err := strconv.ParseInt(apptId, 10, 64)
 
-		if err == nil {
-			// Adding appt to global payment queue
-			apptIdIndex := binarySearchApptID(appointments, 0, len(appointments)-1, apptId)
+			if err == nil {
+				// Adding appt to global payment queue
+				apptIdIndex := binarySearchApptID(appointments, 0, len(appointments)-1, apptId)
 
-			if apptIdIndex >= 0 {
+				if apptIdIndex < 0 {
+					http.Redirect(res, req, pageAdminAllAppointments+"?error=ErrAppointmentIDNotFound", http.StatusSeeOther)
+					return
+				}
+
 				appt := appointments[apptIdIndex]
 				createPayment(appt, 19.99)
 				http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
@@ -295,7 +310,7 @@ func adminPaymentEnqueuePage(res http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	http.Redirect(res, req, pageAdminAllAppointments+"?error=ErrAppointmentIDNotFound", http.StatusSeeOther)
+	http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
 }
 
 func adminPaymentDequeuePage(res http.ResponseWriter, req *http.Request) {
@@ -312,7 +327,9 @@ func adminPaymentDequeuePage(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	paymentQ.dequeue()
+	if req.Method == http.MethodPost {
+		paymentQ.dequeue()
+	}
 
 	http.Redirect(res, req, pagePaymentQueue, http.StatusSeeOther)
 }
@@ -331,7 +348,9 @@ func adminPaymentDequeueToMissedQueuePage(res http.ResponseWriter, req *http.Req
 		return
 	}
 
-	paymentQ.dequeueToMissedPaymentQueue()
+	if req.Method == http.MethodPost {
+		paymentQ.dequeueToMissedPaymentQueue()
+	}
 
 	http.Redirect(res, req, pagePaymentQueue, http.StatusSeeOther)
 }
@@ -350,7 +369,9 @@ func adminPaymentDequeueToPaymentQueuePage(res http.ResponseWriter, req *http.Re
 		return
 	}
 
-	missedPaymentQ.dequeueToPaymentQueue()
+	if req.Method == http.MethodPost {
+		missedPaymentQ.dequeueToPaymentQueue()
+	}
 
 	http.Redirect(res, req, pagePaymentQueue, http.StatusSeeOther)
 }

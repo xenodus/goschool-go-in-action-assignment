@@ -74,7 +74,7 @@ func seedAppointments() {
 
 func seedPaymentQueue() {
 	no2queue := 5
-	no2MissedQueue := 1
+	no2MissedQueue := 0
 	rand.Seed(time.Now().Unix())
 
 	for no2queue > 0 {
