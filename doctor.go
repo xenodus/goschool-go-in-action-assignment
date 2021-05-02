@@ -1,4 +1,4 @@
-package doctor
+package main
 
 import (
 	"net/http"
