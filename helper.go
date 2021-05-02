@@ -35,22 +35,25 @@ func seedPatients() {
 		bPassword, err := bcrypt.GenerateFromPassword([]byte(testAcctPasswordString), bcrypt.MinCost)
 
 		if err == nil {
-			wg.Add(7)
+			wg.Add(10)
 			go createPatient("S1111111B", "Barry", "Allen", bPassword)
 			go createPatient("S2222222C", "Bruce", "Wayne", bPassword)
 			go createPatient("S3333333D", "Hal", "Jordan", bPassword)
 			go createPatient("S4444444D", "Arthur", "Curry", bPassword)
+			go createPatient("S5555555E", "Jay", "Garrick", bPassword)
+			go createPatient("S6666666F", "John", "Steward", bPassword)
+			go createPatient("S7777777G", "Wally", "West", bPassword)
 			// admins
 			go createPatient("S0000000A", "Diana", "Prince", bPassword)
 			go createPatient("S1234567A", "Clark", "Kent", bPassword)
-			go createPatient("S9999999C", "Oliver", "Queen", bPassword)
+			go createPatient("S9999999A", "Oliver", "Queen", bPassword)
 			wg.Wait()
 		}
 	}
 }
 
 func seedDoctors() {
-	wg.Add(9)
+	wg.Add(10)
 	go addDoctor("Steve", "Rogers")
 	go addDoctor("Tony", "Stark")
 	go addDoctor("Peter", "Parker")
@@ -60,6 +63,7 @@ func seedDoctors() {
 	go addDoctor("Scott", "Lang")
 	go addDoctor("Bruce", "Banner")
 	go addDoctor("Steven", "Strange")
+	go addDoctor("Carol", "Denvers")
 	wg.Wait()
 }
 

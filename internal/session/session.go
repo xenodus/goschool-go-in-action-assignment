@@ -1,8 +1,11 @@
 package session
 
 import (
+	"io"
+	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"time"
 
 	uuid "github.com/satori/go.uuid"
@@ -24,9 +27,18 @@ func init() {
 }
 
 func deleteDuplicateSession(username string) {
+
+	file, err := os.OpenFile("./logs/out.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		log.Fatalln("Failed to open error log file:", err)
+	}
+	defer file.Close()
+
+	info := log.New(io.MultiWriter(os.Stdout, file), "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
+
 	for k, v := range MapSessions {
 		if v.Id == username {
-			//Info.Println("Stale session deleted successfully for:", username)
+			info.Println("Stale session deleted successfully for:", username)
 			delete(MapSessions, k)
 			break
 		}

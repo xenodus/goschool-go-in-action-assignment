@@ -24,8 +24,8 @@ func psiPage(res http.ResponseWriter, req *http.Request) {
 	psi, err := psi.GetPSI()
 
 	if err != nil {
-		payload.ErrorMsg = err.Error()
-		Error.Println(req.RemoteAddr, "[Admin]", payload.ErrorMsg)
+		payload.ErrorMsg = "Unable to retrieve PSI"
+		Error.Println(req.RemoteAddr, "[Admin]", err.Error()) // only show detailed error inside logs
 		tpl.ExecuteTemplate(res, "psi.gohtml", payload)
 		return
 	}
