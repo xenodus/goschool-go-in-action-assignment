@@ -5,7 +5,6 @@ package main
 import (
 	"html/template"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"sync"
@@ -41,7 +40,7 @@ func main() {
 	}
 	defer file.Close()
 
-	Trace = log.New(ioutil.Discard, "TRACE: ", log.Ldate|log.Ltime|log.Lshortfile)
+	// Trace = log.New(ioutil.Discard, "TRACE: ", log.Ldate|log.Ltime|log.Lshortfile)
 	Info = log.New(io.MultiWriter(os.Stdout, file), "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 	Warning = log.New(io.MultiWriter(os.Stderr, file), "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
 	Error = log.New(io.MultiWriter(os.Stderr, file), "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
