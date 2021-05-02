@@ -21,10 +21,23 @@ var mapSessions = make(map[string]session)
 
 func init() {
 	// Randomizing the cookie name on each init
-	cookieID = getRandomCookiePrefix()
+	cookieID = "AY_GOSCHOOL"
+}
+
+func deleteDuplicateSession(username string) {
+	for k, v := range mapSessions {
+		if v.Id == username {
+			Info.Println("Stale session deleted successfully for:", username)
+			delete(mapSessions, k)
+			break
+		}
+	}
 }
 
 func createSession(res http.ResponseWriter, req *http.Request, username string) {
+
+	deleteDuplicateSession(username)
+
 	// Create Session + Cookie
 	id, _ := uuid.NewV4()
 	myCookie := &http.Cookie{
@@ -34,6 +47,7 @@ func createSession(res http.ResponseWriter, req *http.Request, username string) 
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: 3,
+		Domain:   serverHost,
 	}
 	http.SetCookie(res, myCookie)
 	mapSessions[myCookie.Value] = session{username, time.Now().Unix(), req.URL, nil}
@@ -59,9 +73,4 @@ func deleteSession(res http.ResponseWriter, req *http.Request) {
 		}
 		http.SetCookie(res, myCookie)
 	}
-}
-
-func getRandomCookiePrefix() string {
-	randomUUIDByte, _ := uuid.NewV4()
-	return "CO-" + randomUUIDByte.String()
 }

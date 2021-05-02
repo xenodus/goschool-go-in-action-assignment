@@ -22,6 +22,8 @@ func errorPage(res http.ResponseWriter, req *http.Request) {
 	var errorCode = http.StatusInternalServerError
 
 	switch err {
+	// other cases
+	// default
 	default:
 		errorCode = http.StatusInternalServerError
 		payload.ErrorMsg = ErrInternalServerError.Error()

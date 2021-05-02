@@ -6,8 +6,8 @@ const endOperationHour = 22
 const appointmentIntervals = 30 // 30 mins between each consultations
 
 // Server settings
-const serverHost = "localhost"
-const serverPort = "5221"
+const serverHost = "goschool.alvinyeoh.com"
+const serverPort = "443"
 
 // Password policy
 const minPasswordLength = 8
