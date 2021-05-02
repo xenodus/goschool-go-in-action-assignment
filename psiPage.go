@@ -1,11 +1,9 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"net/http"
-	"strconv"
+
+	"./internal/psi"
 )
 
 func psiPage(res http.ResponseWriter, req *http.Request) {
@@ -23,53 +21,17 @@ func psiPage(res http.ResponseWriter, req *http.Request) {
 		thePatient, "PSI", "", "", "",
 	}
 
-	var jsonResult map[string]interface{}
-
-	api_url := "https://api.data.gov.sg/v1/environment/psi"
-
-	result, httpErr := http.Get(api_url)
-
-	if httpErr != nil {
-		payload.ErrorMsg = "Error encountered fetching PSI"
-		Error.Println(req.RemoteAddr, "[Admin] PSI fetch failure:", payload.ErrorMsg)
-		tpl.ExecuteTemplate(res, "psi.gohtml", payload)
-		return
-	}
-
-	JSONData, _ := ioutil.ReadAll(result.Body)
-	marshalErr := json.Unmarshal(JSONData, &jsonResult)
-	tmp := jsonResult["items"].([]interface{})[0].(map[string]interface{})["readings"].(map[string]interface{})["psi_twenty_four_hourly"].(map[string]interface{})["national"]
-
-	if marshalErr != nil || tmp == nil {
-		payload.ErrorMsg = "Error encountered fetching PSI"
-		Error.Println(req.RemoteAddr, "[Admin] PSI fetch failure: error decoding json")
-		tpl.ExecuteTemplate(res, "psi.gohtml", payload)
-		return
-	}
-
-	psi := fmt.Sprintf("%v", tmp)
-	psiInt, err := strconv.Atoi(psi)
+	psi, err := psi.GetPSI()
 
 	if err != nil {
-		payload.ErrorMsg = "Error encountered fetching PSI"
-		Error.Println(req.RemoteAddr, "[Admin] PSI fetch failure: error parsing psi to int")
+		payload.ErrorMsg = err.Error()
+		Error.Println(req.RemoteAddr, "[Admin]", payload.ErrorMsg)
 		tpl.ExecuteTemplate(res, "psi.gohtml", payload)
 		return
 	}
 
-	// All good here
-	payload.Psi = psi
-
-	// https://www.haze.gov.sg/ for groupings
-	if psiInt >= 0 && psiInt <= 55 {
-		payload.PsiDescription = "Normal"
-	} else if psiInt >= 56 && psiInt <= 150 {
-		payload.PsiDescription = "Elevated"
-	} else if psiInt >= 151 && psiInt <= 250 {
-		payload.PsiDescription = "High"
-	} else {
-		payload.PsiDescription = "Very High"
-	}
+	payload.Psi = psi.Value
+	payload.PsiDescription = psi.Description
 
 	tpl.ExecuteTemplate(res, "psi.gohtml", payload)
 }
