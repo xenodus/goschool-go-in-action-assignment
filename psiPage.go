@@ -31,6 +31,7 @@ func psiPage(res http.ResponseWriter, req *http.Request) {
 
 	if httpErr != nil {
 		payload.ErrorMsg = "Error encountered fetching PSI"
+		Error.Println(req.RemoteAddr, "[Admin] PSI fetch failure:", payload.ErrorMsg)
 		tpl.ExecuteTemplate(res, "psi.gohtml", payload)
 		return
 	}
@@ -41,6 +42,7 @@ func psiPage(res http.ResponseWriter, req *http.Request) {
 
 	if marshalErr != nil || tmp == nil {
 		payload.ErrorMsg = "Error encountered fetching PSI"
+		Error.Println(req.RemoteAddr, "[Admin] PSI fetch failure: error decoding json")
 		tpl.ExecuteTemplate(res, "psi.gohtml", payload)
 		return
 	}
@@ -50,6 +52,7 @@ func psiPage(res http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		payload.ErrorMsg = "Error encountered fetching PSI"
+		Error.Println(req.RemoteAddr, "[Admin] PSI fetch failure: error parsing psi to int")
 		tpl.ExecuteTemplate(res, "psi.gohtml", payload)
 		return
 	}

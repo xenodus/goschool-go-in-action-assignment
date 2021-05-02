@@ -181,6 +181,7 @@ func viewDoctorsPage(res http.ResponseWriter, req *http.Request) {
 			payload.TimeslotsAvailable = getAvailableTimeslot(payload.ChosenDoctor.Appointments)
 		} else {
 			payload.ErrorMsg = err.Error()
+			Error.Println(req.RemoteAddr, " Doctor lookup failure:", payload.ErrorMsg, " ID:", doctorID)
 		}
 	}
 

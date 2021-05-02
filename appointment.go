@@ -20,30 +20,29 @@ type appointment struct {
 }
 
 // Make and sort by appointment time
-func makeAppointment(t int64, pat *patient, doc *doctor) (appointment, error) {
+func makeAppointment(t int64, pat *patient, doc *doctor) (*appointment, error) {
+
+	mutex.Lock()
+	defer mutex.Unlock()
 
 	app := appointment{}
 	_, err := isThereTimeslot(pat, doc)
 
 	if err == nil {
 
-		mutex.Lock()
-		{
-			atomic.AddInt64(&appointment_start_id, 1)
-			app := appointment{appointment_start_id, t, pat, doc}
+		atomic.AddInt64(&appointment_start_id, 1)
+		app := appointment{appointment_start_id, t, pat, doc}
 
-			wg.Add(3)
-			go addAppointment(&app)
-			go app.Doctor.addAppointment(&app)
-			go app.Patient.addAppointment(&app)
-			wg.Wait()
-		}
-		mutex.Unlock()
+		wg.Add(3)
+		go addAppointment(&app)
+		go app.Doctor.addAppointment(&app)
+		go app.Patient.addAppointment(&app)
+		wg.Wait()
 
-		return app, nil
+		return &app, nil
 	}
 
-	return app, err
+	return &app, err
 }
 
 func addAppointment(appt *appointment) {
@@ -331,6 +330,7 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	action := req.FormValue("action")
 
 	if action != "edit" && action != "cancel" {
+		Error.Println(req.RemoteAddr, " Appointment update failure: invalid action type")
 		http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 		return
 	}
@@ -351,6 +351,7 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		setNotification(req, ErrAppointmentIDNotFound.Error(), "Error")
+		Error.Println(req.RemoteAddr, " Appointment update failure: invalid appt id. Unable to parse.")
 		http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 		return
 	}
@@ -360,6 +361,7 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 	if patientApptIDIndex < 0 {
 		setNotification(req, ErrAppointmentIDNotFound.Error(), "Error")
+		Error.Println(req.RemoteAddr, " Appointment update failure:", ErrAppointmentIDNotFound.Error())
 		http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 		return
 	}
@@ -369,6 +371,7 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	// Does not belong to logged in user
 	if payload.Appt.Patient != thePatient {
 		setNotification(req, ErrAppointmentIDNotFound.Error(), "Error")
+		Error.Println(req.RemoteAddr, " Appointment update failure: appt ", payload.Appt.Id, " does not belong to user ", thePatient.Id)
 		http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 		return
 	}
@@ -377,7 +380,10 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	if action == "cancel" {
 		if req.Method == http.MethodPost {
 			setNotification(req, "Appointment cancelled!", "Success")
+			Info.Println(req.RemoteAddr, " Appointment cancelled successfully:", payload.Appt.Id)
 			payload.Appt.cancelAppointment()
+		} else {
+			Error.Println(req.RemoteAddr, " Appointment cancellation failure: GET REQUEST")
 		}
 
 		http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
@@ -392,6 +398,7 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 		if timeSlotErr != nil {
 			payload.ErrorMsg = ErrNoMoreTimeslot.Error()
+			Error.Println(req.RemoteAddr, " Appointment update failure:", payload.ErrorMsg)
 			tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
 			return
 		}
@@ -408,6 +415,7 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 				// Patient / Doctor time check
 				if !payload.Appt.Patient.isFreeAt(t) || !payload.Appt.Doctor.isFreeAt(t) {
 					payload.ErrorMsg = ErrDuplicateTimeslot.Error()
+					Error.Println(req.RemoteAddr, " Appointment update failure:", payload.ErrorMsg)
 					tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
 					return
 				}
@@ -417,12 +425,14 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 				// Past time
 				if isApptTimeValidErr != nil {
 					payload.ErrorMsg = isApptTimeValidErr.Error()
+					Error.Println(req.RemoteAddr, " Appointment update failure:", payload.ErrorMsg)
 					tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
 					return
 				}
 
 				payload.Appt.editAppointment(t, payload.Appt.Patient, payload.Appt.Doctor)
 				setNotification(req, "Appointment updated!", "Success")
+				Info.Println(req.RemoteAddr, " Appointment updated successfully:", payload.Appt.Id)
 				http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 				return
 			}
@@ -498,6 +508,7 @@ func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 			if err != nil {
 				payload.ErrorMsg = err.Error()
+				Error.Println(req.RemoteAddr, " Appointment creation failure:", payload.ErrorMsg)
 				tpl.ExecuteTemplate(res, "newAppointment.gohtml", payload)
 				return
 			}
@@ -517,6 +528,7 @@ func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 				payload.ChosenDoctor = nil
 
+				Error.Println(req.RemoteAddr, " Appointment creation failure:", payload.ErrorMsg)
 				tpl.ExecuteTemplate(res, "newAppointment.gohtml", payload)
 				return
 			}
@@ -528,6 +540,7 @@ func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 			// Check if slot truely exists
 			if !payload.ChosenDoctor.isFreeAt(t) || !thePatient.isFreeAt(t) {
 				payload.ErrorMsg = ErrDuplicateTimeslot.Error()
+				Error.Println(req.RemoteAddr, " Appointment creation failure:", payload.ErrorMsg)
 				tpl.ExecuteTemplate(res, "newAppointment.gohtml", payload)
 				return
 			}
@@ -537,14 +550,16 @@ func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 			// Past time
 			if isApptTimeValidErr != nil {
 				payload.ErrorMsg = isApptTimeValidErr.Error()
+				Error.Println(req.RemoteAddr, " Appointment creation failure:", payload.ErrorMsg)
 				tpl.ExecuteTemplate(res, "newAppointment.gohtml", payload)
 				return
 			}
 
-			_, newApptErr := makeAppointment(t, thePatient, payload.ChosenDoctor)
+			newAppt, newApptErr := makeAppointment(t, thePatient, payload.ChosenDoctor)
 
 			if newApptErr == nil {
 				setNotification(req, "Appointment scheduled!", "Success")
+				Info.Println(req.RemoteAddr, " Appointment created successfully:", newAppt.Id)
 				http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 				return
 			}

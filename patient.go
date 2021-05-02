@@ -370,12 +370,14 @@ func registerPage(res http.ResponseWriter, req *http.Request) {
 
 		if inputErr != nil {
 			payload.ErrorMsg = inputErr.Error()
+			Warning.Println(req.RemoteAddr, " Registration input validation failure")
 		} else {
 			// Create session + cookie
 			createSession(res, req, username)
 
 			bPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 			if err != nil {
+				Error.Println(req.RemoteAddr, " Password bcrypt generation failure")
 				http.Redirect(res, req, pageError+"?err=ErrInternalServerError", http.StatusSeeOther)
 				return
 			}
@@ -419,6 +421,7 @@ func loginPage(res http.ResponseWriter, req *http.Request) {
 		if noPatientErr != nil {
 			payload.ErrorMsg = ErrAuthFailure.Error()
 			res.WriteHeader(http.StatusForbidden)
+			Warning.Println(req.RemoteAddr, " Login failure")
 		}
 
 		if payload.ErrorMsg == "" {
@@ -427,6 +430,7 @@ func loginPage(res http.ResponseWriter, req *http.Request) {
 			if err != nil {
 				payload.ErrorMsg = ErrAuthFailure.Error()
 				res.WriteHeader(http.StatusForbidden)
+				Warning.Println(req.RemoteAddr, " Login failure")
 			}
 		}
 
@@ -488,6 +492,7 @@ func profilePage(res http.ResponseWriter, req *http.Request) {
 
 		if inputErr != nil {
 			payload.ErrorMsg = inputErr.Error()
+			Warning.Println(req.RemoteAddr, " Profile update input validation failure")
 		} else {
 			bPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 			thePatient.editPatient(thePatient.Id, firstname, lastname, bPassword)
