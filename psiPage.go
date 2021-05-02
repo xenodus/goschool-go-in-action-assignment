@@ -26,12 +26,10 @@ func psiPage(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		payload.ErrorMsg = "Unable to retrieve PSI"
 		Error.Println(req.RemoteAddr, "[Admin]", err.Error()) // only show detailed error inside logs
-		tpl.ExecuteTemplate(res, "psi.gohtml", payload)
-		return
+	} else {
+		payload.Psi = psi.Value
+		payload.PsiDescription = psi.Description
 	}
-
-	payload.Psi = psi.Value
-	payload.PsiDescription = psi.Description
 
 	tpl.ExecuteTemplate(res, "psi.gohtml", payload)
 }
