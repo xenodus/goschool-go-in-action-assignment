@@ -1,4 +1,4 @@
-package main
+package session
 
 import (
 	"net/http"
@@ -8,63 +8,62 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-type session struct {
+type Session struct {
 	Id           string
 	LastModified int64
 	LastVisited  *url.URL
-	Notification *notification
+	Notification *Notification
 }
 
 // Globals
-var cookieID string
-var mapSessions = make(map[string]session)
+var CookieID string
+var MapSessions = make(map[string]Session)
 
 func init() {
-	// Randomizing the cookie name on each init
-	cookieID = "AY_GOSCHOOL"
+	CookieID = "AY_GOSCHOOL"
 }
 
 func deleteDuplicateSession(username string) {
-	for k, v := range mapSessions {
+	for k, v := range MapSessions {
 		if v.Id == username {
-			Info.Println("Stale session deleted successfully for:", username)
-			delete(mapSessions, k)
+			//Info.Println("Stale session deleted successfully for:", username)
+			delete(MapSessions, k)
 			break
 		}
 	}
 }
 
-func createSession(res http.ResponseWriter, req *http.Request, username string) {
+func CreateSession(res http.ResponseWriter, req *http.Request, username, serverHost string) {
 
 	deleteDuplicateSession(username)
 
 	// Create Session + Cookie
 	id, _ := uuid.NewV4()
 	myCookie := &http.Cookie{
-		Name:     cookieID,
+		Name:     CookieID,
 		Value:    id.String(),
-		Path:     pageIndex,
+		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: 3,
 		Domain:   serverHost,
 	}
 	http.SetCookie(res, myCookie)
-	mapSessions[myCookie.Value] = session{username, time.Now().Unix(), req.URL, nil}
+	MapSessions[myCookie.Value] = Session{username, time.Now().Unix(), req.URL, nil}
 }
 
-func deleteSession(res http.ResponseWriter, req *http.Request) {
-	myCookie, err := req.Cookie(cookieID)
+func DeleteSession(res http.ResponseWriter, req *http.Request) {
+	myCookie, err := req.Cookie(CookieID)
 
 	if err == nil {
 		// Delete the Session
-		delete(mapSessions, myCookie.Value)
+		delete(MapSessions, myCookie.Value)
 		// Expire the Cookie
 		expire := time.Now().Add(-7 * 24 * time.Hour)
 		myCookie = &http.Cookie{
-			Name:     cookieID,
+			Name:     CookieID,
 			Value:    "",
-			Path:     pageIndex,
+			Path:     "/",
 			MaxAge:   -1,
 			Expires:  expire,
 			HttpOnly: true,

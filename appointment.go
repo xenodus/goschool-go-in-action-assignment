@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"sync/atomic"
 	"time"
+
+	"./internal/session"
 )
 
 // Globals
@@ -350,7 +352,7 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	apptId, err := strconv.ParseInt(inputApptId, 10, 64)
 
 	if err != nil {
-		setNotification(req, ErrAppointmentIDNotFound.Error(), "Error")
+		session.SetNotification(req, ErrAppointmentIDNotFound.Error(), "Error")
 		Error.Println(req.RemoteAddr, " Appointment update failure: invalid appt id. Unable to parse.")
 		http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 		return
@@ -360,7 +362,7 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	patientApptIDIndex := binarySearchApptID(apptId)
 
 	if patientApptIDIndex < 0 {
-		setNotification(req, ErrAppointmentIDNotFound.Error(), "Error")
+		session.SetNotification(req, ErrAppointmentIDNotFound.Error(), "Error")
 		Error.Println(req.RemoteAddr, " Appointment update failure:", ErrAppointmentIDNotFound.Error())
 		http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 		return
@@ -370,7 +372,7 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 	// Does not belong to logged in user
 	if payload.Appt.Patient != thePatient {
-		setNotification(req, ErrAppointmentIDNotFound.Error(), "Error")
+		session.SetNotification(req, ErrAppointmentIDNotFound.Error(), "Error")
 		Error.Println(req.RemoteAddr, " Appointment update failure: appt ", payload.Appt.Id, " does not belong to user ", thePatient.Id)
 		http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 		return
@@ -379,7 +381,7 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	// Cancel Appt
 	if action == "cancel" {
 		if req.Method == http.MethodPost {
-			setNotification(req, "Appointment cancelled!", "Success")
+			session.SetNotification(req, "Appointment cancelled!", "Success")
 			Info.Println(req.RemoteAddr, " Appointment cancelled successfully:", payload.Appt.Id)
 			payload.Appt.cancelAppointment()
 		} else {
@@ -431,7 +433,7 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 				}
 
 				payload.Appt.editAppointment(t, payload.Appt.Patient, payload.Appt.Doctor)
-				setNotification(req, "Appointment updated!", "Success")
+				session.SetNotification(req, "Appointment updated!", "Success")
 				Info.Println(req.RemoteAddr, " Appointment updated successfully:", payload.Appt.Id)
 				http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 				return
@@ -462,14 +464,14 @@ func appointmentPage(res http.ResponseWriter, req *http.Request) {
 	}
 
 	// Get notifications from session
-	if notify, notifyErr := getNotification(req); notifyErr == nil {
+	if notify, notifyErr := session.GetNotification(req); notifyErr == nil {
 		if notify != nil {
 			if notify.Type == "Success" {
 				payload.SuccessMsg = notify.Message
 			} else if notify.Type == "Error" {
 				payload.ErrorMsg = notify.Message
 			}
-			clearNotification(req)
+			session.ClearNotification(req)
 		}
 	}
 
@@ -558,7 +560,7 @@ func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 			newAppt, newApptErr := makeAppointment(t, thePatient, payload.ChosenDoctor)
 
 			if newApptErr == nil {
-				setNotification(req, "Appointment scheduled!", "Success")
+				session.SetNotification(req, "Appointment scheduled!", "Success")
 				Info.Println(req.RemoteAddr, " Appointment created successfully:", newAppt.Id)
 				http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 				return

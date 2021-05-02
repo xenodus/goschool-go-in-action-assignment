@@ -1,4 +1,4 @@
-package main
+package patient
 
 import (
 	"math"
@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"./internal/session"
 
 	"github.com/microcosm-cc/bluemonday"
 	"golang.org/x/crypto/bcrypt"
@@ -69,10 +71,10 @@ func (p *patient) deletePatient() error {
 	// 2. remove sessions with user id
 	mutex.Lock()
 	{
-		if len(mapSessions) > 0 {
-			for k, v := range mapSessions {
+		if len(session.MapSessions) > 0 {
+			for k, v := range session.MapSessions {
 				if v.Id == p.Id {
-					delete(mapSessions, k)
+					delete(session.MapSessions, k)
 				}
 			}
 		}
@@ -296,20 +298,20 @@ func isNRICValid(nric string) bool {
 }
 
 func isLoggedIn(req *http.Request) (*patient, bool) {
-	myCookie, err := req.Cookie(cookieID)
+	myCookie, err := req.Cookie(session.CookieID)
 	if err != nil {
 		return nil, false
 	}
 
-	username := mapSessions[myCookie.Value].Id
+	username := session.MapSessions[myCookie.Value].Id
 	patient, noPatientErr := getPatientByID(username)
 
 	if noPatientErr == nil {
 		// also update session with last access datetime
-		session := mapSessions[myCookie.Value]
-		session.LastModified = time.Now().Unix()
-		session.LastVisited = req.URL
-		mapSessions[myCookie.Value] = session
+		newSession := session.MapSessions[myCookie.Value]
+		newSession.LastModified = time.Now().Unix()
+		newSession.LastVisited = req.URL
+		session.MapSessions[myCookie.Value] = newSession
 	}
 
 	return patient, noPatientErr == nil
@@ -373,7 +375,7 @@ func registerPage(res http.ResponseWriter, req *http.Request) {
 			Warning.Println(req.RemoteAddr, " Registration input validation failure")
 		} else {
 			// Create session + cookie
-			createSession(res, req, username)
+			session.CreateSession(res, req, username, serverHost)
 
 			bPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 			if err != nil {
@@ -436,7 +438,7 @@ func loginPage(res http.ResponseWriter, req *http.Request) {
 
 		if payload.ErrorMsg == "" {
 			// Create session + cookie
-			createSession(res, req, username)
+			session.CreateSession(res, req, username, serverHost)
 
 			http.Redirect(res, req, pageIndex, http.StatusSeeOther)
 			return
@@ -454,7 +456,7 @@ func logoutPage(res http.ResponseWriter, req *http.Request) {
 	}
 
 	// Delete session + cookie
-	deleteSession(res, req)
+	session.DeleteSession(res, req)
 
 	http.Redirect(res, req, pageIndex, http.StatusSeeOther)
 }

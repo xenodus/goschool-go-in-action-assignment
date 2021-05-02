@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+
+	"./internal/session"
 )
 
 func adminSessionsPage(res http.ResponseWriter, req *http.Request) {
@@ -24,13 +26,13 @@ func adminSessionsPage(res http.ResponseWriter, req *http.Request) {
 	payload := struct {
 		PageTitle  string
 		User       *patient
-		Sessions   map[string]session
+		Sessions   map[string]session.Session
 		ErrorMsg   string
 		SuccessMsg string
 	}{
 		"Manage Sessions",
 		thePatient,
-		mapSessions,
+		session.MapSessions,
 		"",
 		"",
 	}
@@ -42,8 +44,8 @@ func adminSessionsPage(res http.ResponseWriter, req *http.Request) {
 
 		// delete single session
 		if action == "delete" && sessionId != "" {
-			if _, ok := mapSessions[sessionId]; ok {
-				delete(mapSessions, sessionId)
+			if _, ok := session.MapSessions[sessionId]; ok {
+				delete(session.MapSessions, sessionId)
 				payload.SuccessMsg = "Session deleted!"
 				Info.Println(req.RemoteAddr, " [Admin] Session deleted successfully. By:", thePatient.Id)
 			} else {
@@ -54,7 +56,7 @@ func adminSessionsPage(res http.ResponseWriter, req *http.Request) {
 
 		// delete all sessions
 		if action == "purge" {
-			mapSessions = make(map[string]session)
+			session.MapSessions = make(map[string]session.Session)
 		}
 
 		if action != "" {
@@ -99,14 +101,14 @@ func adminAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	}
 
 	// Get notifications from session
-	if notify, notifyErr := getNotification(req); notifyErr == nil {
+	if notify, notifyErr := session.GetNotification(req); notifyErr == nil {
 		if notify != nil {
 			if notify.Type == "Success" {
 				payload.SuccessMsg = notify.Message
 			} else if notify.Type == "Error" {
 				payload.ErrorMsg = notify.Message
 			}
-			clearNotification(req)
+			session.ClearNotification(req)
 		}
 	}
 
@@ -151,7 +153,7 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	apptId, err := strconv.ParseInt(inputApptId, 10, 64)
 
 	if err != nil {
-		setNotification(req, ErrAppointmentIDNotFound.Error(), "Error")
+		session.SetNotification(req, ErrAppointmentIDNotFound.Error(), "Error")
 		Error.Println(req.RemoteAddr, " [Admin] Appointment update failure: invalid appt id. Unable to parse. By:", thePatient.Id)
 		http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
 		return
@@ -161,7 +163,7 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	theApptIndex := binarySearchApptID(apptId)
 
 	if theApptIndex < 0 {
-		setNotification(req, ErrAppointmentIDNotFound.Error(), "Error")
+		session.SetNotification(req, ErrAppointmentIDNotFound.Error(), "Error")
 		Error.Println(req.RemoteAddr, " [Admin] Appointment update failure: ", ErrAppointmentIDNotFound.Error())
 		http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
 		return
@@ -172,7 +174,7 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	// Cancel Appt
 	if action == "cancel" {
 		if req.Method == http.MethodPost {
-			setNotification(req, "Appointment cancelled!", "Success")
+			session.SetNotification(req, "Appointment cancelled!", "Success")
 			Info.Println(req.RemoteAddr, " [Admin] Appointment cancelled successfully:", payload.Appt.Id, "By:", thePatient.Id)
 			payload.Appt.cancelAppointment()
 		} else {
@@ -224,7 +226,7 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 				}
 
 				payload.Appt.editAppointment(t, payload.Appt.Patient, payload.Appt.Doctor)
-				setNotification(req, "Appointment updated!", "Success")
+				session.SetNotification(req, "Appointment updated!", "Success")
 				Info.Println(req.RemoteAddr, " Appointment updated successfully:", payload.Appt.Id, "By:", thePatient.Id)
 				http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
 				return
@@ -322,7 +324,7 @@ func adminPaymentEnqueuePage(res http.ResponseWriter, req *http.Request) {
 				apptIdIndex := binarySearchApptID(apptId)
 
 				if apptIdIndex < 0 {
-					setNotification(req, "Error adding to payment queue! Appointment ID not found.", "Error")
+					session.SetNotification(req, "Error adding to payment queue! Appointment ID not found.", "Error")
 					Error.Println(req.RemoteAddr, "[Admin] Payment enqueue failure: Appointment ID not found. By:", thePatient.Id)
 					http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
 					return
@@ -330,7 +332,7 @@ func adminPaymentEnqueuePage(res http.ResponseWriter, req *http.Request) {
 
 				appt := appointments[apptIdIndex]
 				createPayment(appt, 19.99)
-				setNotification(req, "Appointment added to payment queue!", "Success")
+				session.SetNotification(req, "Appointment added to payment queue!", "Success")
 				Info.Println(req.RemoteAddr, " [Admin] Payment enqueued successfully. By:", thePatient.Id)
 				http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
 				return
@@ -424,7 +426,7 @@ func adminDebugPage(res http.ResponseWriter, req *http.Request) {
 	fmt.Println("Patients:", len(patients), patients)
 	fmt.Println("PaymentQueue:", paymentQ.Size, paymentQ)
 	fmt.Println("MissedPaymentQueue:", missedPaymentQ.Size, missedPaymentQ)
-	fmt.Println("Sessions:", len(mapSessions), mapSessions)
+	fmt.Println("Sessions:", len(session.MapSessions), session.MapSessions)
 	fmt.Println("Admins:", len(admins), admins)
 
 	fmt.Println(":::::::::::::: Appointments ::::::::::::::")
