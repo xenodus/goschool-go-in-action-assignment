@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"assignment4/internal/session"
+	"assignment4/session"
 )
 
 // Globals

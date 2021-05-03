@@ -1,5 +1,3 @@
-// Author: Alvin Yeoh
-
 package main
 
 import (

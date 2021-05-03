@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"assignment4/internal/session"
+	"assignment4/session"
 
 	"github.com/microcosm-cc/bluemonday"
 	"golang.org/x/crypto/bcrypt"
