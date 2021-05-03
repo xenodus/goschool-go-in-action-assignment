@@ -19,7 +19,7 @@ func SeedAdmins() {
 		log.Fatal("Error loading .env file")
 	} else {
 		adminIdsString := os.Getenv("ADMIN_IDS")
-		adminIds := strings.Split(adminIdsString, ",")
+		adminIds := strings.Split(adminIdsString, ", ")
 		Admins = append(Admins, adminIds...)
 	}
 }
@@ -34,18 +34,20 @@ func SeedPatients() {
 		bPassword, err := bcrypt.GenerateFromPassword([]byte(testAcctPasswordString), bcrypt.MinCost)
 
 		if err == nil {
-			wg.Add(10)
-			go CreatePatient("S1111111B", "Barry", "Allen", bPassword)
-			go CreatePatient("S2222222C", "Bruce", "Wayne", bPassword)
-			go CreatePatient("S3333333D", "Hal", "Jordan", bPassword)
-			go CreatePatient("S4444444D", "Arthur", "Curry", bPassword)
-			go CreatePatient("S5555555E", "Jay", "Garrick", bPassword)
-			go CreatePatient("S6666666F", "John", "Steward", bPassword)
-			go CreatePatient("S7777777G", "Wally", "West", bPassword)
+			wg.Add(12)
+			go CreatePatient("S1111111B", "Anakin", "Skywalker", bPassword)
+			go CreatePatient("S2222222C", "Leia", "Organa", bPassword)
+			go CreatePatient("S3333333D", "Han", "Solo", bPassword)
+			go CreatePatient("S4444444D", "Padmé", "Amidala", bPassword)
+			go CreatePatient("S5555555E", "Owen", "Lars", bPassword)
+			go CreatePatient("S6666666F", "Qui-Gon", "Jin", bPassword)
+			go CreatePatient("S7777777G", "Kanan", "Jarrus", bPassword)
 			// admins
-			go CreatePatient("S0000000A", "Diana", "Prince", bPassword)
-			go CreatePatient("S1234567A", "Clark", "Kent", bPassword)
-			go CreatePatient("S9999999A", "Oliver", "Queen", bPassword)
+			go CreatePatient("S0000000A", "Cal", "Kestis", bPassword)
+			go CreatePatient("S1234567A", "Mace", "Windu", bPassword)
+			go CreatePatient("S7654321A", "Savage", "Opress", bPassword)
+			go CreatePatient("S8888888A", "Orson", "Krennic", bPassword)
+			go CreatePatient("S9999999A", "Sheev", "Palpatine", bPassword)
 			wg.Wait()
 		}
 	}
@@ -53,16 +55,16 @@ func SeedPatients() {
 
 func SeedDoctors() {
 	wg.Add(10)
-	go addDoctor("Steve", "Rogers")
-	go addDoctor("Tony", "Stark")
-	go addDoctor("Peter", "Parker")
-	go addDoctor("Sam", "Wilson")
-	go addDoctor("Clint", "Barton")
-	go addDoctor("Wanda", "Maximoff")
-	go addDoctor("Scott", "Lang")
-	go addDoctor("Bruce", "Banner")
-	go addDoctor("Steven", "Strange")
-	go addDoctor("Carol", "Denvers")
+	go addDoctor("Boba", "Fett")
+	go addDoctor("Bo-Katan", "Kryze")
+	go addDoctor("Paz", "Vizsla")
+	go addDoctor("Sabine", "Wren")
+	go addDoctor("Lando", "Calrissian")
+	go addDoctor("Wedge", "Antilles")
+	go addDoctor("Cassian", "Andor")
+	go addDoctor("Chirrut", "Îmwe")
+	go addDoctor("Galen", "Erso")
+	go addDoctor("Saw", "Gerrera")
 	wg.Wait()
 }
 
