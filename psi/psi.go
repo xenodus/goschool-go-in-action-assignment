@@ -1,4 +1,4 @@
-// My test comment again...
+// Package psi provide implementation for fetching the 24H average Pollutant Standards Index (PSI) value and returns a PSI struct.
 package psi
 
 import (
@@ -20,7 +20,6 @@ func GetPSI() (*PSI, error) {
 	var jsonResult map[string]interface{}
 
 	api_url := "https://api.data.gov.sg/v1/environment/psi"
-	// api_url := "https://www.alvinyeoh.com/files/psi.json" // personal copy for testing
 
 	result, httpErr := http.Get(api_url)
 
