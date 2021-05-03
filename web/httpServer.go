@@ -59,7 +59,7 @@ func StartHttpServer() {
 	http.HandleFunc(pagePaymentQueue, paymentQueuePage)
 
 	// PSI
-	http.HandleFunc(pagePSI, PsiPage)
+	http.HandleFunc(pagePSI, psiPage)
 
 	// Debug Page
 	http.HandleFunc(pageAdminDebug, adminDebugPage)

@@ -7,7 +7,7 @@ import (
 	"assignment4/psi"
 )
 
-func PsiPage(res http.ResponseWriter, req *http.Request) {
+func psiPage(res http.ResponseWriter, req *http.Request) {
 
 	thePatient, _ := clinic.IsLoggedIn(req)
 
