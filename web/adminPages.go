@@ -53,7 +53,7 @@ func adminSessionsPage(res http.ResponseWriter, req *http.Request) {
 				payload.SuccessMsg = "Session deleted!"
 				doLog(req, "INFO", " [Admin] Session deleted successfully. By: "+thePatient.Id)
 			} else {
-				payload.ErrorMsg = clinic.ErrSessionNotFound.Error()
+				payload.ErrorMsg = errSessionNotFound.Error()
 				doLog(req, "ERROR", "[Admin] Session delete failure: "+payload.ErrorMsg+" By: "+thePatient.Id)
 			}
 		}

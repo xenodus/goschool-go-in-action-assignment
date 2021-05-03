@@ -10,6 +10,9 @@ var (
 	errInternalServerError = errors.New("internal server error")
 	errStatusNotFound      = errors.New("page not found")
 
+	// Session
+	errSessionNotFound = errors.New("session not found")
+
 	// Auth
 	errAlreadyRegistered = errors.New("you are already registered")
 	errInvalidNRIC       = errors.New("invalid NRIC")
