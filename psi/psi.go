@@ -1,4 +1,4 @@
-// Package psi provide implementation for fetching the 24H average Pollutant Standards Index (PSI) value and returns a PSI struct.
+// Package psi defines the PSI type and provide implementation for fetching the 24H average Pollutant Standards Index (PSI) value.
 package psi
 
 import (

@@ -7,8 +7,6 @@ import (
 	"strconv"
 )
 
-// Web Pages
-
 func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 	thePatient, isLoggedInCheck := clinic.IsLoggedIn(req)

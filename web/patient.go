@@ -14,7 +14,6 @@ import (
 // Globals
 var wg sync.WaitGroup
 
-// Web Pages
 func areInputValid(username, firstname, lastname, password string, isRegister bool) error {
 
 	if firstname == "" || lastname == "" || password == "" {

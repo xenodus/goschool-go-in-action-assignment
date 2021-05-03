@@ -5,7 +5,6 @@ import (
 	"net/http"
 )
 
-// Web Pages
 func paymentQueuePage(res http.ResponseWriter, req *http.Request) {
 
 	thePatient, _ := clinic.IsLoggedIn(req)
