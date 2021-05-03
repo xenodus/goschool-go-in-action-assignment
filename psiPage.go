@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 
-	"./internal/psi"
+	"assignment4/internal/psi"
 )
 
 func psiPage(res http.ResponseWriter, req *http.Request) {

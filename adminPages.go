@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"./internal/session"
+	"assignment4/internal/session"
 )
 
 func adminSessionsPage(res http.ResponseWriter, req *http.Request) {
