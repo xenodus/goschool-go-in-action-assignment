@@ -1,13 +1,18 @@
 package clinic
 
 import (
-	"sync/atomic"
+	"log"
+
+	"database/sql"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 // Globals
 var Doctors = []*Doctor{}
 var DoctorsBST *BST
-var doctor_start_id int64 = 100
+
+// var doctor_start_id int64 = 100
 
 type Doctor struct {
 	Id           int64
@@ -16,17 +21,84 @@ type Doctor struct {
 	Appointments []*Appointment
 }
 
-func addDoctor(first_name string, last_name string) {
+func getDoctorsFromDB() ([]*Doctor, error) {
+
+	db, err := sql.Open("mysql", db_connection)
+	if err != nil {
+		log.Fatal(ErrDBConn.Error(), err)
+		return Doctors, ErrDBConn
+	}
+	defer db.Close()
+
+	rows, rowsErr := db.Query("SELECT * FROM doctor")
+
+	if rowsErr != nil {
+		return Doctors, ErrDBConn
+	}
+
+	for rows.Next() {
+
+		var (
+			id                    int64
+			first_name, last_name string
+		)
+
+		rowScanErr := rows.Scan(&id, &first_name, &last_name)
+
+		if rowScanErr != nil {
+			return Doctors, ErrDBConn
+		}
+
+		doc := &Doctor{
+			id, first_name, last_name, nil,
+		}
+
+		Doctors = append(Doctors, doc)
+	}
+
+	if len(Doctors) > 0 {
+		DoctorsBST = makeBST()
+	}
+
+	return Doctors, nil
+}
+
+func addDoctor(first_name string, last_name string) (*Doctor, error) {
 	defer wg.Done()
 
 	mutex.Lock()
-	{
-		atomic.AddInt64(&doctor_start_id, 1)
-		doc := Doctor{doctor_start_id, first_name, last_name, nil}
-		Doctors = append(Doctors, &doc)
-		DoctorsBST = makeBST()
+	defer mutex.Unlock()
+
+	db, err := sql.Open("mysql", db_connection)
+	if err != nil {
+		log.Fatal(ErrDBConn.Error(), err)
+		return nil, ErrDBConn
 	}
-	mutex.Unlock()
+	defer db.Close()
+
+	stmt, prepErr := db.Prepare("INSERT into doctor (first_name, last_name) values(?,?)")
+	if prepErr != nil {
+		log.Fatal(ErrDBConn.Error(), prepErr)
+		return nil, ErrCreateDoctor
+	}
+	res, execErr := stmt.Exec(first_name, last_name)
+	if execErr != nil {
+		log.Fatal(ErrDBConn.Error(), execErr)
+		return nil, ErrCreateDoctor
+	}
+	insertedId, insertedErr := res.LastInsertId()
+	if insertedErr != nil {
+		log.Fatal(ErrDBConn.Error(), insertedErr)
+		return nil, ErrCreateDoctor
+	}
+
+	//atomic.AddInt64(&doctor_start_id, 1)
+	//doc := Doctor{doctor_start_id, first_name, last_name, nil}
+	doc := &Doctor{insertedId, first_name, last_name, nil}
+	Doctors = append(Doctors, doc)
+	DoctorsBST = makeBST()
+
+	return doc, nil
 }
 
 func (d *Doctor) IsFreeAt(t int64) bool {

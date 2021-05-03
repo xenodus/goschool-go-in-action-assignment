@@ -14,12 +14,19 @@ var (
 	ErrTimeslotExpired       = errors.New("timeslot has already expired")
 	ErrAppointmentIDNotFound = errors.New("appointment id not found")
 
+	ErrCreateAppointment = errors.New("unable to create appointment")
+
 	// Doc
 	ErrDoctorIDNotFound = errors.New("doctor id not found")
+	ErrCreateDoctor     = errors.New("unable to create doctor")
 
 	// Patient
 	ErrPatientIDNotFound = errors.New("patient id not found")
+	ErrCreatePatient     = errors.New("unable to create patient")
 
 	// Payment
 	ErrEmptyPaymentQueue = errors.New("empty payment queue")
+
+	// DB
+	ErrDBConn = errors.New("unable to get db connection")
 )

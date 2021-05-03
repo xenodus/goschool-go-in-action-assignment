@@ -1,6 +1,7 @@
 package clinic
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"math/rand"
@@ -12,19 +13,57 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func SeedAdmins() {
+func SeedData() {
+	if seedDB {
+		// Truncate DB Tables
+		resetDB()
 
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
+		// Mandatory Test Data
+		seedDoctors()
+		seedAdmins()
+
+		// Optional Test Data
+		seedPatients()
+		seedAppointments()
+		seedPaymentQueue()
 	} else {
-		adminIdsString := os.Getenv("ADMIN_IDS")
-		adminIds := strings.Split(adminIdsString, ", ")
-		Admins = append(Admins, adminIds...)
+		getDoctorsFromDB()
+		getPatientsFromDB()
+		getAppointmentsFromDB()
 	}
 }
 
-func SeedPatients() {
+func resetDB() {
+	db, err := sql.Open("mysql", "goschool:f04d27b032ea5092fe613e1e61ae228272c116cd@tcp(goschooldb.alvinyeoh.com:3306)/goschool")
+	if err != nil {
+		log.Fatal("DB Connection Failed: ", err)
+	}
+	db.Query("TRUNCATE TABLE `doctor`")
+	db.Query("ALTER TABLE `doctor` AUTO_INCREMENT=100")
+	db.Query("TRUNCATE TABLE `patient`")
+	db.Query("TRUNCATE TABLE `appointment`")
+	db.Query("ALTER TABLE appointment AUTO_INCREMENT=1000")
+	db.Query("TRUNCATE TABLE `payment`")
+	db.Query("ALTER TABLE payment AUTO_INCREMENT=300")
+
+	defer db.Close()
+}
+
+func seedAdmins() {
+
+	if len(Admins) == 0 {
+		err := godotenv.Load()
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		} else {
+			adminIdsString := os.Getenv("ADMIN_IDS")
+			adminIds := strings.Split(adminIdsString, ", ")
+			Admins = append(Admins, adminIds...)
+		}
+	}
+}
+
+func seedPatients() {
 
 	err := godotenv.Load()
 	if err != nil {
@@ -53,7 +92,7 @@ func SeedPatients() {
 	}
 }
 
-func SeedDoctors() {
+func seedDoctors() {
 	wg.Add(10)
 	go addDoctor("Boba", "Fett")
 	go addDoctor("Bo-Katan", "Kryze")
@@ -68,7 +107,7 @@ func SeedDoctors() {
 	wg.Wait()
 }
 
-func SeedAppointments() {
+func seedAppointments() {
 	no2seed := 10
 	rand.Seed(time.Now().Unix())
 
@@ -89,7 +128,7 @@ func SeedAppointments() {
 	}
 }
 
-func SeedPaymentQueue() {
+func seedPaymentQueue() {
 	no2queue := 3
 	no2MissedQueue := 0
 	rand.Seed(time.Now().Unix())

@@ -119,7 +119,7 @@ func loginPage(res http.ResponseWriter, req *http.Request) {
 		if noPatientErr != nil {
 			payload.ErrorMsg = errAuthFailure.Error()
 			res.WriteHeader(http.StatusForbidden)
-			doLog(req, "WARNING", " Login failure")
+			doLog(req, "WARNING", " Login failure - Invalid ID")
 		}
 
 		if payload.ErrorMsg == "" {
@@ -128,7 +128,7 @@ func loginPage(res http.ResponseWriter, req *http.Request) {
 			if err != nil {
 				payload.ErrorMsg = errAuthFailure.Error()
 				res.WriteHeader(http.StatusForbidden)
-				doLog(req, "WARNING", " Login failure")
+				doLog(req, "WARNING", " Login failure - Password mismatch")
 			}
 		}
 

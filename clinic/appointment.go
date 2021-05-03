@@ -1,15 +1,20 @@
 package clinic
 
 import (
+	"database/sql"
+	"log"
+	"strconv"
 	"sync"
-	"sync/atomic"
 	"time"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 // Globals
 var Appointments = []*Appointment{}
 var AppointmentsSortedByTimeslot = []*Appointment{}
-var appointment_start_id int64 = 1000
+
+// var appointment_start_id int64 = 1000
 
 var wg sync.WaitGroup
 var mutex sync.Mutex
@@ -21,30 +26,102 @@ type Appointment struct {
 	Doctor  *Doctor
 }
 
+func getAppointmentsFromDB() ([]*Appointment, error) {
+
+	db, err := sql.Open("mysql", db_connection)
+	if err != nil {
+		log.Fatal(ErrDBConn.Error(), err)
+		return Appointments, ErrDBConn
+	}
+	defer db.Close()
+
+	rows, rowsErr := db.Query("SELECT * FROM appointment")
+
+	if rowsErr != nil {
+		return Appointments, ErrDBConn
+	}
+
+	for rows.Next() {
+
+		var (
+			id, time              int64
+			doctor_id, patient_id string
+		)
+
+		rowScanErr := rows.Scan(&id, &time, &doctor_id, &patient_id)
+
+		if rowScanErr != nil {
+			return Appointments, ErrDBConn
+		}
+
+		doctorID, _ := strconv.ParseInt(doctor_id, 10, 64)
+		doc, docErr := DoctorsBST.GetDoctorByIDBST(doctorID)
+		pat, patErr := GetPatientByID(patient_id)
+
+		if docErr == nil && patErr == nil {
+			appt := &Appointment{
+				id, time, pat, doc,
+			}
+
+			wg.Add(3)
+			go addAppointment(appt)
+			go appt.Doctor.addAppointment(appt)
+			go appt.Patient.addAppointment(appt)
+			wg.Wait()
+		}
+	}
+
+	return Appointments, nil
+}
+
 // Make and sort by appointment time
 func MakeAppointment(t int64, pat *Patient, doc *Doctor) (*Appointment, error) {
 
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	app := Appointment{}
+	app := &Appointment{}
 	_, err := IsThereTimeslot(pat, doc)
 
 	if err == nil {
 
-		atomic.AddInt64(&appointment_start_id, 1)
-		app := Appointment{appointment_start_id, t, pat, doc}
+		db, err := sql.Open("mysql", db_connection)
+		if err != nil {
+			log.Fatal(ErrDBConn.Error(), err)
+			return nil, ErrDBConn
+		}
+		defer db.Close()
+
+		stmt, prepErr := db.Prepare("INSERT into appointment (time, doctor_id, patient_id) values(?,?,?)")
+		if prepErr != nil {
+			log.Fatal(ErrDBConn.Error(), prepErr)
+			return nil, ErrCreateAppointment
+		}
+		res, execErr := stmt.Exec(t, doc.Id, pat.Id)
+		if execErr != nil {
+			log.Fatal(ErrDBConn.Error(), execErr)
+			return nil, ErrCreateAppointment
+		}
+		insertedId, insertedErr := res.LastInsertId()
+		if insertedErr != nil {
+			log.Fatal(ErrDBConn.Error(), insertedErr)
+			return nil, ErrCreateAppointment
+		}
+
+		// atomic.AddInt64(&appointment_start_id, 1)
+		// app := Appointment{appointment_start_id, t, pat, doc}
+		app := &Appointment{insertedId, t, pat, doc}
 
 		wg.Add(3)
-		go addAppointment(&app)
-		go app.Doctor.addAppointment(&app)
-		go app.Patient.addAppointment(&app)
+		go addAppointment(app)
+		go app.Doctor.addAppointment(app)
+		go app.Patient.addAppointment(app)
 		wg.Wait()
 
-		return &app, nil
+		return app, nil
 	}
 
-	return &app, err
+	return app, err
 }
 
 func addAppointment(appt *Appointment) {

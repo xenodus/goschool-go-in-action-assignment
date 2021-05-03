@@ -1,6 +1,8 @@
 package clinic
 
 import (
+	"database/sql"
+	"log"
 	"math"
 	"net/http"
 	"strconv"
@@ -8,6 +10,8 @@ import (
 	"time"
 
 	"assignment4/session"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 // Globals
@@ -22,17 +26,85 @@ type Patient struct {
 	Appointments []*Appointment
 }
 
-func CreatePatient(username, first_name, last_name string, password []byte) {
-	defer wg.Done()
+func init() {
+	seedAdmins()
+}
 
-	mutex.Lock()
-	{
-		thePatient := Patient{username, first_name, last_name, password, nil}
-		Patients = append(Patients, &thePatient)
+func getPatientsFromDB() ([]*Patient, error) {
+
+	db, err := sql.Open("mysql", db_connection)
+	if err != nil {
+		log.Fatal(ErrDBConn.Error(), err)
+		return Patients, ErrDBConn
+	}
+	defer db.Close()
+
+	rows, rowsErr := db.Query("SELECT * FROM patient")
+
+	if rowsErr != nil {
+		return Patients, ErrDBConn
+	}
+
+	for rows.Next() {
+
+		var (
+			id, first_name, last_name string
+			password                  []byte
+			admin                     bool
+		)
+
+		rowScanErr := rows.Scan(&id, &first_name, &last_name, &password, &admin)
+
+		if rowScanErr != nil {
+			return Patients, ErrDBConn
+		}
+
+		pat := &Patient{
+			id, first_name, last_name, password, nil,
+		}
+
+		Patients = append(Patients, pat)
+	}
+
+	if len(Doctors) > 0 {
 		// Sort by patient id alphabetically
 		mergeSortPatient(Patients, 0, len(Patients)-1)
 	}
-	mutex.Unlock()
+
+	return Patients, nil
+}
+
+func CreatePatient(username, first_name, last_name string, password []byte) (*Patient, error) {
+	defer wg.Done()
+
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	// db
+	db, err := sql.Open("mysql", db_connection)
+	if err != nil {
+		log.Fatal(err)
+		return nil, ErrDBConn
+	}
+	defer db.Close()
+
+	stmt, prepErr := db.Prepare("INSERT into patient (id, first_name, last_name, password, admin) values(?,?,?,?,?)")
+	if prepErr != nil {
+		log.Fatal(ErrDBConn.Error(), prepErr)
+		return nil, ErrCreateAppointment
+	}
+	_, execErr := stmt.Exec(username, first_name, last_name, password, 0)
+	if execErr != nil {
+		log.Fatal(ErrDBConn.Error(), execErr)
+		return nil, ErrCreateAppointment
+	}
+
+	thePatient := &Patient{username, first_name, last_name, password, nil}
+	Patients = append(Patients, thePatient)
+	// Sort by patient id alphabetically
+	mergeSortPatient(Patients, 0, len(Patients)-1)
+
+	return thePatient, nil
 }
 
 func (p *Patient) EditPatient(username, first_name, last_name string, password []byte) {
@@ -42,6 +114,19 @@ func (p *Patient) EditPatient(username, first_name, last_name string, password [
 		p.First_name = first_name
 		p.Last_name = last_name
 		p.Password = password
+
+		// db
+		db, err := sql.Open("mysql", db_connection)
+		if err != nil {
+			log.Fatal(ErrDBConn.Error(), err)
+		}
+		defer db.Close()
+
+		_, execErr := db.Exec("UPDATE `patient` SET first_name = ?, last_name = ?, password = ? WHERE id = ?", p.First_name, p.Last_name, p.Password, p.Id)
+		if execErr != nil {
+			log.Fatal(ErrDBConn.Error(), err)
+		}
+
 		// Sort by patient id alphabetically
 		mergeSortPatient(Patients, 0, len(Patients)-1)
 	}
@@ -76,7 +161,29 @@ func (p *Patient) DeletePatient() error {
 			}
 		}
 
-		// 3. remove patient from patients slice
+		// 3. remove from db
+		db, err := sql.Open("mysql", db_connection)
+		if err != nil {
+			log.Fatal(ErrDBConn.Error(), err)
+		}
+		defer db.Close()
+
+		_, execErr := db.Exec("DELETE FROM `patient` WHERE id = ?", p.Id)
+		if execErr != nil {
+			log.Fatal(ErrDBConn.Error(), err)
+		}
+
+		_, execErr = db.Exec("DELETE FROM `appointments` WHERE patient_id = ?", p.Id)
+		if execErr != nil {
+			log.Fatal(ErrDBConn.Error(), err)
+		}
+
+		_, execErr = db.Exec("DELETE FROM `appointments` WHERE patient_id = ?", p.Id)
+		if execErr != nil {
+			log.Fatal(ErrDBConn.Error(), err)
+		}
+
+		// 4. remove patient from patients slice
 		patientIDIndex := binarySearchPatientID(p.Id)
 
 		if patientIDIndex >= 0 {
