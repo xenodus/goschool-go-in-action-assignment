@@ -1,6 +1,9 @@
-package main
+package web
 
-import "net/http"
+import (
+	"assignment4/clinic"
+	"net/http"
+)
 
 func genericErrorHandler(res http.ResponseWriter, req *http.Request) {
 
@@ -9,7 +12,7 @@ func genericErrorHandler(res http.ResponseWriter, req *http.Request) {
 		PageTitle  string
 		ErrorMsg   string
 		SuccessMsg string
-		User       *patient
+		User       *clinic.Patient
 	}{
 		"Error",
 		"",
@@ -25,7 +28,7 @@ func genericErrorHandler(res http.ResponseWriter, req *http.Request) {
 	// default
 	default:
 		errorCode = http.StatusInternalServerError
-		payload.ErrorMsg = ErrInternalServerError.Error()
+		payload.ErrorMsg = errInternalServerError.Error()
 	}
 
 	res.WriteHeader(errorCode)
@@ -37,10 +40,10 @@ func notFoundErrorHandler(res http.ResponseWriter, req *http.Request) {
 	payload := struct {
 		PageTitle string
 		ErrorMsg  string
-		User      *patient
+		User      *clinic.Patient
 	}{
 		"Page not found",
-		ErrStatusNotFound.Error(),
+		errStatusNotFound.Error(),
 		nil,
 	}
 

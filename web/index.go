@@ -1,6 +1,9 @@
-package main
+package web
 
-import "net/http"
+import (
+	"assignment4/clinic"
+	"net/http"
+)
 
 func indexPage(res http.ResponseWriter, req *http.Request) {
 
@@ -9,7 +12,7 @@ func indexPage(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	thePatient, isLoggedInCheck := isLoggedIn(req)
+	thePatient, isLoggedInCheck := clinic.IsLoggedIn(req)
 
 	if !isLoggedInCheck {
 		http.Redirect(res, req, pageLogin, http.StatusSeeOther)
@@ -19,7 +22,7 @@ func indexPage(res http.ResponseWriter, req *http.Request) {
 	// Anonymous payload
 	payload := struct {
 		PageTitle string
-		User      *patient
+		User      *clinic.Patient
 	}{
 		"",
 		thePatient,

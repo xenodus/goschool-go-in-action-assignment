@@ -1,18 +1,19 @@
-package main
+package web
 
 import (
 	"net/http"
 
+	"assignment4/clinic"
 	"assignment4/psi"
 )
 
-func psiPage(res http.ResponseWriter, req *http.Request) {
+func PsiPage(res http.ResponseWriter, req *http.Request) {
 
-	thePatient, _ := isLoggedIn(req)
+	thePatient, _ := clinic.IsLoggedIn(req)
 
 	// Anonymous payload
 	payload := struct {
-		User           *patient
+		User           *clinic.Patient
 		PageTitle      string
 		ErrorMsg       string
 		Psi            string
@@ -25,7 +26,7 @@ func psiPage(res http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		payload.ErrorMsg = "Unable to retrieve PSI"
-		Error.Println(req.RemoteAddr, "[Admin]", err.Error()) // only show detailed error inside logs
+		doLog(req, "ERROR", "[Admin] "+err.Error()) // only show detailed error inside logs
 	} else {
 		payload.Psi = psi.Value
 		payload.PsiDescription = psi.Description

@@ -1,4 +1,4 @@
-package main
+package web
 
 import (
 	"fmt"
@@ -20,10 +20,11 @@ func init() {
 	tpl = template.Must(template.New("").Funcs(funcMap).ParseGlob("templates/*"))
 }
 
-func startHttpServer() {
+func StartHttpServer() {
 	fs := http.FileServer(http.Dir("./assets"))
 	http.Handle("/assets/", http.StripPrefix("/assets/", fs))
 
+	// Used in IndexPage
 	http.HandleFunc(pageError, genericErrorHandler)
 
 	// Index
@@ -58,7 +59,7 @@ func startHttpServer() {
 	http.HandleFunc(pagePaymentQueue, paymentQueuePage)
 
 	// PSI
-	http.HandleFunc(pagePSI, psiPage)
+	http.HandleFunc(pagePSI, PsiPage)
 
 	// Debug Page
 	http.HandleFunc(pageAdminDebug, adminDebugPage)
@@ -66,7 +67,6 @@ func startHttpServer() {
 	fmt.Println("Server starting on: https://" + serverHost + ":" + serverPort)
 
 	err := http.ListenAndServeTLS(serverHost+":"+serverPort, "./.cert/.cert.pem", "./.cert/.key.pem", nil)
-
 	if err != nil {
 		log.Fatal(err)
 	}

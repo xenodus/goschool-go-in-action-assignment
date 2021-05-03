@@ -1,16 +1,12 @@
-package main
+package clinic
 
 // For doctors' timeslots - 1st consultation @ 8 am, last @ 10 pm
 const startOperationHour = 8
 const endOperationHour = 22
 const appointmentIntervals = 30 // 30 mins between each consultations
 
-// Server settings
-const serverHost = "goschool.alvinyeoh.com"
-const serverPort = "443"
-
 // Password policy
-const minPasswordLength = 8
+const MinPasswordLength = 8
 
 // Disabled for ease of testing of assignment
 const strictNRIC = false

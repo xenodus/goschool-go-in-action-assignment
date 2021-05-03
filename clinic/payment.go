@@ -1,49 +1,48 @@
-package main
+package clinic
 
 import (
-	"net/http"
 	"strconv"
 	"strings"
 	"sync/atomic"
 )
 
 // Globals
-var paymentQ = paymentQueue{}
-var missedPaymentQ = paymentQueue{}
+var PaymentQ = PaymentQueue{}
+var MissedPaymentQ = PaymentQueue{}
 var paymentCounter int64 = 200
 
-type payment struct {
+type Payment struct {
 	Id          int64
-	Appointment *appointment
+	Appointment *Appointment
 	Amount      float64
 }
 
-type paymentNode struct {
-	Payment *payment
-	Next    *paymentNode
+type PaymentNode struct {
+	Payment *Payment
+	Next    *PaymentNode
 }
 
-type paymentQueue struct {
-	Front *paymentNode
-	Back  *paymentNode
+type PaymentQueue struct {
+	Front *PaymentNode
+	Back  *PaymentNode
 	Size  int
 }
 
-func createPayment(appt *appointment, amt float64) error {
+func CreatePayment(appt *Appointment, amt float64) error {
 
 	atomic.AddInt64(&paymentCounter, 1)
-	pmy := payment{paymentCounter, appt, amt}
-	paymentQ.enqueue(&pmy)
-	appt.cancelAppointment()
+	pmy := Payment{paymentCounter, appt, amt}
+	PaymentQ.Enqueue(&pmy)
+	appt.CancelAppointment()
 
 	return nil
 }
 
-func (p *paymentQueue) enqueue(pmy *payment) error {
+func (p *PaymentQueue) Enqueue(pmy *Payment) error {
 
 	mutex.Lock()
 	{
-		newNode := &paymentNode{
+		newNode := &PaymentNode{
 			Payment: pmy,
 			Next:    nil,
 		}
@@ -62,9 +61,9 @@ func (p *paymentQueue) enqueue(pmy *payment) error {
 	return nil
 }
 
-func (p *paymentQueue) dequeue() (*payment, error) {
+func (p *PaymentQueue) Dequeue() (*Payment, error) {
 
-	var pmy *payment
+	var pmy *Payment
 
 	mutex.Lock()
 	{
@@ -88,7 +87,7 @@ func (p *paymentQueue) dequeue() (*payment, error) {
 	return pmy, nil
 }
 
-func (p *paymentQueue) PrintAllQueueIDs(skipFirst bool) string {
+func (p *PaymentQueue) PrintAllQueueIDs(skipFirst bool) string {
 
 	queueIds := p.getAllQueueID()
 
@@ -103,7 +102,7 @@ func (p *paymentQueue) PrintAllQueueIDs(skipFirst bool) string {
 	return ""
 }
 
-func (p *paymentQueue) getAllQueueID() []string {
+func (p *PaymentQueue) getAllQueueID() []string {
 	queueIDs := []string{}
 	currentNode := p.Front
 
@@ -122,11 +121,11 @@ func (p *paymentQueue) getAllQueueID() []string {
 }
 
 // Move over to missed queues if say nobody turns up
-func (p *paymentQueue) dequeueToMissedPaymentQueue() (*payment, error) {
-	pmy, err := p.dequeue()
+func (p *PaymentQueue) DequeueToMissedPaymentQueue() (*Payment, error) {
+	pmy, err := p.Dequeue()
 
 	if err == nil {
-		missedPaymentQ.enqueue(pmy)
+		MissedPaymentQ.Enqueue(pmy)
 		return pmy, nil
 	}
 
@@ -134,34 +133,13 @@ func (p *paymentQueue) dequeueToMissedPaymentQueue() (*payment, error) {
 }
 
 // Move from missed payment queue back to main payment queue
-func (p *paymentQueue) dequeueToPaymentQueue() (*payment, error) {
-	pmy, err := p.dequeue()
+func (p *PaymentQueue) DequeueToPaymentQueue() (*Payment, error) {
+	pmy, err := p.Dequeue()
 
 	if err == nil {
-		paymentQ.enqueue(pmy)
+		PaymentQ.Enqueue(pmy)
 		return pmy, nil
 	}
 
 	return nil, err
-}
-
-// Web Pages
-func paymentQueuePage(res http.ResponseWriter, req *http.Request) {
-
-	thePatient, _ := isLoggedIn(req)
-
-	// Anonymous payload
-	payload := struct {
-		PageTitle   string
-		Queue       *paymentQueue
-		MissedQueue *paymentQueue
-		User        *patient
-	}{
-		"Payment Queue",
-		&paymentQ,
-		&missedPaymentQ,
-		thePatient,
-	}
-
-	tpl.ExecuteTemplate(res, "paymentQueue.gohtml", payload)
 }
