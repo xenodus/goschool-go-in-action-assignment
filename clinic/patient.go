@@ -170,17 +170,12 @@ func (p *Patient) DeletePatient() error {
 
 		_, execErr := db.Exec("DELETE FROM `patient` WHERE id = ?", p.Id)
 		if execErr != nil {
-			log.Fatal(ErrDBConn.Error(), err)
+			log.Fatal(ErrDBConn.Error(), execErr)
 		}
 
 		_, execErr = db.Exec("DELETE FROM `appointments` WHERE patient_id = ?", p.Id)
 		if execErr != nil {
-			log.Fatal(ErrDBConn.Error(), err)
-		}
-
-		_, execErr = db.Exec("DELETE FROM `appointments` WHERE patient_id = ?", p.Id)
-		if execErr != nil {
-			log.Fatal(ErrDBConn.Error(), err)
+			log.Fatal(ErrDBConn.Error(), execErr)
 		}
 
 		// 4. remove patient from patients slice

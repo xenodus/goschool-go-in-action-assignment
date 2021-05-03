@@ -7,8 +7,8 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// Seed or fetch from DB
-const seedDB = false
+// True, seed test data; False, fetch from DB
+const seedDB = true
 
 // For doctors' timeslots - 1st consultation @ 8 am, last @ 10 pm
 const startOperationHour = 8
@@ -18,16 +18,16 @@ const appointmentIntervals = 30 // 30 mins between each consultations
 // Password policy
 const MinPasswordLength = 8
 
-// Disabled for ease of testing of assignment
+// Disabled for ease of testing of assignment; Set to true to check for true NRIC format (PDPA though...)
 const strictNRIC = false
 
-// Set to true if current time 10pm and want to test
-// Set current hour minute for testing
+// Set to true if current time > 10:30 PM and want to test app
+// Set desired current hour & minute for testing
 const testFakeTime = false
 const testHour = 9
 const testMinute = 15
 
-// DB
+// DB settings
 var (
 	db_hostname   string
 	db_port       string

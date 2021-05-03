@@ -156,6 +156,19 @@ func (appt *Appointment) CancelAppointment() {
 		apptIDIndex := BinarySearchApptID(appt.Id)
 
 		if apptIDIndex >= 0 {
+
+			// Remove from db
+			db, err := sql.Open("mysql", db_connection)
+			if err != nil {
+				log.Fatal(ErrDBConn.Error(), err)
+			}
+			defer db.Close()
+
+			_, execErr := db.Exec("DELETE FROM `appointment` WHERE id = ?", appt.Id)
+			if execErr != nil {
+				log.Fatal(ErrDBConn.Error(), execErr)
+			}
+
 			// Remove from Patient & Doctor
 			wg.Add(2)
 			go Appointments[apptIDIndex].Patient.cancelAppointment(appt.Id)
