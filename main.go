@@ -3,11 +3,7 @@ package main
 import (
 	"assignment4/clinic"
 	"assignment4/web"
-	"html/template"
 )
-
-// Globals
-var tpl *template.Template
 
 func init() {
 	// Mandatory Test Data
