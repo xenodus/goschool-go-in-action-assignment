@@ -1,3 +1,4 @@
+// Package app provides function to fetch PSI value and struct
 package psi
 
 import (
@@ -47,7 +48,6 @@ func GetPSI() (*PSI, error) {
 		return nil, errors.New("PSI fetch failure: error parsing psi to int")
 	}
 
-	// All good here
 	newPSI := PSI{
 		Value:       psi,
 		Description: "",
