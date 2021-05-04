@@ -8,17 +8,11 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"sync"
 	"time"
 	"unicode"
 )
 
-var mu sync.Mutex
-
 func doLog(req *http.Request, logType, msg string) {
-
-	mu.Lock()
-	defer mu.Unlock()
 
 	file, err := os.OpenFile("./logs/out.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
