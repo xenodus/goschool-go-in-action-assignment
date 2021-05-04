@@ -51,10 +51,10 @@ func adminSessionsPage(res http.ResponseWriter, req *http.Request) {
 			if _, ok := session.MapSessions[sessionId]; ok {
 				delete(session.MapSessions, sessionId)
 				payload.SuccessMsg = "Session deleted!"
-				doLog(req, "INFO", " [Admin] Session deleted successfully. By: "+thePatient.Id)
+				go doLog(req, "INFO", " [Admin] Session deleted successfully. By: "+thePatient.Id)
 			} else {
 				payload.ErrorMsg = errSessionNotFound.Error()
-				doLog(req, "ERROR", "[Admin] Session delete failure: "+payload.ErrorMsg+" By: "+thePatient.Id)
+				go doLog(req, "ERROR", "[Admin] Session delete failure: "+payload.ErrorMsg+" By: "+thePatient.Id)
 			}
 		}
 

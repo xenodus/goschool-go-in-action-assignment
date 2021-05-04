@@ -8,11 +8,18 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 	"unicode"
 )
 
+var mu sync.Mutex
+
 func doLog(req *http.Request, logType, msg string) {
+
+	mu.Lock()
+	defer mu.Unlock()
+
 	file, err := os.OpenFile("./logs/out.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		log.Fatalln("Failed to open error log file:", err)
@@ -20,6 +27,8 @@ func doLog(req *http.Request, logType, msg string) {
 	defer file.Close()
 
 	var logger *log.Logger
+
+	logType = strings.ToUpper(logType)
 
 	if logType == "INFO" {
 		logger = log.New(io.MultiWriter(os.Stdout, file), "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
