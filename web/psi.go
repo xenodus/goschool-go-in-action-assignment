@@ -26,7 +26,7 @@ func psiPage(res http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		payload.ErrorMsg = "Unable to retrieve PSI"
-		doLog(req, "ERROR", "[Admin] "+err.Error()) // only show detailed error inside logs
+		go doLog(req, "ERROR", "[Admin] "+err.Error()) // only show detailed error inside logs
 	} else {
 		payload.Psi = psi.Value
 		payload.PsiDescription = psi.Description

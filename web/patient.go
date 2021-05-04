@@ -68,14 +68,14 @@ func registerPage(res http.ResponseWriter, req *http.Request) {
 
 		if inputErr != nil {
 			payload.ErrorMsg = inputErr.Error()
-			doLog(req, "WARNING", " Registration input validation failure")
+			go doLog(req, "WARNING", " Registration input validation failure")
 		} else {
 			// Create session + cookie
 			session.CreateSession(res, req, username, serverHost)
 
 			bPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 			if err != nil {
-				doLog(req, "ERROR", " Password bcrypt generation failure")
+				go doLog(req, "ERROR", " Password bcrypt generation failure")
 				http.Redirect(res, req, pageError+"?err=ErrInternalServerError", http.StatusSeeOther)
 				return
 			}
@@ -119,7 +119,7 @@ func loginPage(res http.ResponseWriter, req *http.Request) {
 		if noPatientErr != nil {
 			payload.ErrorMsg = errAuthFailure.Error()
 			res.WriteHeader(http.StatusForbidden)
-			doLog(req, "WARNING", " Login failure - Invalid ID")
+			go doLog(req, "WARNING", " Login failure - Invalid ID")
 		}
 
 		if payload.ErrorMsg == "" {
@@ -128,7 +128,7 @@ func loginPage(res http.ResponseWriter, req *http.Request) {
 			if err != nil {
 				payload.ErrorMsg = errAuthFailure.Error()
 				res.WriteHeader(http.StatusForbidden)
-				doLog(req, "WARNING", " Login failure - Password mismatch")
+				go doLog(req, "WARNING", " Login failure - Password mismatch")
 			}
 		}
 
@@ -189,7 +189,7 @@ func profilePage(res http.ResponseWriter, req *http.Request) {
 
 		if inputErr != nil {
 			payload.ErrorMsg = inputErr.Error()
-			doLog(req, "WARNING", " Profile update input validation failure")
+			go doLog(req, "WARNING", " Profile update input validation failure")
 		} else {
 			bPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 			thePatient.EditPatient(thePatient.Id, firstname, lastname, bPassword)

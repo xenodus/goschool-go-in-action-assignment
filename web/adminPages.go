@@ -149,7 +149,7 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	action := req.FormValue("action")
 
 	if action != "edit" && action != "cancel" {
-		doLog(req, "ERROR", "[Admin] Appointment update failure: invalid action type. By: "+thePatient.Id)
+		go doLog(req, "ERROR", "[Admin] Appointment update failure: invalid action type. By: "+thePatient.Id)
 		http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
 		return
 	}
@@ -158,7 +158,7 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		session.SetNotification(req, clinic.ErrAppointmentIDNotFound.Error(), "Error")
-		doLog(req, "ERROR", "[Admin] Appointment update failure: invalid appt id. Unable to parse. By: "+thePatient.Id)
+		go doLog(req, "ERROR", "[Admin] Appointment update failure: invalid appt id. Unable to parse. By: "+thePatient.Id)
 		http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
 		return
 	}
@@ -168,7 +168,7 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 	if theApptIndex < 0 {
 		session.SetNotification(req, clinic.ErrAppointmentIDNotFound.Error(), "Error")
-		doLog(req, "ERROR", "[Admin] Appointment update failure: "+clinic.ErrAppointmentIDNotFound.Error())
+		go doLog(req, "ERROR", "[Admin] Appointment update failure: "+clinic.ErrAppointmentIDNotFound.Error())
 		http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
 		return
 	}
@@ -179,10 +179,10 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	if action == "cancel" {
 		if req.Method == http.MethodPost {
 			session.SetNotification(req, "Appointment cancelled!", "Success")
-			doLog(req, "INFO", "[Admin] Appointment cancelled successfully: "+strconv.FormatInt(payload.Appt.Id, 10)+" By: "+thePatient.Id)
+			go doLog(req, "INFO", "[Admin] Appointment cancelled successfully: "+strconv.FormatInt(payload.Appt.Id, 10)+" By: "+thePatient.Id)
 			payload.Appt.CancelAppointment()
 		} else {
-			doLog(req, "ERROR", "[Admin] Appointment cancellation failure: GET REQUEST. By:"+thePatient.Id)
+			go doLog(req, "ERROR", "[Admin] Appointment cancellation failure: GET REQUEST. By:"+thePatient.Id)
 		}
 
 		http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
@@ -197,7 +197,7 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 		if timeSlotErr != nil {
 			payload.ErrorMsg = timeSlotErr.Error()
-			doLog(req, "ERROR", "[Admin] Appointment update failure: "+payload.ErrorMsg+" By: "+thePatient.Id)
+			go doLog(req, "ERROR", "[Admin] Appointment update failure: "+payload.ErrorMsg+" By: "+thePatient.Id)
 			tpl.ExecuteTemplate(res, "adminEditAppointment.gohtml", payload)
 			return
 		}
@@ -216,7 +216,7 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 				// Past time
 				if isApptTimeValidErr != nil {
 					payload.ErrorMsg = isApptTimeValidErr.Error()
-					doLog(req, "ERROR", "[Admin] Appointment update failure: "+payload.ErrorMsg+" By: "+thePatient.Id)
+					go doLog(req, "ERROR", "[Admin] Appointment update failure: "+payload.ErrorMsg+" By: "+thePatient.Id)
 					tpl.ExecuteTemplate(res, "adminEditAppointment.gohtml", payload)
 					return
 				}
@@ -224,14 +224,14 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 				// Patient / Doctor time check
 				if !payload.Appt.Patient.IsFreeAt(t) || !payload.Appt.Doctor.IsFreeAt(t) {
 					payload.ErrorMsg = clinic.ErrDuplicateTimeslot.Error()
-					doLog(req, "ERROR", "[Admin] Appointment update failure: "+payload.ErrorMsg+" By: "+thePatient.Id)
+					go doLog(req, "ERROR", "[Admin] Appointment update failure: "+payload.ErrorMsg+" By: "+thePatient.Id)
 					tpl.ExecuteTemplate(res, "adminEditAppointment.gohtml", payload)
 					return
 				}
 
 				payload.Appt.EditAppointment(t, payload.Appt.Patient, payload.Appt.Doctor)
 				session.SetNotification(req, "Appointment updated!", "Success")
-				doLog(req, "INFO", "[Admin] Appointment updated successfully: "+strconv.FormatInt(payload.Appt.Id, 10)+" By: "+thePatient.Id)
+				go doLog(req, "INFO", "[Admin] Appointment updated successfully: "+strconv.FormatInt(payload.Appt.Id, 10)+" By: "+thePatient.Id)
 				http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
 				return
 			}
@@ -283,10 +283,10 @@ func adminUsersPage(res http.ResponseWriter, req *http.Request) {
 				theUser.DeletePatient()
 				payload.Patients = clinic.Patients
 				payload.SuccessMsg = "User deleted!"
-				doLog(req, "INFO", "[Admin] User deleted successfully. By: "+thePatient.Id)
+				go doLog(req, "INFO", "[Admin] User deleted successfully. By: "+thePatient.Id)
 			} else {
 				payload.ErrorMsg = clinic.ErrPatientIDNotFound.Error()
-				doLog(req, "ERROR", "[Admin] User deletion failure: "+payload.ErrorMsg+" By: "+thePatient.Id)
+				go doLog(req, "ERROR", "[Admin] User deletion failure: "+payload.ErrorMsg+" By: "+thePatient.Id)
 			}
 		}
 
@@ -329,7 +329,7 @@ func adminPaymentEnqueuePage(res http.ResponseWriter, req *http.Request) {
 
 				if apptIdIndex < 0 {
 					session.SetNotification(req, "Error adding to payment queue! Appointment ID not found.", "Error")
-					doLog(req, "ERROR", "[Admin] Payment enqueue failure: Appointment ID not found. By: "+thePatient.Id)
+					go doLog(req, "ERROR", "[Admin] Payment enqueue failure: Appointment ID not found. By: "+thePatient.Id)
 					http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
 					return
 				}
@@ -337,7 +337,7 @@ func adminPaymentEnqueuePage(res http.ResponseWriter, req *http.Request) {
 				appt := clinic.Appointments[apptIdIndex]
 				clinic.CreatePayment(appt, 19.99)
 				session.SetNotification(req, "Appointment added to payment queue!", "Success")
-				doLog(req, "INFO", "[Admin] Payment enqueued successfully. By: "+thePatient.Id)
+				go doLog(req, "INFO", "[Admin] Payment enqueued successfully. By: "+thePatient.Id)
 				http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
 				return
 			}
@@ -363,7 +363,7 @@ func adminPaymentDequeuePage(res http.ResponseWriter, req *http.Request) {
 
 	if req.Method == http.MethodPost {
 		if clinic.PaymentQ.Front != nil {
-			doLog(req, "INFO", "[Admin] Payment dequeued successfully. Appt: "+strconv.FormatInt(clinic.PaymentQ.Front.Payment.Appointment.Id, 10)+" By: "+thePatient.Id)
+			go doLog(req, "INFO", "[Admin] Payment dequeued successfully. Appt: "+strconv.FormatInt(clinic.PaymentQ.Front.Payment.Appointment.Id, 10)+" By: "+thePatient.Id)
 			clinic.PaymentQ.Dequeue()
 		}
 	}
@@ -387,7 +387,7 @@ func adminPaymentDequeueToMissedQueuePage(res http.ResponseWriter, req *http.Req
 
 	if req.Method == http.MethodPost {
 		if clinic.PaymentQ.Front != nil {
-			doLog(req, "INFO", "[Admin] Payment dequeued to missed queue successfully. Appt: "+strconv.FormatInt(clinic.PaymentQ.Front.Payment.Appointment.Id, 10)+" By: "+thePatient.Id)
+			go doLog(req, "INFO", "[Admin] Payment dequeued to missed queue successfully. Appt: "+strconv.FormatInt(clinic.PaymentQ.Front.Payment.Appointment.Id, 10)+" By: "+thePatient.Id)
 			clinic.PaymentQ.DequeueToMissedPaymentQueue()
 		}
 	}
@@ -411,7 +411,7 @@ func adminPaymentDequeueToPaymentQueuePage(res http.ResponseWriter, req *http.Re
 
 	if req.Method == http.MethodPost {
 		if clinic.MissedPaymentQ.Front != nil {
-			doLog(req, "INFO", "[Admin] Payment dequeued to main queue successfully. Appt: "+strconv.FormatInt(clinic.MissedPaymentQ.Front.Payment.Appointment.Id, 10)+" By: "+thePatient.Id)
+			go doLog(req, "INFO", "[Admin] Payment dequeued to main queue successfully. Appt: "+strconv.FormatInt(clinic.MissedPaymentQ.Front.Payment.Appointment.Id, 10)+" By: "+thePatient.Id)
 			clinic.MissedPaymentQ.DequeueToPaymentQueue()
 		}
 	}

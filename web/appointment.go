@@ -21,7 +21,7 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	action := req.FormValue("action")
 
 	if action != "edit" && action != "cancel" {
-		doLog(req, "ERROR", " Appointment update failure: invalid action type")
+		go doLog(req, "ERROR", " Appointment update failure: invalid action type")
 		http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 		return
 	}
@@ -42,7 +42,7 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		session.SetNotification(req, clinic.ErrAppointmentIDNotFound.Error(), "Error")
-		doLog(req, "ERROR", " Appointment update failure: invalid appt id. Unable to parse.")
+		go doLog(req, "ERROR", " Appointment update failure: invalid appt id. Unable to parse.")
 		http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 		return
 	}
@@ -52,7 +52,7 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 	if patientApptIDIndex < 0 {
 		session.SetNotification(req, clinic.ErrAppointmentIDNotFound.Error(), "Error")
-		doLog(req, "ERROR", " Appointment update failure:"+clinic.ErrAppointmentIDNotFound.Error())
+		go doLog(req, "ERROR", " Appointment update failure:"+clinic.ErrAppointmentIDNotFound.Error())
 		http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 		return
 	}
@@ -62,7 +62,7 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	// Does not belong to logged in user
 	if payload.Appt.Patient != thePatient {
 		session.SetNotification(req, clinic.ErrAppointmentIDNotFound.Error(), "Error")
-		doLog(req, "ERROR", " Appointment update failure: appt "+strconv.FormatInt(payload.Appt.Id, 10)+" does not belong to user "+thePatient.Id)
+		go doLog(req, "ERROR", " Appointment update failure: appt "+strconv.FormatInt(payload.Appt.Id, 10)+" does not belong to user "+thePatient.Id)
 		http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 		return
 	}
@@ -71,10 +71,10 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	if action == "cancel" {
 		if req.Method == http.MethodPost {
 			session.SetNotification(req, "Appointment cancelled!", "Success")
-			doLog(req, "INFO", " Appointment cancelled successfully: "+strconv.FormatInt(payload.Appt.Id, 10))
+			go doLog(req, "INFO", " Appointment cancelled successfully: "+strconv.FormatInt(payload.Appt.Id, 10))
 			payload.Appt.CancelAppointment()
 		} else {
-			doLog(req, "ERROR", " Appointment cancellation failure: GET REQUEST")
+			go doLog(req, "ERROR", " Appointment cancellation failure: GET REQUEST")
 		}
 
 		http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
@@ -89,7 +89,7 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 		if timeSlotErr != nil {
 			payload.ErrorMsg = clinic.ErrNoMoreTimeslot.Error()
-			doLog(req, "ERROR", " Appointment update failure: "+payload.ErrorMsg)
+			go doLog(req, "ERROR", " Appointment update failure: "+payload.ErrorMsg)
 			tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
 			return
 		}
@@ -106,7 +106,7 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 				// Patient / Doctor time check
 				if !payload.Appt.Patient.IsFreeAt(t) || !payload.Appt.Doctor.IsFreeAt(t) {
 					payload.ErrorMsg = clinic.ErrDuplicateTimeslot.Error()
-					doLog(req, "ERROR", " Appointment update failure: "+payload.ErrorMsg)
+					go doLog(req, "ERROR", " Appointment update failure: "+payload.ErrorMsg)
 					tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
 					return
 				}
@@ -116,14 +116,14 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 				// Past time
 				if isApptTimeValidErr != nil {
 					payload.ErrorMsg = isApptTimeValidErr.Error()
-					doLog(req, "ERROR", " Appointment update failure: "+payload.ErrorMsg)
+					go doLog(req, "ERROR", " Appointment update failure: "+payload.ErrorMsg)
 					tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
 					return
 				}
 
 				payload.Appt.EditAppointment(t, payload.Appt.Patient, payload.Appt.Doctor)
 				session.SetNotification(req, "Appointment updated!", "Success")
-				doLog(req, "INFO", " Appointment updated successfully:"+strconv.FormatInt(payload.Appt.Id, 10))
+				go doLog(req, "INFO", " Appointment updated successfully:"+strconv.FormatInt(payload.Appt.Id, 10))
 				http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 				return
 			}
@@ -199,7 +199,7 @@ func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 			if err != nil {
 				payload.ErrorMsg = err.Error()
-				doLog(req, "ERROR", "Appointment creation failure: "+payload.ErrorMsg)
+				go doLog(req, "ERROR", "Appointment creation failure: "+payload.ErrorMsg)
 				tpl.ExecuteTemplate(res, "newAppointment.gohtml", payload)
 				return
 			}
@@ -219,7 +219,7 @@ func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 				payload.ChosenDoctor = nil
 
-				doLog(req, "ERROR", "Appointment creation failure: "+payload.ErrorMsg)
+				go doLog(req, "ERROR", "Appointment creation failure: "+payload.ErrorMsg)
 				tpl.ExecuteTemplate(res, "newAppointment.gohtml", payload)
 				return
 			}
@@ -231,7 +231,7 @@ func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 			// Check if slot truely exists
 			if !payload.ChosenDoctor.IsFreeAt(t) || !thePatient.IsFreeAt(t) {
 				payload.ErrorMsg = clinic.ErrDuplicateTimeslot.Error()
-				doLog(req, "ERROR", "Appointment creation failure: "+payload.ErrorMsg)
+				go doLog(req, "ERROR", "Appointment creation failure: "+payload.ErrorMsg)
 				tpl.ExecuteTemplate(res, "newAppointment.gohtml", payload)
 				return
 			}
@@ -241,7 +241,7 @@ func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 			// Past time
 			if isApptTimeValidErr != nil {
 				payload.ErrorMsg = isApptTimeValidErr.Error()
-				doLog(req, "ERROR", "Appointment creation failure: "+payload.ErrorMsg)
+				go doLog(req, "ERROR", "Appointment creation failure: "+payload.ErrorMsg)
 				tpl.ExecuteTemplate(res, "newAppointment.gohtml", payload)
 				return
 			}
@@ -250,7 +250,7 @@ func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 			if newApptErr == nil {
 				session.SetNotification(req, "Appointment scheduled!", "Success")
-				doLog(req, "INFO", "Appointment created successfully:"+strconv.FormatInt(newAppt.Id, 10))
+				go doLog(req, "INFO", "Appointment created successfully:"+strconv.FormatInt(newAppt.Id, 10))
 				http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 				return
 			}

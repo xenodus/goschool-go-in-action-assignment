@@ -44,7 +44,7 @@ func viewDoctorsPage(res http.ResponseWriter, req *http.Request) {
 			payload.TimeslotsAvailable = clinic.GetAvailableTimeslot(payload.ChosenDoctor.Appointments)
 		} else {
 			payload.ErrorMsg = err.Error()
-			doLog(req, "ERROR", " Doctor lookup failure: "+payload.ErrorMsg+" ID: "+strconv.FormatInt(doctorID, 10))
+			go doLog(req, "ERROR", " Doctor lookup failure: "+payload.ErrorMsg+" ID: "+strconv.FormatInt(doctorID, 10))
 		}
 	}
 
