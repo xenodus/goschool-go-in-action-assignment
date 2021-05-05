@@ -3,7 +3,6 @@ package clinic
 import (
 	"log"
 	"strconv"
-	"sync"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -12,11 +11,6 @@ import (
 // Globals
 var Appointments = []*Appointment{}
 var AppointmentsSortedByTimeslot = []*Appointment{}
-
-// var appointment_start_id int64 = 1000
-
-var wg sync.WaitGroup
-var mutex sync.Mutex
 
 type Appointment struct {
 	Id      int64 // unique identifier
@@ -55,11 +49,11 @@ func getAppointmentsFromDB() ([]*Appointment, error) {
 				id, time, pat, doc,
 			}
 
-			wg.Add(3)
+			Wg.Add(3)
 			go addAppointment(appt)
 			go appt.Doctor.addAppointment(appt)
 			go appt.Patient.addAppointment(appt)
-			wg.Wait()
+			Wg.Wait()
 		}
 	}
 
@@ -93,15 +87,13 @@ func MakeAppointment(t int64, pat *Patient, doc *Doctor) (*Appointment, error) {
 				return nil, ErrCreateAppointment
 			}
 
-			// atomic.AddInt64(&appointment_start_id, 1)
-			// app := Appointment{appointment_start_id, t, pat, doc}
 			app := &Appointment{insertedId, t, pat, doc}
 
-			wg.Add(3)
+			Wg.Add(3)
 			go addAppointment(app)
 			go app.Doctor.addAppointment(app)
 			go app.Patient.addAppointment(app)
-			wg.Wait()
+			Wg.Wait()
 		}
 		mutex.Unlock()
 
@@ -112,7 +104,7 @@ func MakeAppointment(t int64, pat *Patient, doc *Doctor) (*Appointment, error) {
 }
 
 func addAppointment(appt *Appointment) {
-	defer wg.Done()
+	defer Wg.Done()
 	Appointments = append(Appointments, appt)
 	updateTimeslotSortedAppts()
 }
@@ -157,10 +149,10 @@ func (appt *Appointment) CancelAppointment() {
 			}
 
 			// Remove from Patient & Doctor
-			wg.Add(2)
+			Wg.Add(2)
 			go Appointments[apptIDIndex].Patient.cancelAppointment(appt.Id)
 			go Appointments[apptIDIndex].Doctor.cancelAppointment(appt.Id)
-			wg.Wait()
+			Wg.Wait()
 
 			if apptIDIndex == 0 {
 				Appointments = Appointments[1:]

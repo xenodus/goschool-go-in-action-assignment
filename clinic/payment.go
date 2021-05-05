@@ -10,8 +10,6 @@ import (
 var PaymentQ = &PaymentQueue{}
 var MissedPaymentQ = &PaymentQueue{}
 
-// var paymentCounter int64 = 200
-
 type Payment struct {
 	Id          int64
 	Appointment *Appointment
@@ -60,7 +58,6 @@ func getPaymentsFromDB() (*PaymentQueue, error) {
 
 func CreatePayment(appt *Appointment, amt float64) (*PaymentQueue, error) {
 
-	// atomic.AddInt64(&paymentCounter, 1)
 	// Db
 	stmt, prepErr := clinicDb.Prepare("INSERT into payment (amount, appointment_id) values(?,?)")
 	if prepErr != nil {

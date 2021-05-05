@@ -13,14 +13,20 @@ import (
 )
 
 func SeedData() {
-	if resetAndSeedDB {
-		resetDB()
+
+	if resetDB {
+		// Just truncate tables
+		setupDbTables()
+	} else if resetAndSeedDB {
+		// Truncate tables & seed test data
+		setupDbTables()
 		seedDoctors()
 		seedAdmins()
 		seedPatients()
 		seedAppointments()
 		seedPaymentQueue()
 	} else {
+		// Load data from DB
 		getDoctorsFromDB()
 		getPatientsFromDB()
 		getAppointmentsFromDB()
@@ -28,7 +34,7 @@ func SeedData() {
 	}
 }
 
-func resetDB() {
+func setupDbTables() {
 	// Resetting DB
 	fmt.Println("Setting up fresh DB...")
 
@@ -108,7 +114,7 @@ func seedPatients() {
 		bPassword, err := bcrypt.GenerateFromPassword([]byte(testAcctPasswordString), bcrypt.MinCost)
 
 		if err == nil {
-			wg.Add(12)
+			Wg.Add(12)
 			go CreatePatient("S1111111B", "Anakin", "Skywalker", bPassword)
 			go CreatePatient("S2222222C", "Leia", "Organa", bPassword)
 			go CreatePatient("S3333333D", "Han", "Solo", bPassword)
@@ -122,13 +128,13 @@ func seedPatients() {
 			go CreatePatient("S7654321A", "Savage", "Opress", bPassword)
 			go CreatePatient("S8888888A", "Orson", "Krennic", bPassword)
 			go CreatePatient("S9999999A", "Sheev", "Palpatine", bPassword)
-			wg.Wait()
+			Wg.Wait()
 		}
 	}
 }
 
 func seedDoctors() {
-	wg.Add(10)
+	Wg.Add(10)
 	go addDoctor("Boba", "Fett")
 	go addDoctor("Bo-Katan", "Kryze")
 	go addDoctor("Paz", "Vizsla")
@@ -139,7 +145,7 @@ func seedDoctors() {
 	go addDoctor("Chirrut", "Îmwe")
 	go addDoctor("Galen", "Erso")
 	go addDoctor("Saw", "Gerrera")
-	wg.Wait()
+	Wg.Wait()
 }
 
 func seedAppointments() {

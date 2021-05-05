@@ -4,12 +4,15 @@ import (
 	"database/sql"
 	"log"
 	"os"
+	"sync"
 
 	"github.com/joho/godotenv"
 )
 
-// True  = reset tables & seed test data;
-// False = just fetch from DB
+// True  = clean system with no data
+const resetDB = false
+
+// True  = clean system with test data
 const resetAndSeedDB = false
 
 // For doctors' timeslots - 1st consultation @ 8 am, last @ 10 pm
@@ -39,6 +42,9 @@ var (
 	db_connection string
 )
 
+// Globals
+var Wg sync.WaitGroup
+var mutex sync.Mutex
 var clinicDb *sql.DB
 
 func init() {

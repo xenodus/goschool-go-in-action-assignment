@@ -67,10 +67,7 @@ func getPatientsFromDB() ([]*Patient, error) {
 }
 
 func CreatePatient(username, first_name, last_name string, password []byte) (*Patient, error) {
-	defer wg.Done()
-
-	mutex.Lock()
-	defer mutex.Unlock()
+	defer Wg.Done()
 
 	// Db
 	stmt, prepErr := clinicDb.Prepare("INSERT into patient (id, first_name, last_name, password, admin) values(?,?,?,?,?)")
@@ -83,6 +80,9 @@ func CreatePatient(username, first_name, last_name string, password []byte) (*Pa
 		log.Fatal(ErrDBConn.Error(), execErr)
 		return nil, ErrCreateAppointment
 	}
+
+	mutex.Lock()
+	defer mutex.Unlock()
 
 	thePatient := &Patient{username, first_name, last_name, password, nil}
 	Patients = append(Patients, thePatient)
@@ -124,14 +124,14 @@ func (p *Patient) IsFreeAt(t int64) bool {
 
 func (p *Patient) DeletePatient() error {
 
-	// 1. remove all appointment from appointments slice with patient in em
+	// 1. Remove all appointment from appointments slice with patient in em
 	for len(p.Appointments) > 0 {
 		p.Appointments[0].CancelAppointment()
 	}
 
 	mutex.Lock()
 	{
-		// 2. remove sessions with user id
+		// 2. Remove sessions with user id
 		if len(session.MapSessions) > 0 {
 			for k, v := range session.MapSessions {
 				if v.Id == p.Id {
@@ -140,18 +140,18 @@ func (p *Patient) DeletePatient() error {
 			}
 		}
 
-		// 3. remove from db
+		// 3. Remove from db
 		_, execErr := clinicDb.Exec("DELETE FROM `patient` WHERE id = ?", p.Id)
 		if execErr != nil {
 			log.Fatal(ErrDBConn.Error(), execErr)
 		}
 
-		_, execErr = clinicDb.Exec("DELETE FROM `appointments` WHERE patient_id = ?", p.Id)
+		_, execErr = clinicDb.Exec("DELETE FROM `appointment` WHERE patient_id = ?", p.Id)
 		if execErr != nil {
 			log.Fatal(ErrDBConn.Error(), execErr)
 		}
 
-		// 4. remove patient from patients slice
+		// 4. Remove patient from patients slice
 		patientIDIndex := binarySearchPatientID(p.Id)
 
 		if patientIDIndex >= 0 {
@@ -186,13 +186,13 @@ func (p *Patient) sortAppointments() {
 }
 
 func (p *Patient) addAppointment(appt *Appointment) {
-	defer wg.Done()
+	defer Wg.Done()
 	p.Appointments = append(p.Appointments, appt)
 	p.sortAppointments()
 }
 
 func (p *Patient) cancelAppointment(apptID int64) error {
-	defer wg.Done()
+	defer Wg.Done()
 
 	apptIDIndex, err := searchApptID(p.Appointments, apptID)
 

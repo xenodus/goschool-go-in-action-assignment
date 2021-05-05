@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"assignment4/clinic"
 	"assignment4/session"
@@ -43,7 +44,7 @@ func adminSessionsPage(res http.ResponseWriter, req *http.Request) {
 
 	if req.Method == http.MethodPost {
 		// Get querystring values
-		action := req.FormValue("action")
+		action := strings.ToLower(req.FormValue("action"))
 		sessionId := req.FormValue("sessionId")
 
 		// delete single session
@@ -146,7 +147,7 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 	// Get querystring values
 	inputApptId := req.FormValue("apptId")
-	action := req.FormValue("action")
+	action := strings.ToLower(req.FormValue("action"))
 
 	if action != "edit" && action != "cancel" {
 		go doLog(req, "ERROR", "[Admin] Appointment update failure: invalid action type. By: "+thePatient.Id)
@@ -272,7 +273,7 @@ func adminUsersPage(res http.ResponseWriter, req *http.Request) {
 
 	if req.Method == http.MethodPost {
 		// Get querystring values
-		action := req.FormValue("action")
+		action := strings.ToLower(req.FormValue("action"))
 		userId := req.FormValue("userId")
 
 		// delete single users

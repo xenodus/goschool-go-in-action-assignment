@@ -5,14 +5,10 @@ import (
 	"assignment4/session"
 	"net/http"
 	"strings"
-	"sync"
 
 	"github.com/microcosm-cc/bluemonday"
 	"golang.org/x/crypto/bcrypt"
 )
-
-// Globals
-var wg sync.WaitGroup
 
 func areInputValid(username, firstname, lastname, password string, isRegister bool) error {
 
@@ -80,9 +76,9 @@ func registerPage(res http.ResponseWriter, req *http.Request) {
 				return
 			}
 
-			wg.Add(1)
+			clinic.Wg.Add(1)
 			clinic.CreatePatient(username, firstname, lastname, bPassword)
-			wg.Wait()
+			clinic.Wg.Wait()
 
 			// Redirect to main index
 			http.Redirect(res, req, pageIndex, http.StatusSeeOther)

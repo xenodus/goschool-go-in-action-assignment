@@ -10,8 +10,6 @@ import (
 var Doctors = []*Doctor{}
 var DoctorsBST *BST
 
-// var doctor_start_id int64 = 100
-
 type Doctor struct {
 	Id           int64
 	First_name   string
@@ -55,7 +53,7 @@ func getDoctorsFromDB() ([]*Doctor, error) {
 }
 
 func addDoctor(first_name string, last_name string) (*Doctor, error) {
-	defer wg.Done()
+	defer Wg.Done()
 
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -76,8 +74,6 @@ func addDoctor(first_name string, last_name string) (*Doctor, error) {
 		return nil, ErrCreateDoctor
 	}
 
-	//atomic.AddInt64(&doctor_start_id, 1)
-	//doc := Doctor{doctor_start_id, first_name, last_name, nil}
 	doc := &Doctor{insertedId, first_name, last_name, nil}
 	Doctors = append(Doctors, doc)
 	DoctorsBST = makeBST()
@@ -99,13 +95,13 @@ func (d *Doctor) sortAppointments() {
 }
 
 func (d *Doctor) addAppointment(appt *Appointment) {
-	defer wg.Done()
+	defer Wg.Done()
 	d.Appointments = append(d.Appointments, appt)
 	d.sortAppointments()
 }
 
 func (d *Doctor) cancelAppointment(apptID int64) error {
-	defer wg.Done()
+	defer Wg.Done()
 
 	apptIDIndex, err := searchApptID(d.Appointments, apptID)
 

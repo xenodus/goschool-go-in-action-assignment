@@ -5,6 +5,7 @@ import (
 	"assignment4/session"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
@@ -18,7 +19,7 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 	// Get querystring values
 	inputApptId := req.FormValue("apptId")
-	action := req.FormValue("action")
+	action := strings.ToLower(req.FormValue("action"))
 
 	if action != "edit" && action != "cancel" {
 		go doLog(req, "ERROR", " Appointment update failure: invalid action type")
