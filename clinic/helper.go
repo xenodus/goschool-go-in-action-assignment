@@ -21,7 +21,6 @@ func SeedData() {
 		// Truncate tables & seed test data
 		setupDbTables()
 		seedDoctors()
-		seedAdmins()
 		seedPatients()
 		seedAppointments()
 		seedPaymentQueue()
