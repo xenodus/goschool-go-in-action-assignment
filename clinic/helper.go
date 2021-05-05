@@ -24,6 +24,7 @@ func SeedData() {
 		getDoctorsFromDB()
 		getPatientsFromDB()
 		getAppointmentsFromDB()
+		getPaymentsFromDB()
 	}
 }
 

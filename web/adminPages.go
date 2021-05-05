@@ -364,6 +364,7 @@ func adminPaymentDequeuePage(res http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodPost {
 		if clinic.PaymentQ.Front != nil {
 			go doLog(req, "INFO", "[Admin] Payment dequeued successfully. Appt: "+strconv.FormatInt(clinic.PaymentQ.Front.Payment.Appointment.Id, 10)+" By: "+thePatient.Id)
+			clinic.PaymentQ.Front.Payment.ClearPayment()
 			clinic.PaymentQ.Dequeue()
 		}
 	}

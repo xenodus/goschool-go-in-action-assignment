@@ -1,15 +1,16 @@
 package clinic
 
 import (
+	"log"
 	"strconv"
 	"strings"
-	"sync/atomic"
 )
 
 // Globals
-var PaymentQ = PaymentQueue{}
-var MissedPaymentQ = PaymentQueue{}
-var paymentCounter int64 = 200
+var PaymentQ = &PaymentQueue{}
+var MissedPaymentQ = &PaymentQueue{}
+
+// var paymentCounter int64 = 200
 
 type Payment struct {
 	Id          int64
@@ -28,14 +29,68 @@ type PaymentQueue struct {
 	Size  int
 }
 
-func CreatePayment(appt *Appointment, amt float64) error {
+func getPaymentsFromDB() (*PaymentQueue, error) {
 
-	atomic.AddInt64(&paymentCounter, 1)
-	pmy := Payment{paymentCounter, appt, amt}
+	rows, rowsErr := clinicDb.Query("SELECT * FROM payment")
+
+	if rowsErr != nil {
+		return PaymentQ, ErrDBConn
+	}
+
+	for rows.Next() {
+
+		var (
+			id, appointment_id int64
+			amount             float64
+		)
+
+		rowScanErr := rows.Scan(&id, &amount, &appointment_id)
+
+		if rowScanErr != nil {
+			return PaymentQ, ErrDBConn
+		}
+
+		appt := Appointment{appointment_id, 0, nil, nil}
+		pmy := Payment{id, &appt, amount}
+		PaymentQ.Enqueue(&pmy)
+	}
+
+	return PaymentQ, nil
+}
+
+func CreatePayment(appt *Appointment, amt float64) (*PaymentQueue, error) {
+
+	// atomic.AddInt64(&paymentCounter, 1)
+	// Db
+	stmt, prepErr := clinicDb.Prepare("INSERT into payment (amount, appointment_id) values(?,?)")
+	if prepErr != nil {
+		log.Fatal(ErrDBConn.Error(), prepErr)
+		return PaymentQ, ErrCreateAppointment
+	}
+	res, execErr := stmt.Exec(amt, appt.Id)
+	if execErr != nil {
+		log.Fatal(ErrDBConn.Error(), execErr)
+		return PaymentQ, ErrCreateAppointment
+	}
+	insertedId, insertedErr := res.LastInsertId()
+	if insertedErr != nil {
+		log.Fatal(ErrDBConn.Error(), insertedErr)
+		return PaymentQ, ErrCreateAppointment
+	}
+
+	pmy := Payment{insertedId, appt, amt}
 	PaymentQ.Enqueue(&pmy)
 	appt.CancelAppointment()
 
-	return nil
+	return PaymentQ, nil
+}
+
+func (pmy *Payment) ClearPayment() {
+	// Db
+	_, execErr := clinicDb.Exec("DELETE FROM `payment` WHERE id = ?", pmy.Id)
+	if execErr != nil {
+		log.Fatal(ErrDBConn.Error(), execErr)
+	}
 }
 
 func (p *PaymentQueue) Enqueue(pmy *Payment) error {

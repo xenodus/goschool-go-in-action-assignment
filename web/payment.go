@@ -17,8 +17,8 @@ func paymentQueuePage(res http.ResponseWriter, req *http.Request) {
 		User        *clinic.Patient
 	}{
 		"Payment Queue",
-		&clinic.PaymentQ,
-		&clinic.MissedPaymentQ,
+		clinic.PaymentQ,
+		clinic.MissedPaymentQ,
 		thePatient,
 	}
 

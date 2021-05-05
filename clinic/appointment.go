@@ -1,7 +1,6 @@
 package clinic
 
 import (
-	"database/sql"
 	"log"
 	"strconv"
 	"sync"
@@ -70,40 +69,41 @@ func getAppointmentsFromDB() ([]*Appointment, error) {
 // Make and sort by appointment time
 func MakeAppointment(t int64, pat *Patient, doc *Doctor) (*Appointment, error) {
 
-	mutex.Lock()
-	defer mutex.Unlock()
-
 	app := &Appointment{}
 	_, err := IsThereTimeslot(pat, doc)
 
 	if err == nil {
 
-		// Db
-		stmt, prepErr := clinicDb.Prepare("INSERT into appointment (time, doctor_id, patient_id) values(?,?,?)")
-		if prepErr != nil {
-			log.Fatal(ErrDBConn.Error(), prepErr)
-			return nil, ErrCreateAppointment
-		}
-		res, execErr := stmt.Exec(t, doc.Id, pat.Id)
-		if execErr != nil {
-			log.Fatal(ErrDBConn.Error(), execErr)
-			return nil, ErrCreateAppointment
-		}
-		insertedId, insertedErr := res.LastInsertId()
-		if insertedErr != nil {
-			log.Fatal(ErrDBConn.Error(), insertedErr)
-			return nil, ErrCreateAppointment
-		}
+		mutex.Lock()
+		{
+			// Db
+			stmt, prepErr := clinicDb.Prepare("INSERT into appointment (time, doctor_id, patient_id) values(?,?,?)")
+			if prepErr != nil {
+				log.Fatal(ErrDBConn.Error(), prepErr)
+				return nil, ErrCreateAppointment
+			}
+			res, execErr := stmt.Exec(t, doc.Id, pat.Id)
+			if execErr != nil {
+				log.Fatal(ErrDBConn.Error(), execErr)
+				return nil, ErrCreateAppointment
+			}
+			insertedId, insertedErr := res.LastInsertId()
+			if insertedErr != nil {
+				log.Fatal(ErrDBConn.Error(), insertedErr)
+				return nil, ErrCreateAppointment
+			}
 
-		// atomic.AddInt64(&appointment_start_id, 1)
-		// app := Appointment{appointment_start_id, t, pat, doc}
-		app := &Appointment{insertedId, t, pat, doc}
+			// atomic.AddInt64(&appointment_start_id, 1)
+			// app := Appointment{appointment_start_id, t, pat, doc}
+			app := &Appointment{insertedId, t, pat, doc}
 
-		wg.Add(3)
-		go addAppointment(app)
-		go app.Doctor.addAppointment(app)
-		go app.Patient.addAppointment(app)
-		wg.Wait()
+			wg.Add(3)
+			go addAppointment(app)
+			go app.Doctor.addAppointment(app)
+			go app.Patient.addAppointment(app)
+			wg.Wait()
+		}
+		mutex.Unlock()
 
 		return app, nil
 	}
@@ -151,13 +151,7 @@ func (appt *Appointment) CancelAppointment() {
 		if apptIDIndex >= 0 {
 
 			// Db
-			db, err := sql.Open("mysql", db_connection)
-			if err != nil {
-				log.Fatal(ErrDBConn.Error(), err)
-			}
-			defer db.Close()
-
-			_, execErr := db.Exec("DELETE FROM `appointment` WHERE id = ?", appt.Id)
+			_, execErr := clinicDb.Exec("DELETE FROM `appointment` WHERE id = ?", appt.Id)
 			if execErr != nil {
 				log.Fatal(ErrDBConn.Error(), execErr)
 			}

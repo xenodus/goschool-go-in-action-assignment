@@ -10,7 +10,7 @@ import (
 
 // True  = reset tables & seed test data;
 // False = just fetch from DB
-const resetAndSeedDB = true
+const resetAndSeedDB = false
 
 // For doctors' timeslots - 1st consultation @ 8 am, last @ 10 pm
 const startOperationHour = 8
@@ -25,7 +25,7 @@ const strictNRIC = false
 
 // Set to true if current time > 10:30 PM and want to test app
 // Set desired current hour & minute for testing
-const testFakeTime = false
+const testFakeTime = true
 const testHour = 9
 const testMinute = 15
 
