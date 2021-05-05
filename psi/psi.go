@@ -47,7 +47,7 @@ func GetPSI() (*PSI, error) {
 		return nil, errors.New("PSI fetch failure: error parsing psi to int")
 	}
 
-	newPSI := PSI{
+	newPSI := &PSI{
 		Value:       psi,
 		Description: "",
 	}
@@ -63,7 +63,7 @@ func GetPSI() (*PSI, error) {
 		newPSI.Description = "Very High"
 	}
 
-	return &newPSI, nil
+	return newPSI, nil
 }
 
 // Is there a better way to check / unmarshal json with many similarly named keys aside from traversing and checking each level?

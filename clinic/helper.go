@@ -1,7 +1,6 @@
 package clinic
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"math/rand"
@@ -14,15 +13,10 @@ import (
 )
 
 func SeedData() {
-	if seedDB {
-		// Truncate DB Tables
+	if resetAndSeedDB {
 		resetDB()
-
-		// Mandatory Test Data
 		seedDoctors()
 		seedAdmins()
-
-		// Optional Test Data
 		seedPatients()
 		seedAppointments()
 		seedPaymentQueue()
@@ -34,19 +28,59 @@ func SeedData() {
 }
 
 func resetDB() {
-	db, err := sql.Open("mysql", "goschool:f04d27b032ea5092fe613e1e61ae228272c116cd@tcp(goschooldb.alvinyeoh.com:3306)/goschool")
-	if err != nil {
-		log.Fatal("DB Connection Failed: ", err)
-	}
-	db.Query("TRUNCATE TABLE `doctor`")
-	db.Query("ALTER TABLE `doctor` AUTO_INCREMENT=100")
-	db.Query("TRUNCATE TABLE `patient`")
-	db.Query("TRUNCATE TABLE `appointment`")
-	db.Query("ALTER TABLE appointment AUTO_INCREMENT=1000")
-	db.Query("TRUNCATE TABLE `payment`")
-	db.Query("ALTER TABLE payment AUTO_INCREMENT=300")
+	// Resetting DB
+	fmt.Println("Setting up fresh DB...")
 
-	defer db.Close()
+	// Doctor
+	clinicDb.Query("DROP table doctor")
+	clinicDb.Query(`CREATE TABLE doctor (
+		id int(11) NOT NULL,
+		first_name varchar(255) NOT NULL,
+		last_name varchar(255) NOT NULL
+	  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`)
+	clinicDb.Query("ALTER TABLE `doctor` ADD PRIMARY KEY (`id`)")
+	clinicDb.Query("ALTER TABLE `doctor` MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=100")
+
+	fmt.Println("Doctor table created")
+
+	// Patient
+	clinicDb.Query("DROP table patient")
+	clinicDb.Query(`CREATE TABLE patient (
+		id char(9) NOT NULL,
+		first_name varchar(255) NOT NULL,
+		last_name varchar(255) NOT NULL,
+		password blob NOT NULL,
+		admin tinyint(1) NOT NULL DEFAULT '0'
+	  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`)
+	clinicDb.Query("ALTER TABLE `patient` ADD PRIMARY KEY (`id`)")
+
+	fmt.Println("Patient table created")
+
+	// Appointment
+	clinicDb.Query("DROP table appointment")
+	clinicDb.Query(`CREATE TABLE appointment (
+		id int(11) NOT NULL,
+		time int(11) NOT NULL,
+		doctor_id int(11) NOT NULL,
+		patient_id char(9) NOT NULL
+	  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`)
+	clinicDb.Query("ALTER TABLE `appointment` ADD PRIMARY KEY (`id`)")
+	clinicDb.Query("ALTER TABLE appointment MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1000")
+
+	fmt.Println("Appointment table created")
+
+	// Payment
+	clinicDb.Query("DROP table payment")
+	clinicDb.Query(`CREATE TABLE payment (
+		id int(11) NOT NULL,
+		amount float NOT NULL,
+		appointment_id int(11) NOT NULL
+	  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`)
+	clinicDb.Query("ALTER TABLE `payment` ADD PRIMARY KEY (`id`)")
+	clinicDb.Query("ALTER TABLE payment MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=300")
+
+	fmt.Println("Payment table created")
+	fmt.Println("DB setup done.")
 }
 
 func seedAdmins() {

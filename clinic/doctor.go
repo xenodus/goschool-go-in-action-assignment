@@ -3,8 +3,6 @@ package clinic
 import (
 	"log"
 
-	"database/sql"
-
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -23,14 +21,7 @@ type Doctor struct {
 
 func getDoctorsFromDB() ([]*Doctor, error) {
 
-	db, err := sql.Open("mysql", db_connection)
-	if err != nil {
-		log.Fatal(ErrDBConn.Error(), err)
-		return Doctors, ErrDBConn
-	}
-	defer db.Close()
-
-	rows, rowsErr := db.Query("SELECT * FROM doctor")
+	rows, rowsErr := clinicDb.Query("SELECT * FROM doctor")
 
 	if rowsErr != nil {
 		return Doctors, ErrDBConn
@@ -69,14 +60,7 @@ func addDoctor(first_name string, last_name string) (*Doctor, error) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	db, err := sql.Open("mysql", db_connection)
-	if err != nil {
-		log.Fatal(ErrDBConn.Error(), err)
-		return nil, ErrDBConn
-	}
-	defer db.Close()
-
-	stmt, prepErr := db.Prepare("INSERT into doctor (first_name, last_name) values(?,?)")
+	stmt, prepErr := clinicDb.Prepare("INSERT into doctor (first_name, last_name) values(?,?)")
 	if prepErr != nil {
 		log.Fatal(ErrDBConn.Error(), prepErr)
 		return nil, ErrCreateDoctor

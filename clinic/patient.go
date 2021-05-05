@@ -1,7 +1,6 @@
 package clinic
 
 import (
-	"database/sql"
 	"log"
 	"math"
 	"net/http"
@@ -32,14 +31,7 @@ func init() {
 
 func getPatientsFromDB() ([]*Patient, error) {
 
-	db, err := sql.Open("mysql", db_connection)
-	if err != nil {
-		log.Fatal(ErrDBConn.Error(), err)
-		return Patients, ErrDBConn
-	}
-	defer db.Close()
-
-	rows, rowsErr := db.Query("SELECT * FROM patient")
+	rows, rowsErr := clinicDb.Query("SELECT * FROM patient")
 
 	if rowsErr != nil {
 		return Patients, ErrDBConn
@@ -80,15 +72,8 @@ func CreatePatient(username, first_name, last_name string, password []byte) (*Pa
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	// db
-	db, err := sql.Open("mysql", db_connection)
-	if err != nil {
-		log.Fatal(err)
-		return nil, ErrDBConn
-	}
-	defer db.Close()
-
-	stmt, prepErr := db.Prepare("INSERT into patient (id, first_name, last_name, password, admin) values(?,?,?,?,?)")
+	// Db
+	stmt, prepErr := clinicDb.Prepare("INSERT into patient (id, first_name, last_name, password, admin) values(?,?,?,?,?)")
 	if prepErr != nil {
 		log.Fatal(ErrDBConn.Error(), prepErr)
 		return nil, ErrCreateAppointment
@@ -115,16 +100,10 @@ func (p *Patient) EditPatient(username, first_name, last_name string, password [
 		p.Last_name = last_name
 		p.Password = password
 
-		// db
-		db, err := sql.Open("mysql", db_connection)
-		if err != nil {
-			log.Fatal(ErrDBConn.Error(), err)
-		}
-		defer db.Close()
-
-		_, execErr := db.Exec("UPDATE `patient` SET first_name = ?, last_name = ?, password = ? WHERE id = ?", p.First_name, p.Last_name, p.Password, p.Id)
+		// Db
+		_, execErr := clinicDb.Exec("UPDATE `patient` SET first_name = ?, last_name = ?, password = ? WHERE id = ?", p.First_name, p.Last_name, p.Password, p.Id)
 		if execErr != nil {
-			log.Fatal(ErrDBConn.Error(), err)
+			log.Fatal(ErrDBConn.Error(), execErr)
 		}
 
 		// Sort by patient id alphabetically
@@ -150,9 +129,9 @@ func (p *Patient) DeletePatient() error {
 		p.Appointments[0].CancelAppointment()
 	}
 
-	// 2. remove sessions with user id
 	mutex.Lock()
 	{
+		// 2. remove sessions with user id
 		if len(session.MapSessions) > 0 {
 			for k, v := range session.MapSessions {
 				if v.Id == p.Id {
@@ -162,18 +141,12 @@ func (p *Patient) DeletePatient() error {
 		}
 
 		// 3. remove from db
-		db, err := sql.Open("mysql", db_connection)
-		if err != nil {
-			log.Fatal(ErrDBConn.Error(), err)
-		}
-		defer db.Close()
-
-		_, execErr := db.Exec("DELETE FROM `patient` WHERE id = ?", p.Id)
+		_, execErr := clinicDb.Exec("DELETE FROM `patient` WHERE id = ?", p.Id)
 		if execErr != nil {
 			log.Fatal(ErrDBConn.Error(), execErr)
 		}
 
-		_, execErr = db.Exec("DELETE FROM `appointments` WHERE patient_id = ?", p.Id)
+		_, execErr = clinicDb.Exec("DELETE FROM `appointments` WHERE patient_id = ?", p.Id)
 		if execErr != nil {
 			log.Fatal(ErrDBConn.Error(), execErr)
 		}

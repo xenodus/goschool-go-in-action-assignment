@@ -1,11 +1,15 @@
 package web
 
 import (
+	"assignment4/clinic"
+	"database/sql"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 )
+
+var Db *sql.DB
 
 func init() {
 
@@ -20,7 +24,11 @@ func init() {
 	tpl = template.Must(template.New("").Funcs(funcMap).ParseGlob("templates/*"))
 }
 
-func StartHttpServer() {
+func StartHttpServer(myDb *sql.DB) {
+
+	clinic.SetDb(myDb)
+	clinic.SeedData()
+
 	fs := http.FileServer(http.Dir("./assets"))
 	http.Handle("/assets/", http.StripPrefix("/assets/", fs))
 

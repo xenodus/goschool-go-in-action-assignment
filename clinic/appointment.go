@@ -28,14 +28,7 @@ type Appointment struct {
 
 func getAppointmentsFromDB() ([]*Appointment, error) {
 
-	db, err := sql.Open("mysql", db_connection)
-	if err != nil {
-		log.Fatal(ErrDBConn.Error(), err)
-		return Appointments, ErrDBConn
-	}
-	defer db.Close()
-
-	rows, rowsErr := db.Query("SELECT * FROM appointment")
+	rows, rowsErr := clinicDb.Query("SELECT * FROM appointment")
 
 	if rowsErr != nil {
 		return Appointments, ErrDBConn
@@ -85,14 +78,8 @@ func MakeAppointment(t int64, pat *Patient, doc *Doctor) (*Appointment, error) {
 
 	if err == nil {
 
-		db, err := sql.Open("mysql", db_connection)
-		if err != nil {
-			log.Fatal(ErrDBConn.Error(), err)
-			return nil, ErrDBConn
-		}
-		defer db.Close()
-
-		stmt, prepErr := db.Prepare("INSERT into appointment (time, doctor_id, patient_id) values(?,?,?)")
+		// Db
+		stmt, prepErr := clinicDb.Prepare("INSERT into appointment (time, doctor_id, patient_id) values(?,?,?)")
 		if prepErr != nil {
 			log.Fatal(ErrDBConn.Error(), prepErr)
 			return nil, ErrCreateAppointment
@@ -134,6 +121,12 @@ func (appt *Appointment) EditAppointment(t int64, pat *Patient, doc *Doctor) err
 
 	mutex.Lock()
 	{
+		// Db
+		_, execErr := clinicDb.Exec("UPDATE `appointment` SET time = ?, patient_id = ?, doctor_id = ? WHERE id = ?", t, pat.Id, doc.Id, appt.Id)
+		if execErr != nil {
+			log.Fatal(ErrDBConn.Error(), execErr)
+		}
+
 		// Update
 		appt.Patient = pat
 		appt.Doctor = doc
@@ -157,7 +150,7 @@ func (appt *Appointment) CancelAppointment() {
 
 		if apptIDIndex >= 0 {
 
-			// Remove from db
+			// Db
 			db, err := sql.Open("mysql", db_connection)
 			if err != nil {
 				log.Fatal(ErrDBConn.Error(), err)

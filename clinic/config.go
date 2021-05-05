@@ -1,14 +1,16 @@
 package clinic
 
 import (
+	"database/sql"
 	"log"
 	"os"
 
 	"github.com/joho/godotenv"
 )
 
-// True, seed test data; False, fetch from DB
-const seedDB = true
+// True  = reset tables & seed test data;
+// False = just fetch from DB
+const resetAndSeedDB = true
 
 // For doctors' timeslots - 1st consultation @ 8 am, last @ 10 pm
 const startOperationHour = 8
@@ -37,6 +39,8 @@ var (
 	db_connection string
 )
 
+var clinicDb *sql.DB
+
 func init() {
 	err := godotenv.Load()
 	if err != nil {
@@ -50,4 +54,12 @@ func init() {
 
 		db_connection = db_username + ":" + db_password + "@tcp(" + db_hostname + ":" + db_port + ")/" + db_database
 	}
+}
+
+func DbConnection() string {
+	return db_connection
+}
+
+func SetDb(myDb *sql.DB) {
+	clinicDb = myDb
 }

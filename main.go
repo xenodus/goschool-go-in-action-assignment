@@ -3,13 +3,19 @@ package main
 import (
 	"assignment4/clinic"
 	"assignment4/web"
+	"database/sql"
+	"log"
 )
 
-func init() {
-	// Truncate DB and Seed Test Data
-	clinic.SeedData()
-}
+var db *sql.DB
 
 func main() {
-	web.StartHttpServer()
+
+	db, err := sql.Open("mysql", clinic.DbConnection())
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	web.StartHttpServer(db)
 }
