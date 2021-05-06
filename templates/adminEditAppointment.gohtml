@@ -43,16 +43,21 @@
 
                     {{ if .ChosenDate }}
                         {{ if gt (len .TimeslotsAvailable) 0 }}
-                        <div class="form-group mb-3">
-                            <label for="timeslot" class="form-label">Change Timeslot</label>
-                            <select class="form-select" name="timeslot">
-                            {{ range .TimeslotsAvailable }}
-                                <option value="{{.}}">{{time2HumanReadable .}}</option>
-                            {{ end }}
-                            </select>
-                        </div>
+                            <div class="form-group mb-3">
+                                <label for="timeslot" class="form-label">Change Timeslot</label>
+                                <select class="form-select" name="timeslot">
+                                {{ range .TimeslotsAvailable }}
+                                    <option value="{{.}}">{{time2HumanReadable .}}</option>
+                                {{ end }}
+                                </select>
+                            </div>
 
-                        <div><button type="submit" class="btn btn-primary mb-3">Edit Appointment</button></div>
+                            <div class="mb-3">
+                                <button type="submit" class="btn btn-primary">Edit Appointment</button>
+                                {{ if .Appt }}
+                                    <a href="/admin/appointment/edit?apptId={{ .Appt.Id }}&action=edit" class="btn btn-dark " role="button">Change Date</a>
+                                {{ end }}
+                            </div>
                         {{ end }}
                     {{ else }}
                         <div><button type="submit" class="btn btn-primary mb-3">Next</button></div>

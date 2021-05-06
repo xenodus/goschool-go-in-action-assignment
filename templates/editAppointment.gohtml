@@ -52,10 +52,17 @@
                         </select>
                     </div>
 
-                    <div><button type="submit" class="btn btn-primary mb-3">Edit Appointment</button></div>
+                    <div class="mb-3">
+                        <button type="submit" class="btn btn-primary">Edit Appointment</button>
+                        {{ if .Appt }}
+                            <a href="/appointment/edit?apptId={{ .Appt.Id }}&action=edit" class="btn btn-dark " role="button">Change Date</a>
+                        {{ end }}
+                    </div>
                     {{ end }}
                 {{ else }}
-                    <div><button type="submit" class="btn btn-primary mb-3">Next</button></div>
+                    <div>
+                        <button type="submit" class="btn btn-primary mb-3">Next</button>
+                    </div>
                 {{ end }}
             </form>
 

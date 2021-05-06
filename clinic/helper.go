@@ -153,8 +153,6 @@ func seedAppointments() {
 	no2seed := 30
 	rand.Seed(time.Now().Unix())
 
-	fmt.Println(no2seed)
-
 	Wg.Add(no2seed)
 	for no2seed > 0 {
 		randomPat := Patients[rand.Intn(len(Patients))]
@@ -163,7 +161,7 @@ func seedAppointments() {
 		// Get random date between now and MaxAdvanceApptDays (default: 90 days)
 		currDateTime := time.Now()
 		min := currDateTime.Unix()
-		max := time.Date(currDateTime.Year(), currDateTime.Month(), currDateTime.Day(), 0, 0, 0, 0, time.Local).Add(time.Hour * 24 * 1).Unix()
+		max := time.Date(currDateTime.Year(), currDateTime.Month(), currDateTime.Day(), 0, 0, 0, 0, time.Local).Add(time.Hour * 24 * MaxAdvanceApptDays).Unix()
 		delta := max - min
 		sec := rand.Int63n(delta) + min
 		currDateTime = time.Unix(sec, 0)
