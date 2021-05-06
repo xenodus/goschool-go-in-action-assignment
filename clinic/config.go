@@ -15,6 +15,8 @@ const resetDB = false
 // True  = clean system with test data
 const resetAndSeedDB = false
 
+// If above 2 are both false = fetch from database
+
 // For doctors' timeslots - 1st consultation @ 8 am, last @ 10 pm
 const startOperationHour = 8
 const endOperationHour = 22
