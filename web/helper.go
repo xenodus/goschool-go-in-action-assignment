@@ -41,6 +41,10 @@ func time2HumanReadable(t int64) string {
 	return time.Unix(t, 0).Format("3:04PM")
 }
 
+func time2HumanReadableFull(t int64) string {
+	return time.Unix(t, 0).Format("02 Jan 2006 3:04PM")
+}
+
 func getUserByID(uid string) *clinic.Patient {
 	user, err := clinic.GetPatientByID(uid)
 

@@ -15,10 +15,11 @@ func init() {
 
 	// Adding helper functions to templates
 	funcMap := template.FuncMap{
-		"time2HumanReadable": time2HumanReadable,
-		"getUserByID":        getUserByID,
-		"ucFirst":            ucFirst,
-		"stripSpace":         stripSpace,
+		"time2HumanReadable":     time2HumanReadable,
+		"time2HumanReadableFull": time2HumanReadableFull,
+		"getUserByID":            getUserByID,
+		"ucFirst":                ucFirst,
+		"stripSpace":             stripSpace,
 	}
 
 	tpl = template.Must(template.New("").Funcs(funcMap).ParseGlob("templates/*"))

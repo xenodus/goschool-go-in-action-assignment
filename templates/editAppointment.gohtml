@@ -21,25 +21,54 @@
             {{ end }}
 
             {{ if .Appt }}
-            <div class="mb-3">Appointment ({{ .Appt.Id }}) with <strong>Dr. {{ .Appt.Doctor.First_name }} {{ .Appt.Doctor.Last_name }} ({{ .Appt.Doctor.Id }})</strong> is scheduled for <strong>{{ time2HumanReadable .Appt.Time }}</strong></div>
+            <div class="mb-3">
+                Appointment ({{ .Appt.Id }}) with <strong>Dr. {{ .Appt.Doctor.First_name }} {{ .Appt.Doctor.Last_name }} ({{ .Appt.Doctor.Id }})</strong> is scheduled for <strong>{{ time2HumanReadableFull .Appt.Time }}</strong>.
+                <br/>If you would like to change the doctor, please cancel and make a new appointment.
+            </div>
             {{ end }}
 
             <form method="post">
-                {{ if gt (len .TimeslotsAvailable) 0 }}
-                <div class="form-group mb-3">
-                    <label for="timeslot" class="form-label">Change Timeslot</label>
-                    <select class="form-select" name="timeslot">
-                    {{ range .TimeslotsAvailable }}
-                        <option value="{{.}}">{{time2HumanReadable .}}</option>
-                    {{ end }}
-                    </select>
-                </div>
 
-                <div><button type="submit" class="btn btn-primary mb-3">Edit Appointment</button></div>
+                {{ if not .ChosenDate }}
+                    <div class="form-group mb-3">
+                        <label for="date" class="form-label">Select Date</label>
+                        <input class="form-control datePicker bg-white" type="text" name="date" value="{{ if .ChosenDate }} {{ .ChosenDate }} {{ end }}">
+                    </div>
+                {{ else }}
+                    <div class="form-group mb-3">
+                        <h2>{{ .ChosenDate }}</h2>
+                        <input class="form-control" type="hidden" name="date" value="{{ .ChosenDate }}" readonly>
+                    </div>
+                {{ end }}
+
+                {{ if .ChosenDate }}
+                    {{ if gt (len .TimeslotsAvailable) 0 }}
+                    <div class="form-group mb-3">
+                        <label for="timeslot" class="form-label">Change Timeslot</label>
+                        <select class="form-select" name="timeslot">
+                        {{ range .TimeslotsAvailable }}
+                            <option value="{{.}}">{{time2HumanReadable .}}</option>
+                        {{ end }}
+                        </select>
+                    </div>
+
+                    <div><button type="submit" class="btn btn-primary mb-3">Edit Appointment</button></div>
+                    {{ end }}
+                {{ else }}
+                    <div><button type="submit" class="btn btn-primary mb-3">Next</button></div>
                 {{ end }}
             </form>
 
             {{template "footer"}}
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+            <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+            <script>
+                flatpickr(".datePicker", {
+                    dateFormat: "d F Y",
+                    minDate: "today",
+                    maxDate: new Date().fp_incr(30)
+                });
+            </script>
         </div>
     </body>
 </html>

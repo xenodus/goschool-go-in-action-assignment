@@ -30,8 +30,21 @@
                 {{ if .ChosenDoctor }}
                     <div class="form-group mb-3">
                         <h2>Dr. {{.ChosenDoctor.First_name}} {{.ChosenDoctor.Last_name}}</h2>
-                        <input class="form-control" type="hidden" name="doctor" placeholder="nric" value="{{.ChosenDoctor.Id}}" readonly>
+                        <input class="form-control" type="hidden" name="doctor" value="{{.ChosenDoctor.Id}}" readonly>
                     </div>
+
+                    {{ if not .ChosenDate }}
+                        <div class="form-group mb-3">
+                            <label for="date" class="form-label">Select Date</label>
+                            <input class="form-control datePicker bg-white" type="text" name="date" value="{{ if .ChosenDate }} {{ .ChosenDate }} {{ end }}">
+                        </div>
+                    {{ else }}
+                        <div class="form-group mb-3">
+                            <h2>{{ .ChosenDate }}</h2>
+                            <input class="form-control" type="hidden" name="date" value="{{ .ChosenDate }}" readonly>
+                        </div>
+                    {{ end }}
+
                 {{ else }}
                     <div class="form-group mb-3">
                         <label for="doctor" class="form-label">Select Doctor</label>
@@ -43,7 +56,7 @@
                     </div>
                 {{ end }}
 
-                {{ if .ChosenDoctor }}
+                {{ if and .ChosenDoctor .ChosenDate }}
                     {{ if gt (len .TimeslotsAvailable) 0 }}
                         <div class="form-group mb-3">
                             <label for="timeslot" class="form-label">Select Timeslot</label>
@@ -59,8 +72,8 @@
                 {{ if .TimeslotsAvailable }}
                     <div>
                         <button type="submit" class="btn btn-primary">Make Appointment</button>
-                        {{ if .ChosenDoctor }}
-                            <a href="/appointment/new" class="btn btn-dark " role="button">Change Doctor</a>
+                        {{ if and .ChosenDoctor .ChosenDate }}
+                            <a href="/appointment/new" class="btn btn-dark " role="button">Change Doctor / Date</a>
                         {{ end }}
                     </div>
                 {{else}}
@@ -69,6 +82,15 @@
             </form>
 
             {{template "footer"}}
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+            <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+            <script>
+                flatpickr(".datePicker", {
+                    dateFormat: "d F Y",
+                    minDate: "today",
+                    maxDate: new Date().fp_incr(30)
+                });
+            </script>
         </div>
     </body>
 </html>

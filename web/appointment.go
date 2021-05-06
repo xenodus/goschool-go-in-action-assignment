@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
@@ -35,8 +36,9 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 		TimeslotsAvailable []int64
 		ErrorMsg           string
 		SuccessMsg         string
+		ChosenDate         string
 	}{
-		"Edit Appointment", thePatient, nil, nil, "", "",
+		"Edit Appointment", thePatient, nil, nil, "", "", "",
 	}
 
 	apptId, err := strconv.ParseInt(inputApptId, 10, 64)
@@ -85,48 +87,63 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	// Edit Appt
 	if action == "edit" {
 
-		payload.TimeslotsAvailable = clinic.GetAvailableTimeslot(append(payload.Appt.Doctor.Appointments, payload.User.Appointments...))
-		_, timeSlotErr := clinic.IsThereTimeslot(payload.User, payload.Appt.Doctor)
-
-		if timeSlotErr != nil {
-			payload.ErrorMsg = clinic.ErrNoMoreTimeslot.Error()
-			go doLog(req, "ERROR", " Appointment update failure: "+payload.ErrorMsg)
-			tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
-			return
-		}
-
 		if req.Method == http.MethodPost {
 
-			// Form submit values
+			date := req.FormValue("date")
 			timeslot := req.FormValue("timeslot")
 
-			if timeslot != "" {
+			// Date
+			if date != "" {
+				// Parse date
+				dt, dtErr := time.Parse("02 January 2006", date)
 
-				t, _ := strconv.ParseInt(timeslot, 10, 64)
+				if dtErr != nil {
+					payload.ErrorMsg = "Invalid date"
+					go doLog(req, "ERROR", "Appointment creation failure: "+payload.ErrorMsg+dtErr.Error())
+					tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
+					return
+				}
 
-				// Patient / Doctor time check
-				if !payload.Appt.Patient.IsFreeAt(t) || !payload.Appt.Doctor.IsFreeAt(t) {
-					payload.ErrorMsg = clinic.ErrDuplicateTimeslot.Error()
+				payload.ChosenDate = date
+				payload.TimeslotsAvailable = clinic.GetAvailableTimeslot(dt.Unix(), append(payload.Appt.Doctor.GetAppointmentsByDate(dt.Unix()), payload.User.GetAppointmentsByDate(dt.Unix())...))
+				_, timeSlotErr := clinic.IsThereTimeslot(dt.Unix(), payload.User, payload.Appt.Doctor)
+
+				if timeSlotErr != nil {
+					payload.ErrorMsg = clinic.ErrNoMoreTimeslot.Error()
 					go doLog(req, "ERROR", " Appointment update failure: "+payload.ErrorMsg)
 					tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
 					return
 				}
 
-				_, isApptTimeValidErr := clinic.IsApptTimeValid(t)
+				// Form submit values
+				if timeslot != "" {
 
-				// Past time
-				if isApptTimeValidErr != nil {
-					payload.ErrorMsg = isApptTimeValidErr.Error()
-					go doLog(req, "ERROR", " Appointment update failure: "+payload.ErrorMsg)
-					tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
+					t, _ := strconv.ParseInt(timeslot, 10, 64)
+
+					// Patient / Doctor time check
+					if !payload.Appt.Patient.IsFreeAt(t) || !payload.Appt.Doctor.IsFreeAt(t) {
+						payload.ErrorMsg = clinic.ErrDuplicateTimeslot.Error()
+						go doLog(req, "ERROR", " Appointment update failure: "+payload.ErrorMsg)
+						tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
+						return
+					}
+
+					_, isApptTimeValidErr := clinic.IsApptTimeValid(t)
+
+					// Past time
+					if isApptTimeValidErr != nil {
+						payload.ErrorMsg = isApptTimeValidErr.Error()
+						go doLog(req, "ERROR", " Appointment update failure: "+payload.ErrorMsg)
+						tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
+						return
+					}
+
+					payload.Appt.EditAppointment(t, payload.Appt.Patient, payload.Appt.Doctor)
+					session.SetNotification(req, "Appointment updated!", "Success")
+					go doLog(req, "INFO", " Appointment updated successfully:"+strconv.FormatInt(payload.Appt.Id, 10))
+					http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
 					return
 				}
-
-				payload.Appt.EditAppointment(t, payload.Appt.Patient, payload.Appt.Doctor)
-				session.SetNotification(req, "Appointment updated!", "Success")
-				go doLog(req, "INFO", " Appointment updated successfully:"+strconv.FormatInt(payload.Appt.Id, 10))
-				http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
-				return
 			}
 		}
 	}
@@ -179,6 +196,7 @@ func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 	// Form submit values
 	doctorID := req.FormValue("doctor")
+	date := req.FormValue("date")
 	timeslot := req.FormValue("timeslot")
 
 	payload := struct {
@@ -188,8 +206,9 @@ func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 		ChosenDoctor       *clinic.Doctor
 		TimeslotsAvailable []int64
 		ErrorMsg           string
+		ChosenDate         string
 	}{
-		"New Appointment", thePatient, clinic.Doctors, nil, nil, "",
+		"New Appointment", thePatient, clinic.Doctors, nil, nil, "", "",
 	}
 
 	if req.Method == http.MethodPost {
@@ -206,27 +225,42 @@ func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 			}
 
 			payload.ChosenDoctor = doc
-			payload.TimeslotsAvailable = clinic.GetAvailableTimeslot(append(payload.ChosenDoctor.Appointments, thePatient.Appointments...))
-			_, timeSlotErr := clinic.IsThereTimeslot(thePatient, payload.ChosenDoctor)
 
-			if timeSlotErr != nil {
-				if timeSlotErr == clinic.ErrDoctorNoMoreTimeslot {
-					payload.ErrorMsg = "Dr. " + payload.ChosenDoctor.First_name + " " + payload.ChosenDoctor.Last_name + " has no more available timeslots for today"
-				} else if timeSlotErr == clinic.ErrPatientNoMoreTimeslot {
-					payload.ErrorMsg = "You have no more available timeslots for today"
-				} else {
-					payload.ErrorMsg = timeSlotErr.Error()
+			// Date
+			if date != "" {
+				// Parse date
+				dt, dtErr := time.Parse("02 January 2006", date)
+
+				if dtErr != nil {
+					payload.ErrorMsg = "Invalid date"
+					go doLog(req, "ERROR", "Appointment creation failure: "+payload.ErrorMsg+dtErr.Error())
+					tpl.ExecuteTemplate(res, "newAppointment.gohtml", payload)
+					return
 				}
 
-				payload.ChosenDoctor = nil
+				payload.ChosenDate = date
+				payload.TimeslotsAvailable = clinic.GetAvailableTimeslot(dt.Unix(), append(payload.ChosenDoctor.GetAppointmentsByDate(dt.Unix()), thePatient.GetAppointmentsByDate(dt.Unix())...))
+				_, timeSlotErr := clinic.IsThereTimeslot(dt.Unix(), thePatient, payload.ChosenDoctor)
 
-				go doLog(req, "ERROR", "Appointment creation failure: "+payload.ErrorMsg)
-				tpl.ExecuteTemplate(res, "newAppointment.gohtml", payload)
-				return
+				if timeSlotErr != nil {
+					if timeSlotErr == clinic.ErrDoctorNoMoreTimeslot {
+						payload.ErrorMsg = "Dr. " + payload.ChosenDoctor.First_name + " " + payload.ChosenDoctor.Last_name + " has no more available timeslots for " + date
+					} else if timeSlotErr == clinic.ErrPatientNoMoreTimeslot {
+						payload.ErrorMsg = "You have no more available timeslots for " + date
+					} else {
+						payload.ErrorMsg = timeSlotErr.Error()
+					}
+
+					payload.ChosenDoctor = nil
+
+					go doLog(req, "ERROR", "Appointment creation failure: "+payload.ErrorMsg)
+					tpl.ExecuteTemplate(res, "newAppointment.gohtml", payload)
+					return
+				}
 			}
 		}
 
-		if timeslot != "" && payload.ChosenDoctor != nil && payload.ErrorMsg == "" {
+		if timeslot != "" && date != "" && payload.ChosenDoctor != nil && payload.ErrorMsg == "" {
 			t, _ := strconv.ParseInt(timeslot, 10, 64)
 
 			// Check if slot truely exists

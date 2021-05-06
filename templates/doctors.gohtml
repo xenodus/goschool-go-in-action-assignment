@@ -14,42 +14,56 @@
             </div>
             {{ end }}
 
-            {{ if .ChosenDoctor }}
-                <div class="mb-3">
-                    <div class="mb-1"><a href="/doctors" class="btn btn-dark btn-sm mb-1" role="button"><i class="fas fa-reply"></i> Back</a></div>
-                    <h1>Dr. {{ .ChosenDoctor.First_name }} {{ .ChosenDoctor.Last_name }}</h1>
+            <div class="mb-3">
+                <div class="mb-1"><a href="/" class="btn btn-dark btn-sm mb-1" role="button"><i class="fas fa-reply"></i> Back</a></div>
+                <h1>Our Doctors</h1>
+                <div>Select a doctor and date to view his/her availability</div>
+            </div>
+
+            <hr/>
+
+            <form method="post">
+                <div class="form-group mb-3">
+                    <label for="timeslot" class="form-label">Doctor</label>
+                    <select class="form-select" name="doctorID">
+                        {{ range .Doctors }}
+                            <option value="{{.Id}}">{{ .First_name }} {{ .Last_name }}</option>
+                        {{ end }}
+                    </select>
                 </div>
 
-                <hr/>
+                <div class="form-group mb-3">
+                    <label for="date" class="form-label">Select Date</label>
+                    <input class="form-control datePicker bg-white" type="text" name="date" value="{{ if .ChosenDate }} {{ .ChosenDate }} {{ end }}">
+                </div>
 
-                {{ if gt (len .TimeslotsAvailable) 0 }}
-                    <div>Available timeslots</div>
+                {{ if .ChosenDoctor }}
+                    {{ if gt (len .TimeslotsAvailable) 0 }}
+                        <div>Available timeslots</div>
 
-                    <ul>
-                    {{ range .TimeslotsAvailable }}
-                        <li>{{time2HumanReadable .}}</li>
+                        <ul>
+                        {{ range .TimeslotsAvailable }}
+                            <li>{{time2HumanReadable .}}</li>
+                        {{ end }}
+                        </ul>
+                    {{ else }}
+                        <div>There are no more available timeslots for Dr. {{ .ChosenDoctor.First_name }} {{ .ChosenDoctor.Last_name }}</div>
                     {{ end }}
-                    </ul>
-                {{ else }}
-                    <div>There are no more available timeslots for Dr. {{ .ChosenDoctor.First_name }} {{ .ChosenDoctor.Last_name }}</div>
                 {{ end }}
-            {{ else }}
-                <div class="mb-3">
-                    <div class="mb-1"><a href="/" class="btn btn-dark btn-sm mb-1" role="button"><i class="fas fa-reply"></i> Back</a></div>
-                    <h1>Ours Doctors</h1>
-                    <div>Select a doctor to view his/her availability</div>
-                </div>
 
-                <hr/>
-
-                <ul>
-                {{ range .Doctors }}
-                    <li><a href="/doctors?doctorID={{ .Id }}">{{ .First_name }} {{ .Last_name }}</a></li>
-                {{ end }}
-                </ul>
-            {{ end }}
+                <div><button type="submit" class="btn btn-primary mb-3">Submit</button></div>
+            </form>
 
             {{template "footer"}}
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+            <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+            <script>
+                flatpickr(".datePicker", {
+                    dateFormat: "d F Y",
+                    minDate: "today",
+                    maxDate: new Date().fp_incr(30)
+                });
+            </script>
         </div>
     </body>
 </html>

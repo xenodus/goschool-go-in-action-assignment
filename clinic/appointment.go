@@ -64,7 +64,7 @@ func getAppointmentsFromDB() ([]*Appointment, error) {
 func MakeAppointment(t int64, pat *Patient, doc *Doctor) (*Appointment, error) {
 
 	app := &Appointment{}
-	_, err := IsThereTimeslot(pat, doc)
+	_, err := IsThereTimeslot(t, pat, doc)
 
 	if err == nil {
 
@@ -172,40 +172,37 @@ func (appt *Appointment) CancelAppointment() {
 // Check if time of appointment is in the past - e.g. process started at 3:55 PM, user chose 4 PM timeslot but submitted at 4:05 PM
 func IsApptTimeValid(t int64) (bool, error) {
 
-	if !testFakeTime {
+	currTime := time.Now()
+	var lastPossibleTimeslot int64
 
-		currTime := time.Now()
-		var lastPossibleTimeslot int64
+	if currTime.Minute() >= 30 {
+		lastPossibleTimeslot = time.Date(currTime.Year(), currTime.Month(), currTime.Day(), currTime.Hour(), 30, 0, 0, time.Local).Unix()
+	} else {
+		lastPossibleTimeslot = time.Date(currTime.Year(), currTime.Month(), currTime.Day(), currTime.Hour(), 0, 0, 0, time.Local).Unix()
+	}
 
-		if currTime.Minute() >= 30 {
-			lastPossibleTimeslot = time.Date(currTime.Year(), currTime.Month(), currTime.Day(), currTime.Hour(), 30, 0, 0, time.Local).Unix()
-		} else {
-			lastPossibleTimeslot = time.Date(currTime.Year(), currTime.Month(), currTime.Day(), currTime.Hour(), 0, 0, 0, time.Local).Unix()
-		}
-
-		if lastPossibleTimeslot > t {
-			return false, ErrTimeslotExpired
-		}
+	if lastPossibleTimeslot > t {
+		return false, ErrTimeslotExpired
 	}
 
 	return true, nil
 }
 
-func IsThereTimeslot(pat *Patient, doc *Doctor) (bool, error) {
+func IsThereTimeslot(dt int64, pat *Patient, doc *Doctor) (bool, error) {
 
-	patientTimeslotsAvailable := GetAvailableTimeslot(pat.Appointments)
+	patientTimeslotsAvailable := GetAvailableTimeslot(dt, pat.GetAppointmentsByDate(dt))
 
 	if len(patientTimeslotsAvailable) <= 0 {
 		return false, ErrPatientNoMoreTimeslot
 	}
 
-	doctorTimeslotsAvailable := GetAvailableTimeslot(doc.Appointments)
+	doctorTimeslotsAvailable := GetAvailableTimeslot(dt, doc.GetAppointmentsByDate(dt))
 
 	if len(doctorTimeslotsAvailable) <= 0 {
 		return false, ErrDoctorNoMoreTimeslot
 	}
 
-	timeslotsAvailable := GetAvailableTimeslot(append(doc.Appointments, pat.Appointments...))
+	timeslotsAvailable := GetAvailableTimeslot(dt, append(doc.GetAppointmentsByDate(dt), pat.GetAppointmentsByDate(dt)...))
 
 	if len(timeslotsAvailable) <= 0 {
 		return false, ErrNoMoreTimeslot
@@ -221,9 +218,10 @@ func updateTimeslotSortedAppts() {
 	AppointmentsSortedByTimeslot = tempAppts
 }
 
-func GetAvailableTimeslot(apptsToExclude []*Appointment) []int64 {
+func GetAvailableTimeslot(dt int64, apptsToExclude []*Appointment) []int64 {
 
-	allTimeSlots := timeSlotsGenerator()
+	allTimeSlots := timeSlotsGenerator(dt)
+
 	availableTimeslots := []int64{}
 
 	// Exclude timeslots that are already occipied by patient and doctor
@@ -244,37 +242,33 @@ func GetAvailableTimeslot(apptsToExclude []*Appointment) []int64 {
 	return availableTimeslots
 }
 
-// Returns slice of available time slots in 30 mins intervals from current time in unix/epoch time
-func timeSlotsGenerator() []int64 {
+// Returns slice of available time slots in 30 mins intervals from provided datetime
+func timeSlotsGenerator(dt int64) []int64 {
+
+	selectedDate := time.Unix(dt, 0)
+
 	currentTimeHour := time.Now().Hour()
 	currentTimeMinute := time.Now().Minute()
 
-	// Test overwrites
-	if testFakeTime {
-		currentTimeHour = testHour
-		currentTimeMinute = testMinute
-	}
-
 	timeSlots := []int64{}
 	startHour := currentTimeHour
-	startMinute := 30
+	startMinute := 0
 	currTime := time.Now()
 
-	if currentTimeHour < startOperationHour || currentTimeHour > endOperationHour {
-		startHour = startOperationHour
-		startMinute = 0
+	// Same day
+	if selectedDate.Year() == currTime.Year() && selectedDate.Day() == currTime.Day() && selectedDate.Month() == currTime.Month() {
+		if currentTimeHour >= startOperationHour {
+			if currentTimeMinute >= 0 {
+				startMinute = appointmentIntervals
+			}
+		}
 
-		if currentTimeHour > endOperationHour {
-			currTime = currTime.Add(time.Hour * 24) // next day
-		}
 	} else {
-		if currentTimeMinute >= appointmentIntervals {
-			startHour += 1
-			startMinute = 0
-		}
+		startHour = startOperationHour
+		currTime = time.Date(selectedDate.Year(), selectedDate.Month(), selectedDate.Day(), startHour, startMinute, 0, 0, time.Local)
 	}
 
-	for startHour <= endOperationHour {
+	for startHour >= startOperationHour && startHour <= endOperationHour {
 
 		t := time.Date(currTime.Year(), currTime.Month(), currTime.Day(), startHour, startMinute, 0, 0, time.Local)
 		timeSlots = append(timeSlots, t.Unix())

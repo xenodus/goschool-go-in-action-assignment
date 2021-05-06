@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"assignment4/clinic"
 	"assignment4/session"
@@ -141,8 +142,9 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 		Appt               *clinic.Appointment
 		TimeslotsAvailable []int64
 		ErrorMsg           string
+		ChosenDate         string
 	}{
-		"Edit Appointment", thePatient, nil, nil, "",
+		"Edit Appointment", thePatient, nil, nil, "", "",
 	}
 
 	// Get querystring values
@@ -193,48 +195,62 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	// Edit Appt
 	if action == "edit" {
 
-		payload.TimeslotsAvailable = clinic.GetAvailableTimeslot(append(payload.Appt.Doctor.Appointments, payload.Appt.Patient.Appointments...))
-		_, timeSlotErr := clinic.IsThereTimeslot(payload.Appt.Patient, payload.Appt.Doctor)
-
-		if timeSlotErr != nil {
-			payload.ErrorMsg = timeSlotErr.Error()
-			go doLog(req, "ERROR", "[Admin] Appointment update failure: "+payload.ErrorMsg+" By: "+thePatient.Id)
-			tpl.ExecuteTemplate(res, "adminEditAppointment.gohtml", payload)
-			return
-		}
-
 		if req.Method == http.MethodPost {
 
-			// Form submit values
+			date := req.FormValue("date")
 			timeslot := req.FormValue("timeslot")
 
-			if timeslot != "" {
+			// Date
+			if date != "" {
+				// Parse date
+				dt, dtErr := time.Parse("02 January 2006", date)
 
-				t, _ := strconv.ParseInt(timeslot, 10, 64)
+				if dtErr != nil {
+					payload.ErrorMsg = "Invalid date"
+					go doLog(req, "ERROR", "[Admin] Appointment update failure: "+payload.ErrorMsg+dtErr.Error())
+					tpl.ExecuteTemplate(res, "adminEditAppointment.gohtml", payload)
+					return
+				}
 
-				_, isApptTimeValidErr := clinic.IsApptTimeValid(t) // Is time in the past check
+				payload.ChosenDate = date
+				payload.TimeslotsAvailable = clinic.GetAvailableTimeslot(dt.Unix(), append(payload.Appt.Doctor.GetAppointmentsByDate(dt.Unix()), payload.Appt.Patient.GetAppointmentsByDate(dt.Unix())...))
+				_, timeSlotErr := clinic.IsThereTimeslot(dt.Unix(), payload.Appt.Patient, payload.Appt.Doctor)
 
-				// Past time
-				if isApptTimeValidErr != nil {
-					payload.ErrorMsg = isApptTimeValidErr.Error()
+				if timeSlotErr != nil {
+					payload.ErrorMsg = timeSlotErr.Error()
 					go doLog(req, "ERROR", "[Admin] Appointment update failure: "+payload.ErrorMsg+" By: "+thePatient.Id)
 					tpl.ExecuteTemplate(res, "adminEditAppointment.gohtml", payload)
 					return
 				}
 
-				// Patient / Doctor time check
-				if !payload.Appt.Patient.IsFreeAt(t) || !payload.Appt.Doctor.IsFreeAt(t) {
-					payload.ErrorMsg = clinic.ErrDuplicateTimeslot.Error()
-					go doLog(req, "ERROR", "[Admin] Appointment update failure: "+payload.ErrorMsg+" By: "+thePatient.Id)
-					tpl.ExecuteTemplate(res, "adminEditAppointment.gohtml", payload)
+				if timeslot != "" {
+
+					t, _ := strconv.ParseInt(timeslot, 10, 64)
+
+					_, isApptTimeValidErr := clinic.IsApptTimeValid(t) // Is time in the past check
+
+					// Past time
+					if isApptTimeValidErr != nil {
+						payload.ErrorMsg = isApptTimeValidErr.Error()
+						go doLog(req, "ERROR", "[Admin] Appointment update failure: "+payload.ErrorMsg+" By: "+thePatient.Id)
+						tpl.ExecuteTemplate(res, "adminEditAppointment.gohtml", payload)
+						return
+					}
+
+					// Patient / Doctor time check
+					if !payload.Appt.Patient.IsFreeAt(t) || !payload.Appt.Doctor.IsFreeAt(t) {
+						payload.ErrorMsg = clinic.ErrDuplicateTimeslot.Error()
+						go doLog(req, "ERROR", "[Admin] Appointment update failure: "+payload.ErrorMsg+" By: "+thePatient.Id)
+						tpl.ExecuteTemplate(res, "adminEditAppointment.gohtml", payload)
+						return
+					}
+
+					payload.Appt.EditAppointment(t, payload.Appt.Patient, payload.Appt.Doctor)
+					session.SetNotification(req, "Appointment updated!", "Success")
+					go doLog(req, "INFO", "[Admin] Appointment updated successfully: "+strconv.FormatInt(payload.Appt.Id, 10)+" By: "+thePatient.Id)
+					http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
 					return
 				}
-
-				payload.Appt.EditAppointment(t, payload.Appt.Patient, payload.Appt.Doctor)
-				session.SetNotification(req, "Appointment updated!", "Success")
-				go doLog(req, "INFO", "[Admin] Appointment updated successfully: "+strconv.FormatInt(payload.Appt.Id, 10)+" By: "+thePatient.Id)
-				http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
-				return
 			}
 		}
 	}

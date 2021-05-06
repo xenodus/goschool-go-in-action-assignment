@@ -181,6 +181,21 @@ func GetPatientByID(patientID string) (*Patient, error) {
 	return nil, ErrPatientIDNotFound
 }
 
+func (p *Patient) GetAppointmentsByDate(dt int64) []*Appointment {
+
+	requestedDateTime := time.Unix(dt, 0)
+	appts := []*Appointment{}
+
+	for _, v := range p.Appointments {
+		apptDateTime := time.Unix(v.Time, 0)
+		if apptDateTime.Year() == requestedDateTime.Year() && apptDateTime.Month() == requestedDateTime.Month() && apptDateTime.Day() == requestedDateTime.Day() {
+			appts = append(appts, v)
+		}
+	}
+
+	return appts
+}
+
 func (p *Patient) sortAppointments() {
 	mergeSortByTime(p.Appointments, 0, len(p.Appointments)-1) // sorted by time
 }

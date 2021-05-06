@@ -2,6 +2,7 @@ package clinic
 
 import (
 	"log"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -88,6 +89,21 @@ func (d *Doctor) IsFreeAt(t int64) bool {
 		}
 	}
 	return true
+}
+
+func (d *Doctor) GetAppointmentsByDate(dt int64) []*Appointment {
+
+	requestedDateTime := time.Unix(dt, 0)
+	appts := []*Appointment{}
+
+	for _, v := range d.Appointments {
+		apptDateTime := time.Unix(v.Time, 0)
+		if apptDateTime.Year() == requestedDateTime.Year() && apptDateTime.Month() == requestedDateTime.Month() && apptDateTime.Day() == requestedDateTime.Day() {
+			appts = append(appts, v)
+		}
+	}
+
+	return appts
 }
 
 func (d *Doctor) sortAppointments() {

@@ -26,12 +26,6 @@ const MinPasswordLength = 8
 // Disabled for ease of testing of assignment; Set to true to check for true NRIC format (PDPA though...)
 const strictNRIC = false
 
-// Set to true if current time > 10:30 PM and want to test app
-// Set desired current hour & minute for testing
-const testFakeTime = true
-const testHour = 9
-const testMinute = 15
-
 // DB settings
 var (
 	db_hostname   string

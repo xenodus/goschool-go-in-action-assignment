@@ -40,7 +40,7 @@
                     {{ range $key, $val := .User.Appointments }}
                         <tr>
                             <td>{{ $val.Id }}</td>
-                            <td>{{ time2HumanReadable $val.Time }}</td>
+                            <td>{{ time2HumanReadableFull $val.Time }}</td>
                             <td>{{ $val.Doctor.First_name }} {{ $val.Doctor.Last_name }}</td>
                             <td>
                                 <form class="d-inline-block" method="post" action="/appointment/edit?apptId={{$val.Id}}&action=edit">

@@ -155,7 +155,8 @@ func seedAppointments() {
 		randomPat := Patients[rand.Intn(len(Patients))]
 		randomDoc := Doctors[rand.Intn(len(Doctors))]
 
-		timeAvailable := GetAvailableTimeslot(append(randomPat.Appointments, randomDoc.Appointments...))
+		currDateTime := time.Now()
+		timeAvailable := GetAvailableTimeslot(currDateTime.Unix(), append(randomPat.GetAppointmentsByDate(currDateTime.Unix()), randomDoc.GetAppointmentsByDate(currDateTime.Unix())...))
 
 		if len(timeAvailable) > 0 {
 			randomTime := timeAvailable[rand.Intn(len(timeAvailable))]

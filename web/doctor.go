@@ -4,6 +4,7 @@ import (
 	"assignment4/clinic"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 func viewDoctorsPage(res http.ResponseWriter, req *http.Request) {
@@ -23,6 +24,7 @@ func viewDoctorsPage(res http.ResponseWriter, req *http.Request) {
 		ChosenDoctor       *clinic.Doctor
 		TimeslotsAvailable []int64
 		Doctors            []*clinic.Doctor
+		ChosenDate         string
 	}{
 		"View Doctors",
 		"",
@@ -30,22 +32,36 @@ func viewDoctorsPage(res http.ResponseWriter, req *http.Request) {
 		nil,
 		nil,
 		clinic.Doctors,
+		"",
 	}
 
 	// Get querystring values
 	doctorID := req.FormValue("doctorID")
+	date := req.FormValue("date")
 
-	if doctorID != "" {
+	if doctorID != "" && date != "" {
 		doctorID, _ := strconv.ParseInt(doctorID, 10, 64)
-		doc, err := clinic.DoctorsBST.GetDoctorByIDBST(doctorID)
+		doc, docErr := clinic.DoctorsBST.GetDoctorByIDBST(doctorID)
 
-		if err == nil {
-			payload.ChosenDoctor = doc
-			payload.TimeslotsAvailable = clinic.GetAvailableTimeslot(payload.ChosenDoctor.Appointments)
-		} else {
-			payload.ErrorMsg = err.Error()
+		if docErr != nil {
+			payload.ErrorMsg = docErr.Error()
 			go doLog(req, "ERROR", " Doctor lookup failure: "+payload.ErrorMsg+" ID: "+strconv.FormatInt(doctorID, 10))
+			tpl.ExecuteTemplate(res, "doctors.gohtml", payload)
+			return
 		}
+
+		dt, dtErr := time.Parse("02 January 2006", date)
+
+		if dtErr != nil {
+			payload.ErrorMsg = "Invalid date"
+			go doLog(req, "ERROR", " Doctor lookup failure: "+payload.ErrorMsg)
+			tpl.ExecuteTemplate(res, "doctors.gohtml", payload)
+			return
+		}
+
+		payload.ChosenDoctor = doc
+		payload.ChosenDate = date
+		payload.TimeslotsAvailable = clinic.GetAvailableTimeslot(dt.Unix(), payload.ChosenDoctor.GetAppointmentsByDate(dt.Unix()))
 	}
 
 	tpl.ExecuteTemplate(res, "doctors.gohtml", payload)
