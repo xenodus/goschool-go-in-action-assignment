@@ -6,6 +6,7 @@ import (
 	"strconv"
 )
 
+// Errors and accompanying messages to be output in logs or to users.
 var (
 	errInternalServerError = errors.New("internal server error")
 	errStatusNotFound      = errors.New("page not found")

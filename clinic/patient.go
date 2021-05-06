@@ -13,7 +13,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-// Globals
+// Package globals - Patients holds all the patients sorted by Id (alphanumeric), Admins is a slice containing Ids of clinic staff.
 var Patients = []*Patient{}
 var Admins = []string{}
 
@@ -66,6 +66,7 @@ func getPatientsFromDB() ([]*Patient, error) {
 	return Patients, nil
 }
 
+// Create Patient, insert to database, add Patient to global slice Patients, sort Patients slice via mergesort.
 func CreatePatient(username, first_name, last_name string, password []byte) (*Patient, error) {
 	defer Wg.Done()
 
@@ -92,6 +93,7 @@ func CreatePatient(username, first_name, last_name string, password []byte) (*Pa
 	return thePatient, nil
 }
 
+// Update Patient, update corresponding database entry, sort Patients slice via mergesort.
 func (p *Patient) EditPatient(username, first_name, last_name string, password []byte) {
 	mutex.Lock()
 	{
@@ -122,6 +124,7 @@ func (p *Patient) IsFreeAt(t int64) bool {
 	return true
 }
 
+// Delete Patient, Patient's appointments, remove patient from global Patients slice and delete corresponding database entry.
 func (p *Patient) DeletePatient() error {
 
 	// 1. Remove all appointment from appointments slice with patient in em
@@ -170,6 +173,7 @@ func (p *Patient) DeletePatient() error {
 	return nil
 }
 
+// Get and return a Patient (pointer) by id.
 func GetPatientByID(patientID string) (*Patient, error) {
 
 	patientIDIndex := binarySearchPatientID(patientID)
@@ -181,6 +185,7 @@ func GetPatientByID(patientID string) (*Patient, error) {
 	return nil, ErrPatientIDNotFound
 }
 
+// Get a Patient's appointments (slice of pointers) on a given date (unix time).
 func (p *Patient) GetAppointmentsByDate(dt int64) []*Appointment {
 
 	requestedDateTime := time.Unix(dt, 0)
@@ -305,6 +310,7 @@ func binarySearchPatient(arr []*Patient, first int, last int, patientID string) 
 	}
 }
 
+// Returns true if Patient is an admin. Checks recursively against Admins slice.
 func (p Patient) IsAdmin() bool {
 	return isAdminCheck(p.Id, 0)
 }
@@ -323,7 +329,7 @@ func isAdminCheck(adminID string, index int) bool {
 	}
 }
 
-// Validate NRIC
+// Validates NRIC - Checks for length of 9 if strictNRIC is set to false (default) in clinic config; If true, will perform full NRIC validity check.
 // Translated from https://gist.github.com/kamerk22/ed5e0778b3723311d8dd074c792834ef
 func IsNRICValid(nric string) bool {
 
@@ -384,6 +390,8 @@ func IsNRICValid(nric string) bool {
 	}
 }
 
+// Checks if a user is logged in by checking for existence of client side Cookie and comparing Cookie's value to server side session data in MapSessions to check for validity;
+// Returns Patient and true if valid.
 func IsLoggedIn(req *http.Request) (*Patient, bool) {
 	myCookie, err := req.Cookie(session.CookieID)
 	if err != nil {

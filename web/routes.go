@@ -1,6 +1,6 @@
 package web
 
-// URLS
+// Routes
 const (
 	pageIndex    = "/"
 	pageLogin    = "/login"

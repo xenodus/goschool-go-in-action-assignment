@@ -8,7 +8,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-// Globals
+// Package globals - Appointments holds all the appointments sorted by Id and AppointmentsSortedByTimeslot holds all appointments sorted by time.
 var Appointments = []*Appointment{}
 var AppointmentsSortedByTimeslot = []*Appointment{}
 
@@ -60,7 +60,7 @@ func getAppointmentsFromDB() ([]*Appointment, error) {
 	return Appointments, nil
 }
 
-// Create appointment, insert to database, add to global slice, sort global AppointmentsSortedByTimeslot slice, patient's Appointments slice and doctor's Appointments slice by appointment time.
+// Create Appointment, insert to database, add Appointment to global slice AppointmentsSortedByTimeslot and Appointments, sort global slice AppointmentsSortedByTimeslot, patient's Appointments slice and doctor's Appointments slice by appointment time.
 func MakeAppointment(t int64, pat *Patient, doc *Doctor) (*Appointment, error) {
 
 	app := &Appointment{}
@@ -109,7 +109,7 @@ func addAppointment(appt *Appointment) {
 	updateTimeslotSortedAppts()
 }
 
-// Update appointment, update corresponding database entry, sort global AppointmentsSortedByTimeslot slice, patient's Appointments slice, doctor's Appointments slice by appointment time.
+// Update appointment, update corresponding database entry, sort global slice AppointmentsSortedByTimeslot, patient's Appointments slice, doctor's Appointments slice by appointment time.
 func (appt *Appointment) EditAppointment(t int64, pat *Patient, doc *Doctor) error {
 
 	mutex.Lock()
@@ -136,9 +136,9 @@ func (appt *Appointment) EditAppointment(t int64, pat *Patient, doc *Doctor) err
 	return nil
 }
 
-// Remove appointment from global AppointmentsSortedByTimeslot and Appointments slices, patient's Appointments slice, doctor's Appointments slice,
+// Remove appointment from global slice AppointmentsSortedByTimeslot and Appointments, patient's Appointments slice, doctor's Appointments slice,
 // delete corresponding database entry,
-// sort global AppointmentsSortedByTimeslot slice, patient's Appointments slice, doctor's Appointments slice by appointment time.
+// sort global slice AppointmentsSortedByTimeslot, patient's Appointments slice, doctor's Appointments slice by appointment time.
 func (appt *Appointment) CancelAppointment() {
 	mutex.Lock()
 	{
@@ -223,7 +223,7 @@ func updateTimeslotSortedAppts() {
 	AppointmentsSortedByTimeslot = tempAppts
 }
 
-// Return a slice of all the possible timeslots for a given day by comparing between all timeslots for the day and a slice of appointments on the day.
+// Return a slice of all the possible open timeslots for a given day by getting the delta between all timeslots for the day and a slice of appointments on the day.
 func GetAvailableTimeslot(dt int64, apptsToExclude []*Appointment) []int64 {
 
 	allTimeSlots := timeSlotsGenerator(dt)

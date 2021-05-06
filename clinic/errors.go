@@ -4,6 +4,7 @@ import (
 	"errors"
 )
 
+// Errors and accompanying messages to be output in logs or to users.
 var (
 	// Appointments
 	ErrInvalidTimeslot       = errors.New("invalid timeslots entered")

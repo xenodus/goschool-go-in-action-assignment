@@ -1,2 +1,2 @@
-// Package clinic defines the Doctor, Patient, Appointment and Payment types, which implements their individual CRUD methods.
+// Package web defines route constants and provides the implementation for http handlers and server.
 package web

@@ -7,7 +7,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-// Globals
+// Package globals - Doctors hold all the doctors sorted by incremental id and DoctorsBST is a balanced binary search tree of doctors.
 var Doctors = []*Doctor{}
 var DoctorsBST *BST
 
@@ -91,6 +91,8 @@ func (d *Doctor) IsFreeAt(t int64) bool {
 	return true
 }
 
+// Returns a slice of Appointments (pointers) on the given date (unix time).
+// Todo: Can improve by making it binary search instead of sequential since Appointments is sorted by time.
 func (d *Doctor) GetAppointmentsByDate(dt int64) []*Appointment {
 
 	requestedDateTime := time.Unix(dt, 0)
@@ -196,6 +198,7 @@ func (bst *BST) searchNode(t *BinaryNode, docID int64) *BinaryNode {
 	}
 }
 
+// Get a Doctor from the global DoctorsBST by Id. Returns pointer to Doctor if found.
 func (bst *BST) GetDoctorByIDBST(docID int64) (*Doctor, error) {
 
 	docBN := bst.searchNode(bst.root, docID)

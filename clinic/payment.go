@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// Globals
+// Package globals - PaymentQ holds the payments that are pending in a FIFO queue, MissedPaymentQ holds the outstanding payments that have been moved over from PaymentQ.
 var PaymentQ = &PaymentQueue{}
 var MissedPaymentQ = &PaymentQueue{}
 
@@ -56,6 +56,7 @@ func getPaymentsFromDB() (*PaymentQueue, error) {
 	return PaymentQ, nil
 }
 
+// Create payment, add to database, add to payment queue and remove the appointment.
 func CreatePayment(appt *Appointment, amt float64) (*PaymentQueue, error) {
 
 	// Db
@@ -82,6 +83,7 @@ func CreatePayment(appt *Appointment, amt float64) (*PaymentQueue, error) {
 	return PaymentQ, nil
 }
 
+// Delete payment entry from database.
 func (pmy *Payment) ClearPayment() {
 	// Db
 	_, execErr := clinicDb.Exec("DELETE FROM `payment` WHERE id = ?", pmy.Id)
@@ -90,6 +92,7 @@ func (pmy *Payment) ClearPayment() {
 	}
 }
 
+// Add payment to a queue.
 func (p *PaymentQueue) Enqueue(pmy *Payment) error {
 
 	mutex.Lock()
@@ -113,6 +116,7 @@ func (p *PaymentQueue) Enqueue(pmy *Payment) error {
 	return nil
 }
 
+// Remove payment from a queue.
 func (p *PaymentQueue) Dequeue() (*Payment, error) {
 
 	var pmy *Payment
@@ -139,6 +143,7 @@ func (p *PaymentQueue) Dequeue() (*Payment, error) {
 	return pmy, nil
 }
 
+// Returns a CSV concatenated string of appointment ids from payments inside a payment queue.
 func (p *PaymentQueue) PrintAllQueueIDs(skipFirst bool) string {
 
 	queueIds := p.getAllQueueID()
@@ -172,7 +177,7 @@ func (p *PaymentQueue) getAllQueueID() []string {
 	return queueIDs
 }
 
-// Move over to missed queues if say nobody turns up
+// Remove a payment from a queue and move it to MissedPaymentQ.
 func (p *PaymentQueue) DequeueToMissedPaymentQueue() (*Payment, error) {
 	pmy, err := p.Dequeue()
 
@@ -184,7 +189,7 @@ func (p *PaymentQueue) DequeueToMissedPaymentQueue() (*Payment, error) {
 	return nil, err
 }
 
-// Move from missed payment queue back to main payment queue
+// Remove a payment from a queue and move it to PaymentQ.
 func (p *PaymentQueue) DequeueToPaymentQueue() (*Payment, error) {
 	pmy, err := p.Dequeue()
 

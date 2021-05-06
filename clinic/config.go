@@ -18,12 +18,14 @@ const resetAndSeedDB = false
 // For doctors' timeslots - 1st consultation @ 8 am, last @ 10 pm
 const startOperationHour = 8
 const endOperationHour = 22
-const appointmentIntervals = 30 // 30 mins between each consultations
 
-// Maximum number of days in the future allowed to make an appointment for
+// 30 mins between each consultations
+const appointmentIntervals = 30
+
+// Maximum number of days in the future allowed to make an appointment.
 const MaxAdvanceApptDays = 90
 
-// Password policy
+// Password policy.
 const MinPasswordLength = 8
 
 // Disabled for ease of testing of assignment; Set to true to check for true NRIC format (PDPA though...)
@@ -39,7 +41,7 @@ var (
 	db_connection string
 )
 
-// Globals
+// Package globals
 var Wg sync.WaitGroup
 var mutex sync.Mutex
 var clinicDb *sql.DB
@@ -59,10 +61,12 @@ func init() {
 	}
 }
 
+// Returns database connection string.
 func DbConnection() string {
 	return db_connection
 }
 
+// Sets the singleton database connection to be used by package.
 func SetDb(myDb *sql.DB) {
 	clinicDb = myDb
 }

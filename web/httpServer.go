@@ -11,9 +11,9 @@ import (
 
 var Db *sql.DB
 
+// Parse directory for templates and add helper functions to be used inside.
 func init() {
 
-	// Adding helper functions to templates
 	funcMap := template.FuncMap{
 		"time2HumanReadable":     time2HumanReadable,
 		"time2HumanReadableFull": time2HumanReadableFull,
@@ -26,6 +26,7 @@ func init() {
 	tpl = template.Must(template.New("").Funcs(funcMap).ParseGlob("templates/*"))
 }
 
+// Scan file server for static assets, setup routes & handlers, start web server over https.
 func StartHttpServer(myDb *sql.DB) {
 
 	clinic.SetDb(myDb)
