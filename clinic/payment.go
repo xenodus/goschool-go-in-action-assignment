@@ -1,9 +1,11 @@
 package clinic
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 // Package globals - PaymentQ holds the payments that are pending in a FIFO queue, MissedPaymentQ holds the outstanding payments that have been moved over from PaymentQ.
@@ -57,28 +59,38 @@ func getPaymentsFromDB() (*PaymentQueue, error) {
 }
 
 // Create payment, add to database, add to payment queue and remove the appointment.
-func CreatePayment(appt *Appointment, amt float64) (*PaymentQueue, error) {
+func CreatePayment(appt *Appointment, amt float64, wg *sync.WaitGroup) (*PaymentQueue, error) {
 
-	// Db
-	stmt, prepErr := clinicDb.Prepare("INSERT into payment (amount, appointment_id) values(?,?)")
-	if prepErr != nil {
-		log.Fatal(ErrDBConn.Error(), prepErr)
-		return PaymentQ, ErrCreateAppointment
-	}
-	res, execErr := stmt.Exec(amt, appt.Id)
-	if execErr != nil {
-		log.Fatal(ErrDBConn.Error(), execErr)
-		return PaymentQ, ErrCreateAppointment
-	}
-	insertedId, insertedErr := res.LastInsertId()
-	if insertedErr != nil {
-		log.Fatal(ErrDBConn.Error(), insertedErr)
-		return PaymentQ, ErrCreateAppointment
+	if wg != nil {
+		defer wg.Done()
 	}
 
-	pmy := Payment{insertedId, appt, amt}
-	PaymentQ.Enqueue(&pmy)
-	appt.CancelAppointment()
+	mutex.Lock()
+	{
+
+		// Db
+		stmt, prepErr := clinicDb.Prepare("INSERT into payment (amount, appointment_id) values(?,?)")
+		if prepErr != nil {
+			log.Fatal(ErrDBConn.Error(), prepErr)
+			return PaymentQ, ErrCreateAppointment
+		}
+		res, execErr := stmt.Exec(amt, appt.Id)
+		if execErr != nil {
+			log.Fatal(ErrDBConn.Error(), execErr)
+			return PaymentQ, ErrCreateAppointment
+		}
+		insertedId, insertedErr := res.LastInsertId()
+		if insertedErr != nil {
+			log.Fatal(ErrDBConn.Error(), insertedErr)
+			return PaymentQ, ErrCreateAppointment
+		}
+
+		pmy := Payment{insertedId, appt, amt}
+		PaymentQ.Enqueue(&pmy)
+
+		fmt.Println("Payment Q enqueued:", pmy.Appointment.Id)
+	}
+	mutex.Unlock()
 
 	return PaymentQ, nil
 }
@@ -95,23 +107,19 @@ func (pmy *Payment) ClearPayment() {
 // Add payment to a queue.
 func (p *PaymentQueue) Enqueue(pmy *Payment) error {
 
-	mutex.Lock()
-	{
-		newNode := &PaymentNode{
-			Payment: pmy,
-			Next:    nil,
-		}
-
-		if p.Front == nil {
-			p.Front = newNode
-		} else {
-			p.Back.Next = newNode
-		}
-
-		p.Back = newNode
-		p.Size++
+	newNode := &PaymentNode{
+		Payment: pmy,
+		Next:    nil,
 	}
-	mutex.Unlock()
+
+	if p.Front == nil {
+		p.Front = newNode
+	} else {
+		p.Back.Next = newNode
+	}
+
+	p.Back = newNode
+	p.Size++
 
 	return nil
 }
@@ -121,24 +129,20 @@ func (p *PaymentQueue) Dequeue() (*Payment, error) {
 
 	var pmy *Payment
 
-	mutex.Lock()
-	{
-		if p.Front == nil {
-			return nil, ErrEmptyPaymentQueue
-		}
-
-		pmy = p.Front.Payment
-
-		if p.Size == 1 {
-			p.Front = nil
-			p.Back = nil
-		} else {
-			p.Front = p.Front.Next
-		}
-
-		p.Size--
+	if p.Front == nil {
+		return nil, ErrEmptyPaymentQueue
 	}
-	mutex.Unlock()
+
+	pmy = p.Front.Payment
+
+	if p.Size == 1 {
+		p.Front = nil
+		p.Back = nil
+	} else {
+		p.Front = p.Front.Next
+	}
+
+	p.Size--
 
 	return pmy, nil
 }
@@ -179,6 +183,10 @@ func (p *PaymentQueue) getAllQueueID() []string {
 
 // Remove a payment from a queue and move it to MissedPaymentQ.
 func (p *PaymentQueue) DequeueToMissedPaymentQueue() (*Payment, error) {
+
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	pmy, err := p.Dequeue()
 
 	if err == nil {
@@ -191,6 +199,10 @@ func (p *PaymentQueue) DequeueToMissedPaymentQueue() (*Payment, error) {
 
 // Remove a payment from a queue and move it to PaymentQ.
 func (p *PaymentQueue) DequeueToPaymentQueue() (*Payment, error) {
+
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	pmy, err := p.Dequeue()
 
 	if err == nil {

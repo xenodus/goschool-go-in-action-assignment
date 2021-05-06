@@ -27,7 +27,7 @@
                     <label for="timeslot" class="form-label">Doctor</label>
                     <select class="form-select" name="doctorID">
                         {{ range .Doctors }}
-                            <option value="{{.Id}}">{{ .First_name }} {{ .Last_name }}</option>
+                            <option value="{{.Id}}" {{ if $.ChosenDoctor }} {{ if eq $.ChosenDoctor.Id .Id }} selected {{ end }} {{ end }}>{{ .First_name }} {{ .Last_name }}</option>
                         {{ end }}
                     </select>
                 </div>
@@ -40,16 +40,20 @@
             </form>
 
             {{ if .ChosenDoctor }}
-                {{ if gt (len .TimeslotsAvailable) 0 }}
-                    <div>Available timeslots</div>
+                {{ if .ChosenDate }}
+                    {{ if gt (len .TimeslotsAvailable) 0 }}
+                        <div>Available timeslots</div>
 
-                    <ul>
-                    {{ range .TimeslotsAvailable }}
-                        <li>{{time2HumanReadable .}}</li>
+                        <ul>
+                        {{ range .TimeslotsAvailable }}
+                            <li>{{time2HumanReadable .}}</li>
+                        {{ end }}
+                        </ul>
+                    {{ else }}
+                        <div>There are no more available timeslots for Dr. {{ .ChosenDoctor.First_name }} {{ .ChosenDoctor.Last_name }}</div>
                     {{ end }}
-                    </ul>
                 {{ else }}
-                    <div>There are no more available timeslots for Dr. {{ .ChosenDoctor.First_name }} {{ .ChosenDoctor.Last_name }}</div>
+                    <div>Select a date to view timeslots</div>
                 {{ end }}
             {{ end }}
 

@@ -2,6 +2,7 @@ package clinic
 
 import (
 	"log"
+	"sync"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -20,7 +21,7 @@ type Doctor struct {
 
 func getDoctorsFromDB() ([]*Doctor, error) {
 
-	rows, rowsErr := clinicDb.Query("SELECT * FROM doctor")
+	rows, rowsErr := clinicDb.Query("SELECT * FROM doctor ORDER BY id ASC")
 
 	if rowsErr != nil {
 		return Doctors, ErrDBConn
@@ -77,6 +78,7 @@ func addDoctor(first_name string, last_name string) (*Doctor, error) {
 
 	doc := &Doctor{insertedId, first_name, last_name, nil}
 	Doctors = append(Doctors, doc)
+	sortDoctorsById()
 	DoctorsBST = makeBST()
 
 	return doc, nil
@@ -94,6 +96,9 @@ func (d *Doctor) IsFreeAt(t int64) bool {
 // Returns a slice of Appointments (pointers) on the given date (unix time).
 // Todo: Can improve by making it binary search instead of sequential since Appointments is sorted by time.
 func (d *Doctor) GetAppointmentsByDate(dt int64) []*Appointment {
+
+	mutex.Lock()
+	defer mutex.Unlock()
 
 	requestedDateTime := time.Unix(dt, 0)
 	appts := []*Appointment{}
@@ -113,13 +118,12 @@ func (d *Doctor) sortAppointments() {
 }
 
 func (d *Doctor) addAppointment(appt *Appointment) {
-	defer Wg.Done()
 	d.Appointments = append(d.Appointments, appt)
 	d.sortAppointments()
 }
 
-func (d *Doctor) cancelAppointment(apptID int64) error {
-	defer Wg.Done()
+func (d *Doctor) cancelAppointment(apptID int64, wg *sync.WaitGroup) error {
+	defer wg.Done()
 
 	apptIDIndex, err := d.searchApptID(apptID)
 
@@ -218,4 +222,63 @@ func (d *Doctor) searchApptID(apptID int64) (int, error) {
 		}
 	}
 	return -1, ErrAppointmentIDNotFound
+}
+
+func sortDoctorsById() {
+	mergeSortByDoctorId(Doctors, 0, len(Doctors)-1)
+}
+
+func mergeSortByDoctorId(arr []*Doctor, first int, last int) {
+	if first < last { // more than 1 items
+		mid := (first + last) / 2              // index of midpoint
+		mergeSortByDoctorId(arr, first, mid)   // sort left half
+		mergeSortByDoctorId(arr, mid+1, last)  // sort right half
+		mergeByDoctorId(arr, first, mid, last) // merge the two halves
+	}
+}
+
+func mergeByDoctorId(arr []*Doctor, first int, mid int, last int) {
+
+	tempArr := make([]*Doctor, len(arr))
+
+	// initialize the local indexes to indicate the subarrays
+	first1 := first   // beginning of first subarray
+	last1 := mid      // end of first subarray
+	first2 := mid + 1 // beginning of second subarray
+	last2 := last     // end of second subarray
+
+	// while both subarrays are not empty, copy the
+	// smaller item into the temporary array
+	index := first1 // next available location in tempArray
+	for (first1 <= last1) && (first2 <= last2) {
+		if arr[first1].Id < arr[first2].Id {
+			tempArr[index] = arr[first1]
+			first1++
+		} else {
+			tempArr[index] = arr[first2]
+			first2++
+		}
+
+		index++
+	}
+
+	// finish off the nonempty subarray
+	// finish off the first subarray, if necessary
+	for first1 <= last1 {
+		tempArr[index] = arr[first1]
+		first1++
+		index++
+	}
+
+	// finish off the second subarray, if necessary
+	for first2 <= last2 {
+		tempArr[index] = arr[first2]
+		first2++
+		index++
+	}
+
+	// copy the result back into the original array
+	for index = first; index <= last; index++ {
+		arr[index] = tempArr[index]
+	}
 }

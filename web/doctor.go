@@ -35,33 +35,38 @@ func viewDoctorsPage(res http.ResponseWriter, req *http.Request) {
 		"",
 	}
 
-	// Get querystring values
-	doctorID := req.FormValue("doctorID")
-	date := req.FormValue("date")
+	if req.Method == http.MethodPost {
 
-	if doctorID != "" && date != "" {
-		doctorID, _ := strconv.ParseInt(doctorID, 10, 64)
-		doc, docErr := clinic.DoctorsBST.GetDoctorByIDBST(doctorID)
+		doctorID := req.FormValue("doctorID")
+		date := req.FormValue("date")
 
-		if docErr != nil {
-			payload.ErrorMsg = docErr.Error()
-			go doLog(req, "ERROR", " Doctor lookup failure: "+payload.ErrorMsg+" ID: "+strconv.FormatInt(doctorID, 10))
-			tpl.ExecuteTemplate(res, "doctors.gohtml", payload)
-			return
+		if doctorID != "" {
+			doctorID, _ := strconv.ParseInt(doctorID, 10, 64)
+			doc, docErr := clinic.DoctorsBST.GetDoctorByIDBST(doctorID)
+
+			if docErr != nil {
+				payload.ErrorMsg = docErr.Error()
+				go doLog(req, "ERROR", " Doctor lookup failure: "+payload.ErrorMsg+" ID: "+strconv.FormatInt(doctorID, 10))
+				tpl.ExecuteTemplate(res, "doctors.gohtml", payload)
+				return
+			}
+
+			payload.ChosenDoctor = doc
 		}
 
-		dt, dtErr := time.Parse("02 January 2006", date)
+		if date != "" {
+			dt, dtErr := time.Parse("02 January 2006", date)
 
-		if dtErr != nil {
-			payload.ErrorMsg = "Invalid date"
-			go doLog(req, "ERROR", " Doctor lookup failure: "+payload.ErrorMsg)
-			tpl.ExecuteTemplate(res, "doctors.gohtml", payload)
-			return
+			if dtErr != nil {
+				payload.ErrorMsg = "Invalid date"
+				go doLog(req, "ERROR", " Doctor lookup failure: "+payload.ErrorMsg)
+				tpl.ExecuteTemplate(res, "doctors.gohtml", payload)
+				return
+			}
+
+			payload.ChosenDate = date
+			payload.TimeslotsAvailable = clinic.GetAvailableTimeslot(dt.Unix(), payload.ChosenDoctor.GetAppointmentsByDate(dt.Unix()))
 		}
-
-		payload.ChosenDoctor = doc
-		payload.ChosenDate = date
-		payload.TimeslotsAvailable = clinic.GetAvailableTimeslot(dt.Unix(), payload.ChosenDoctor.GetAppointmentsByDate(dt.Unix()))
 	}
 
 	tpl.ExecuteTemplate(res, "doctors.gohtml", payload)

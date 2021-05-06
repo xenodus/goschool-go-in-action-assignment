@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"assignment4/session"
@@ -188,6 +189,9 @@ func GetPatientByID(patientID string) (*Patient, error) {
 // Get a Patient's appointments (slice of pointers) on a given date (unix time).
 func (p *Patient) GetAppointmentsByDate(dt int64) []*Appointment {
 
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	requestedDateTime := time.Unix(dt, 0)
 	appts := []*Appointment{}
 
@@ -206,13 +210,12 @@ func (p *Patient) sortAppointments() {
 }
 
 func (p *Patient) addAppointment(appt *Appointment) {
-	defer Wg.Done()
 	p.Appointments = append(p.Appointments, appt)
 	p.sortAppointments()
 }
 
-func (p *Patient) cancelAppointment(apptID int64) error {
-	defer Wg.Done()
+func (p *Patient) cancelAppointment(apptID int64, wg *sync.WaitGroup) error {
+	defer wg.Done()
 
 	apptIDIndex, err := p.searchApptID(apptID)
 

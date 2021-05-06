@@ -172,6 +172,12 @@ func adminEditAppointmentPage(res http.ResponseWriter, req *http.Request) {
 	if theApptIndex < 0 {
 		session.SetNotification(req, clinic.ErrAppointmentIDNotFound.Error(), "Error")
 		go doLog(req, "ERROR", "[Admin] Appointment update failure: "+clinic.ErrAppointmentIDNotFound.Error())
+
+		fmt.Println("all clinic appts...")
+		for _, v := range clinic.Appointments {
+			fmt.Println(v.Id)
+		}
+
 		http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
 		return
 	}
@@ -352,7 +358,8 @@ func adminPaymentEnqueuePage(res http.ResponseWriter, req *http.Request) {
 				}
 
 				appt := clinic.Appointments[apptIdIndex]
-				clinic.CreatePayment(appt, 19.99)
+				clinic.CreatePayment(appt, 19.99, nil)
+				appt.CancelAppointment()
 				session.SetNotification(req, "Appointment added to payment queue!", "Success")
 				go doLog(req, "INFO", "[Admin] Payment enqueued successfully. By: "+thePatient.Id)
 				http.Redirect(res, req, pageAdminAllAppointments, http.StatusSeeOther)
@@ -452,28 +459,28 @@ func adminDebugPage(res http.ResponseWriter, req *http.Request) {
 	fmt.Println("Admins:", len(clinic.Admins), clinic.Admins)
 
 	fmt.Println(":::::::::::::: Appointments ::::::::::::::")
-	fmt.Println("--- Id | Appt Time :::")
+	fmt.Println("--- Id | Appt Time :::", len(clinic.Appointments))
 
 	for _, v := range clinic.Appointments {
 		fmt.Println(v.Id, time2HumanReadable(v.Time))
 	}
 
 	fmt.Println(":::::::::::::: Appointments By Time ::::::::::::::")
-	fmt.Println("--- Id | Appt Time :::")
+	fmt.Println("--- Id | Appt Time :::", len(clinic.AppointmentsSortedByTimeslot))
 
 	for _, v := range clinic.AppointmentsSortedByTimeslot {
 		fmt.Println(v.Id, time2HumanReadable(v.Time))
 	}
 
 	fmt.Println(":::::::::::::: Doctors ::::::::::::::")
-	fmt.Println("--- Id | # of Appts :::")
+	fmt.Println("--- Id | # of Appts :::", len(clinic.Doctors))
 
 	for _, v := range clinic.Doctors {
 		fmt.Println(v.Id, len(v.Appointments))
 	}
 
 	fmt.Println(":::::::::::::: Patients ::::::::::::::")
-	fmt.Println("--- Id | # of Appts :::")
+	fmt.Println("--- Id | # of Appts :::", len(clinic.Patients))
 
 	for _, v := range clinic.Patients {
 		fmt.Println(v.Id, len(v.Appointments))

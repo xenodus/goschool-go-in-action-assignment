@@ -149,48 +149,60 @@ func seedDoctors() {
 }
 
 func seedAppointments() {
-	no2seed := 10
+	// Don't go beyond 50, my weak test database can't take it
+	no2seed := 30
 	rand.Seed(time.Now().Unix())
 
+	fmt.Println(no2seed)
+
+	Wg.Add(no2seed)
 	for no2seed > 0 {
 		randomPat := Patients[rand.Intn(len(Patients))]
 		randomDoc := Doctors[rand.Intn(len(Doctors))]
 
+		// Get random date between now and MaxAdvanceApptDays (default: 90 days)
 		currDateTime := time.Now()
+		min := currDateTime.Unix()
+		max := time.Date(currDateTime.Year(), currDateTime.Month(), currDateTime.Day(), 0, 0, 0, 0, time.Local).Add(time.Hour * 24 * 1).Unix()
+		delta := max - min
+		sec := rand.Int63n(delta) + min
+		currDateTime = time.Unix(sec, 0)
+
 		timeAvailable := GetAvailableTimeslot(currDateTime.Unix(), append(randomPat.GetAppointmentsByDate(currDateTime.Unix()), randomDoc.GetAppointmentsByDate(currDateTime.Unix())...))
 
 		if len(timeAvailable) > 0 {
 			randomTime := timeAvailable[rand.Intn(len(timeAvailable))]
-			MakeAppointment(randomTime, randomPat, randomDoc)
+			go MakeAppointment(randomTime, randomPat, randomDoc, &Wg)
 		} else {
-			fmt.Println("Seeding Appointment Error: No more timeslot for", randomPat.First_name, randomPat.Last_name, "by Dr.", randomDoc.First_name, randomDoc.Last_name)
+			Wg.Done()
+			fmt.Println("Seeding Appointment Error: No more timeslot for", randomPat.First_name, randomPat.Last_name, "by Dr.", randomDoc.First_name, randomDoc.Last_name, "on", currDateTime.Format("02 Jan 2006 3:04PM"))
 		}
 
 		no2seed--
 	}
+	Wg.Wait()
 }
 
 func seedPaymentQueue() {
-	no2queue := 3
-	no2MissedQueue := 0
+	no2queue := 4
 	rand.Seed(time.Now().Unix())
 
+	if no2queue > len(Appointments) {
+		no2queue = len(Appointments)
+	}
+
+	Wg.Add(no2queue)
 	for no2queue > 0 {
 
 		if len(Appointments) > 0 {
 			appt := Appointments[rand.Intn(len(Appointments))]
-			CreatePayment(appt, 29.99)
+			appt.CancelAppointment()
+			go CreatePayment(appt, 29.99, &Wg)
+		} else {
+			Wg.Done()
 		}
 
 		no2queue--
 	}
-
-	for no2MissedQueue > 0 {
-
-		if PaymentQ.Front != nil {
-			PaymentQ.DequeueToMissedPaymentQueue()
-		}
-
-		no2MissedQueue--
-	}
+	Wg.Wait()
 }

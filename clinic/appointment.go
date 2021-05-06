@@ -1,8 +1,10 @@
 package clinic
 
 import (
+	"fmt"
 	"log"
 	"strconv"
+	"sync"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -49,11 +51,9 @@ func getAppointmentsFromDB() ([]*Appointment, error) {
 				id, time, pat, doc,
 			}
 
-			Wg.Add(3)
-			go addAppointment(appt)
-			go appt.Doctor.addAppointment(appt)
-			go appt.Patient.addAppointment(appt)
-			Wg.Wait()
+			addAppointment(appt)
+			appt.Doctor.addAppointment(appt)
+			appt.Patient.addAppointment(appt)
 		}
 	}
 
@@ -61,52 +61,51 @@ func getAppointmentsFromDB() ([]*Appointment, error) {
 }
 
 // Create Appointment, insert to database, add Appointment to global slice AppointmentsSortedByTimeslot and Appointments, sort global slice AppointmentsSortedByTimeslot, patient's Appointments slice and doctor's Appointments slice by appointment time.
-func MakeAppointment(t int64, pat *Patient, doc *Doctor) (*Appointment, error) {
+func MakeAppointment(t int64, pat *Patient, doc *Doctor, wgrp *sync.WaitGroup) (*Appointment, error) {
 
-	app := &Appointment{}
-	_, err := IsThereTimeslot(t, pat, doc)
-
-	if err == nil {
-
-		// Db
-		stmt, prepErr := clinicDb.Prepare("INSERT into appointment (time, doctor_id, patient_id) values(?,?,?)")
-		if prepErr != nil {
-			log.Fatal(ErrDBConn.Error(), prepErr)
-			return nil, ErrCreateAppointment
-		}
-		res, execErr := stmt.Exec(t, doc.Id, pat.Id)
-		if execErr != nil {
-			log.Fatal(ErrDBConn.Error(), execErr)
-			return nil, ErrCreateAppointment
-		}
-		insertedId, insertedErr := res.LastInsertId()
-		if insertedErr != nil {
-			log.Fatal(ErrDBConn.Error(), insertedErr)
-			return nil, ErrCreateAppointment
-		}
-
-		app := &Appointment{insertedId, t, pat, doc}
-
-		mutex.Lock()
-		{
-			Wg.Add(3)
-			go addAppointment(app)
-			go app.Doctor.addAppointment(app)
-			go app.Patient.addAppointment(app)
-			Wg.Wait()
-		}
-		mutex.Unlock()
-
-		return app, nil
+	if wgrp != nil {
+		defer wgrp.Done()
 	}
 
-	return app, err
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	i := BinarySearchApptTime(t)
+
+	if i >= 0 {
+		return nil, ErrInvalidTimeslot
+	}
+	// Db
+	stmt, prepErr := clinicDb.Prepare("INSERT into appointment (time, doctor_id, patient_id) values(?,?,?)")
+	if prepErr != nil {
+		log.Fatal(ErrDBConn.Error(), prepErr)
+		return nil, ErrCreateAppointment
+	}
+	res, execErr := stmt.Exec(t, doc.Id, pat.Id)
+	if execErr != nil {
+		log.Fatal(ErrDBConn.Error(), execErr)
+		return nil, ErrCreateAppointment
+	}
+	insertedId, insertedErr := res.LastInsertId()
+	if insertedErr != nil {
+		log.Fatal(ErrDBConn.Error(), insertedErr)
+		return nil, ErrCreateAppointment
+	}
+
+	app := &Appointment{insertedId, t, pat, doc}
+
+	addAppointment(app)
+	app.Doctor.addAppointment(app)
+	app.Patient.addAppointment(app)
+
+	fmt.Println("Created Appt:", app.Id)
+
+	return app, nil
 }
 
 func addAppointment(appt *Appointment) {
-	defer Wg.Done()
 	Appointments = append(Appointments, appt)
-	updateTimeslotSortedAppts()
+	sortAppointments()
 }
 
 // Update appointment, update corresponding database entry, sort global slice AppointmentsSortedByTimeslot, patient's Appointments slice, doctor's Appointments slice by appointment time.
@@ -125,9 +124,8 @@ func (appt *Appointment) EditAppointment(t int64, pat *Patient, doc *Doctor) err
 		appt.Doctor = doc
 		appt.Time = t
 
-		// Re-sort appointmentsSortedByTimeslot by time
-		updateTimeslotSortedAppts()
-		// Re-sort doc and patient's appts
+		// Re-sort
+		sortAppointments()
 		pat.sortAppointments()
 		doc.sortAppointments()
 	}
@@ -140,37 +138,39 @@ func (appt *Appointment) EditAppointment(t int64, pat *Patient, doc *Doctor) err
 // delete corresponding database entry,
 // sort global slice AppointmentsSortedByTimeslot, patient's Appointments slice, doctor's Appointments slice by appointment time.
 func (appt *Appointment) CancelAppointment() {
+
 	mutex.Lock()
-	{
-		apptIDIndex := BinarySearchApptID(appt.Id)
+	defer mutex.Unlock()
 
-		if apptIDIndex >= 0 {
+	apptIDIndex := BinarySearchApptID(appt.Id)
 
-			// Db
-			_, execErr := clinicDb.Exec("DELETE FROM `appointment` WHERE id = ?", appt.Id)
-			if execErr != nil {
-				log.Fatal(ErrDBConn.Error(), execErr)
-			}
+	if apptIDIndex >= 0 {
 
-			// Remove from Patient & Doctor
-			Wg.Add(2)
-			go Appointments[apptIDIndex].Patient.cancelAppointment(appt.Id)
-			go Appointments[apptIDIndex].Doctor.cancelAppointment(appt.Id)
-			Wg.Wait()
-
-			if apptIDIndex == 0 {
-				Appointments = Appointments[1:]
-			} else if apptIDIndex == len(Appointments)-1 {
-				Appointments = Appointments[:apptIDIndex]
-			} else {
-				Appointments = append(Appointments[:apptIDIndex], Appointments[apptIDIndex+1:]...)
-			}
-
-			// Re-sort appointmentsSortedByTimeslot by time
-			updateTimeslotSortedAppts()
+		// Db
+		_, execErr := clinicDb.Exec("DELETE FROM `appointment` WHERE id = ?", appt.Id)
+		if execErr != nil {
+			log.Fatal(ErrDBConn.Error(), execErr)
 		}
+
+		var wg sync.WaitGroup
+
+		// Remove from Patient & Doctor
+		wg.Add(2)
+		go Appointments[apptIDIndex].Patient.cancelAppointment(appt.Id, &wg)
+		go Appointments[apptIDIndex].Doctor.cancelAppointment(appt.Id, &wg)
+		wg.Wait()
+
+		if apptIDIndex == 0 {
+			Appointments = Appointments[1:]
+		} else if apptIDIndex == len(Appointments)-1 {
+			Appointments = Appointments[:apptIDIndex]
+		} else {
+			Appointments = append(Appointments[:apptIDIndex], Appointments[apptIDIndex+1:]...)
+		}
+
+		// Re-sort
+		sortAppointments()
 	}
-	mutex.Unlock()
 }
 
 // Check if time of appointment is in the past - e.g. process started at 3:55 PM, user chose 4 PM timeslot but submitted form at 4:05 PM.
@@ -216,11 +216,20 @@ func IsThereTimeslot(dt int64, pat *Patient, doc *Doctor) (bool, error) {
 	return true, nil
 }
 
+func sortAppointments() {
+	updateIdSortedAppts()
+	updateTimeslotSortedAppts()
+}
+
 func updateTimeslotSortedAppts() {
 	tempAppts := make([]*Appointment, len(Appointments))
 	copy(tempAppts, Appointments)
 	mergeSortByTime(tempAppts, 0, len(tempAppts)-1)
 	AppointmentsSortedByTimeslot = tempAppts
+}
+
+func updateIdSortedAppts() {
+	mergeSortByAppointmentId(Appointments, 0, len(Appointments)-1)
 }
 
 // Return a slice of all the possible open timeslots for a given day by getting the delta between all timeslots for the day and a slice of appointments on the day.
@@ -267,8 +276,9 @@ func timeSlotsGenerator(dt int64) []int64 {
 			if currentTimeMinute >= 0 {
 				startMinute = appointmentIntervals
 			}
+		} else {
+			startHour = startOperationHour
 		}
-
 	} else {
 		startHour = startOperationHour
 		currTime = time.Date(selectedDate.Year(), selectedDate.Month(), selectedDate.Day(), startHour, startMinute, 0, 0, time.Local)
@@ -295,6 +305,61 @@ func timeSlotsGenerator(dt int64) []int64 {
 	}
 
 	return timeSlots
+}
+
+func mergeSortByAppointmentId(arr []*Appointment, first int, last int) {
+	if first < last { // more than 1 items
+		mid := (first + last) / 2                   // index of midpoint
+		mergeSortByAppointmentId(arr, first, mid)   // sort left half
+		mergeSortByAppointmentId(arr, mid+1, last)  // sort right half
+		mergeByAppointmentId(arr, first, mid, last) // merge the two halves
+	}
+}
+
+func mergeByAppointmentId(arr []*Appointment, first int, mid int, last int) {
+
+	tempArr := make([]*Appointment, len(arr))
+
+	// initialize the local indexes to indicate the subarrays
+	first1 := first   // beginning of first subarray
+	last1 := mid      // end of first subarray
+	first2 := mid + 1 // beginning of second subarray
+	last2 := last     // end of second subarray
+
+	// while both subarrays are not empty, copy the
+	// smaller item into the temporary array
+	index := first1 // next available location in tempArray
+	for (first1 <= last1) && (first2 <= last2) {
+		if arr[first1].Id < arr[first2].Id {
+			tempArr[index] = arr[first1]
+			first1++
+		} else {
+			tempArr[index] = arr[first2]
+			first2++
+		}
+
+		index++
+	}
+
+	// finish off the nonempty subarray
+	// finish off the first subarray, if necessary
+	for first1 <= last1 {
+		tempArr[index] = arr[first1]
+		first1++
+		index++
+	}
+
+	// finish off the second subarray, if necessary
+	for first2 <= last2 {
+		tempArr[index] = arr[first2]
+		first2++
+		index++
+	}
+
+	// copy the result back into the original array
+	for index = first; index <= last; index++ {
+		arr[index] = tempArr[index]
+	}
 }
 
 func mergeSortByTime(arr []*Appointment, first int, last int) {
@@ -370,6 +435,29 @@ func binarySearchAppt(arr []*Appointment, first int, last int, apptID int64) int
 				return binarySearchAppt(arr, first, mid-1, apptID) // search in first half
 			} else { // item in second half
 				return binarySearchAppt(arr, mid+1, last, apptID) // search in second half
+			}
+		}
+	}
+}
+
+// Binary search for appointment time in sorted slice Appointments.
+func BinarySearchApptTime(time int64) int {
+	return binarySearchApptbyTime(AppointmentsSortedByTimeslot, 0, len(AppointmentsSortedByTimeslot)-1, time)
+}
+
+func binarySearchApptbyTime(arr []*Appointment, first int, last int, time int64) int {
+	if first > last { // item not found
+		return -1
+	} else {
+		mid := (first + last) / 2
+
+		if arr[mid].Time == time { // item found
+			return mid
+		} else {
+			if time < arr[mid].Time { // item in first half
+				return binarySearchApptbyTime(arr, first, mid-1, time) // search in first half
+			} else { // item in second half
+				return binarySearchApptbyTime(arr, mid+1, last, time) // search in second half
 			}
 		}
 	}

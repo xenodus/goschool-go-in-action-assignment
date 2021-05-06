@@ -277,7 +277,7 @@ func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 						return
 					}
 
-					newAppt, newApptErr := clinic.MakeAppointment(t, thePatient, payload.ChosenDoctor)
+					newAppt, newApptErr := clinic.MakeAppointment(t, thePatient, payload.ChosenDoctor, nil)
 
 					if newApptErr == nil {
 						session.SetNotification(req, "Appointment scheduled!", "Success")
