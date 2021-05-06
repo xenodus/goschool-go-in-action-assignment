@@ -92,7 +92,6 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 			date := req.FormValue("date")
 			timeslot := req.FormValue("timeslot")
 
-			// Date
 			if date != "" {
 				// Parse date
 				dt, dtErr := time.Parse("02 January 2006", date)
@@ -226,7 +225,6 @@ func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 
 			payload.ChosenDoctor = doc
 
-			// Date
 			if date != "" {
 				// Parse date
 				dt, dtErr := time.Parse("02 January 2006", date)
@@ -257,37 +255,37 @@ func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 					tpl.ExecuteTemplate(res, "newAppointment.gohtml", payload)
 					return
 				}
-			}
-		}
 
-		if timeslot != "" && date != "" && payload.ChosenDoctor != nil && payload.ErrorMsg == "" {
-			t, _ := strconv.ParseInt(timeslot, 10, 64)
+				if timeslot != "" {
+					t, _ := strconv.ParseInt(timeslot, 10, 64)
 
-			// Check if slot truely exists
-			if !payload.ChosenDoctor.IsFreeAt(t) || !thePatient.IsFreeAt(t) {
-				payload.ErrorMsg = clinic.ErrDuplicateTimeslot.Error()
-				go doLog(req, "ERROR", "Appointment creation failure: "+payload.ErrorMsg)
-				tpl.ExecuteTemplate(res, "newAppointment.gohtml", payload)
-				return
-			}
+					// Check if slot truely exists
+					if !payload.ChosenDoctor.IsFreeAt(t) || !thePatient.IsFreeAt(t) {
+						payload.ErrorMsg = clinic.ErrDuplicateTimeslot.Error()
+						go doLog(req, "ERROR", "Appointment creation failure: "+payload.ErrorMsg)
+						tpl.ExecuteTemplate(res, "newAppointment.gohtml", payload)
+						return
+					}
 
-			_, isApptTimeValidErr := clinic.IsApptTimeValid(t)
+					_, isApptTimeValidErr := clinic.IsApptTimeValid(t)
 
-			// Past time
-			if isApptTimeValidErr != nil {
-				payload.ErrorMsg = isApptTimeValidErr.Error()
-				go doLog(req, "ERROR", "Appointment creation failure: "+payload.ErrorMsg)
-				tpl.ExecuteTemplate(res, "newAppointment.gohtml", payload)
-				return
-			}
+					// Past time
+					if isApptTimeValidErr != nil {
+						payload.ErrorMsg = isApptTimeValidErr.Error()
+						go doLog(req, "ERROR", "Appointment creation failure: "+payload.ErrorMsg)
+						tpl.ExecuteTemplate(res, "newAppointment.gohtml", payload)
+						return
+					}
 
-			newAppt, newApptErr := clinic.MakeAppointment(t, thePatient, payload.ChosenDoctor)
+					newAppt, newApptErr := clinic.MakeAppointment(t, thePatient, payload.ChosenDoctor)
 
-			if newApptErr == nil {
-				session.SetNotification(req, "Appointment scheduled!", "Success")
-				go doLog(req, "INFO", "Appointment created successfully:"+strconv.FormatInt(newAppt.Id, 10))
-				http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
-				return
+					if newApptErr == nil {
+						session.SetNotification(req, "Appointment scheduled!", "Success")
+						go doLog(req, "INFO", "Appointment created successfully:"+strconv.FormatInt(newAppt.Id, 10))
+						http.Redirect(res, req, pageMyAppointments, http.StatusSeeOther)
+						return
+					}
+				}
 			}
 		}
 	}

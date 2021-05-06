@@ -20,6 +20,7 @@ func init() {
 		"getUserByID":            getUserByID,
 		"ucFirst":                ucFirst,
 		"stripSpace":             stripSpace,
+		"maxAdvanceApptDays":     maxAdvanceApptDays,
 	}
 
 	tpl = template.Must(template.New("").Funcs(funcMap).ParseGlob("templates/*"))

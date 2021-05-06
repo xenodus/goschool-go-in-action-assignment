@@ -67,7 +67,7 @@
                 flatpickr(".datePicker", {
                     dateFormat: "d F Y",    // submitted
                     minDate: "today",
-                    maxDate: new Date().fp_incr(30) // 14 days from now
+                    maxDate: new Date().fp_incr({{ maxAdvanceApptDays }}) // 14 days from now
                 });
             </script>
         </div>

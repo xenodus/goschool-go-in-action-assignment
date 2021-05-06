@@ -67,3 +67,7 @@ func ucFirst(str string) string {
 func stripSpace(str string) string {
 	return strings.ReplaceAll(str, " ", "")
 }
+
+func maxAdvanceApptDays() int {
+	return clinic.MaxAdvanceApptDays
+}

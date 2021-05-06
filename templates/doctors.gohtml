@@ -36,23 +36,22 @@
                     <label for="date" class="form-label">Select Date</label>
                     <input class="form-control datePicker bg-white" type="text" name="date" value="{{ if .ChosenDate }} {{ .ChosenDate }} {{ end }}">
                 </div>
-
-                {{ if .ChosenDoctor }}
-                    {{ if gt (len .TimeslotsAvailable) 0 }}
-                        <div>Available timeslots</div>
-
-                        <ul>
-                        {{ range .TimeslotsAvailable }}
-                            <li>{{time2HumanReadable .}}</li>
-                        {{ end }}
-                        </ul>
-                    {{ else }}
-                        <div>There are no more available timeslots for Dr. {{ .ChosenDoctor.First_name }} {{ .ChosenDoctor.Last_name }}</div>
-                    {{ end }}
-                {{ end }}
-
                 <div><button type="submit" class="btn btn-primary mb-3">Submit</button></div>
             </form>
+
+            {{ if .ChosenDoctor }}
+                {{ if gt (len .TimeslotsAvailable) 0 }}
+                    <div>Available timeslots</div>
+
+                    <ul>
+                    {{ range .TimeslotsAvailable }}
+                        <li>{{time2HumanReadable .}}</li>
+                    {{ end }}
+                    </ul>
+                {{ else }}
+                    <div>There are no more available timeslots for Dr. {{ .ChosenDoctor.First_name }} {{ .ChosenDoctor.Last_name }}</div>
+                {{ end }}
+            {{ end }}
 
             {{template "footer"}}
             <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -61,7 +60,7 @@
                 flatpickr(".datePicker", {
                     dateFormat: "d F Y",
                     minDate: "today",
-                    maxDate: new Date().fp_incr(30)
+                    maxDate: new Date().fp_incr({{ maxAdvanceApptDays }})
                 });
             </script>
         </div>

@@ -60,7 +60,7 @@ func getAppointmentsFromDB() ([]*Appointment, error) {
 	return Appointments, nil
 }
 
-// Make and sort by appointment time
+// Create appointment, insert to database, add to global slice, sort global AppointmentsSortedByTimeslot slice, patient's Appointments slice and doctor's Appointments slice by appointment time.
 func MakeAppointment(t int64, pat *Patient, doc *Doctor) (*Appointment, error) {
 
 	app := &Appointment{}
@@ -68,27 +68,27 @@ func MakeAppointment(t int64, pat *Patient, doc *Doctor) (*Appointment, error) {
 
 	if err == nil {
 
+		// Db
+		stmt, prepErr := clinicDb.Prepare("INSERT into appointment (time, doctor_id, patient_id) values(?,?,?)")
+		if prepErr != nil {
+			log.Fatal(ErrDBConn.Error(), prepErr)
+			return nil, ErrCreateAppointment
+		}
+		res, execErr := stmt.Exec(t, doc.Id, pat.Id)
+		if execErr != nil {
+			log.Fatal(ErrDBConn.Error(), execErr)
+			return nil, ErrCreateAppointment
+		}
+		insertedId, insertedErr := res.LastInsertId()
+		if insertedErr != nil {
+			log.Fatal(ErrDBConn.Error(), insertedErr)
+			return nil, ErrCreateAppointment
+		}
+
+		app := &Appointment{insertedId, t, pat, doc}
+
 		mutex.Lock()
 		{
-			// Db
-			stmt, prepErr := clinicDb.Prepare("INSERT into appointment (time, doctor_id, patient_id) values(?,?,?)")
-			if prepErr != nil {
-				log.Fatal(ErrDBConn.Error(), prepErr)
-				return nil, ErrCreateAppointment
-			}
-			res, execErr := stmt.Exec(t, doc.Id, pat.Id)
-			if execErr != nil {
-				log.Fatal(ErrDBConn.Error(), execErr)
-				return nil, ErrCreateAppointment
-			}
-			insertedId, insertedErr := res.LastInsertId()
-			if insertedErr != nil {
-				log.Fatal(ErrDBConn.Error(), insertedErr)
-				return nil, ErrCreateAppointment
-			}
-
-			app := &Appointment{insertedId, t, pat, doc}
-
 			Wg.Add(3)
 			go addAppointment(app)
 			go app.Doctor.addAppointment(app)
@@ -109,6 +109,7 @@ func addAppointment(appt *Appointment) {
 	updateTimeslotSortedAppts()
 }
 
+// Update appointment, update corresponding database entry, sort global AppointmentsSortedByTimeslot slice, patient's Appointments slice, doctor's Appointments slice by appointment time.
 func (appt *Appointment) EditAppointment(t int64, pat *Patient, doc *Doctor) error {
 
 	mutex.Lock()
@@ -135,6 +136,9 @@ func (appt *Appointment) EditAppointment(t int64, pat *Patient, doc *Doctor) err
 	return nil
 }
 
+// Remove appointment from global AppointmentsSortedByTimeslot and Appointments slices, patient's Appointments slice, doctor's Appointments slice,
+// delete corresponding database entry,
+// sort global AppointmentsSortedByTimeslot slice, patient's Appointments slice, doctor's Appointments slice by appointment time.
 func (appt *Appointment) CancelAppointment() {
 	mutex.Lock()
 	{
@@ -169,7 +173,7 @@ func (appt *Appointment) CancelAppointment() {
 	mutex.Unlock()
 }
 
-// Check if time of appointment is in the past - e.g. process started at 3:55 PM, user chose 4 PM timeslot but submitted at 4:05 PM
+// Check if time of appointment is in the past - e.g. process started at 3:55 PM, user chose 4 PM timeslot but submitted form at 4:05 PM.
 func IsApptTimeValid(t int64) (bool, error) {
 
 	currTime := time.Now()
@@ -188,6 +192,7 @@ func IsApptTimeValid(t int64) (bool, error) {
 	return true, nil
 }
 
+// Check if there's timeslot available for the day by checking both the patient's and doctor's appointments for the day.
 func IsThereTimeslot(dt int64, pat *Patient, doc *Doctor) (bool, error) {
 
 	patientTimeslotsAvailable := GetAvailableTimeslot(dt, pat.GetAppointmentsByDate(dt))
@@ -218,6 +223,7 @@ func updateTimeslotSortedAppts() {
 	AppointmentsSortedByTimeslot = tempAppts
 }
 
+// Return a slice of all the possible timeslots for a given day by comparing between all timeslots for the day and a slice of appointments on the day.
 func GetAvailableTimeslot(dt int64, apptsToExclude []*Appointment) []int64 {
 
 	allTimeSlots := timeSlotsGenerator(dt)
@@ -242,7 +248,7 @@ func GetAvailableTimeslot(dt int64, apptsToExclude []*Appointment) []int64 {
 	return availableTimeslots
 }
 
-// Returns slice of available time slots in 30 mins intervals from provided datetime
+// Returns slice of available time slots in 30 mins intervals from provided datetime.
 func timeSlotsGenerator(dt int64) []int64 {
 
 	selectedDate := time.Unix(dt, 0)
@@ -346,7 +352,7 @@ func mergeByTime(arr []*Appointment, first int, mid int, last int) {
 	}
 }
 
-// Binary search for appointment id in sorted slice
+// Binary search for appointment id in sorted slice Appointments.
 func BinarySearchApptID(apptID int64) int {
 	return binarySearchAppt(Appointments, 0, len(Appointments)-1, apptID)
 }
@@ -367,14 +373,4 @@ func binarySearchAppt(arr []*Appointment, first int, last int, apptID int64) int
 			}
 		}
 	}
-}
-
-// Sequential search
-func searchApptID(arr []*Appointment, apptID int64) (int, error) {
-	for k, v := range arr {
-		if v.Id == apptID {
-			return k, nil
-		}
-	}
-	return -1, ErrAppointmentIDNotFound
 }

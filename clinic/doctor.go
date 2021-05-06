@@ -119,7 +119,7 @@ func (d *Doctor) addAppointment(appt *Appointment) {
 func (d *Doctor) cancelAppointment(apptID int64) error {
 	defer Wg.Done()
 
-	apptIDIndex, err := searchApptID(d.Appointments, apptID)
+	apptIDIndex, err := d.searchApptID(apptID)
 
 	if apptIDIndex >= 0 {
 
@@ -205,4 +205,14 @@ func (bst *BST) GetDoctorByIDBST(docID int64) (*Doctor, error) {
 	}
 
 	return nil, ErrDoctorIDNotFound
+}
+
+// Sequential search
+func (d *Doctor) searchApptID(apptID int64) (int, error) {
+	for k, v := range d.Appointments {
+		if v.Id == apptID {
+			return k, nil
+		}
+	}
+	return -1, ErrAppointmentIDNotFound
 }

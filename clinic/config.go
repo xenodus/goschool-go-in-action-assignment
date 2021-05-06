@@ -20,6 +20,9 @@ const startOperationHour = 8
 const endOperationHour = 22
 const appointmentIntervals = 30 // 30 mins between each consultations
 
+// Maximum number of days in the future allowed to make an appointment for
+const MaxAdvanceApptDays = 90
+
 // Password policy
 const MinPasswordLength = 8
 

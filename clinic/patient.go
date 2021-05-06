@@ -209,7 +209,7 @@ func (p *Patient) addAppointment(appt *Appointment) {
 func (p *Patient) cancelAppointment(apptID int64) error {
 	defer Wg.Done()
 
-	apptIDIndex, err := searchApptID(p.Appointments, apptID)
+	apptIDIndex, err := p.searchApptID(apptID)
 
 	if apptIDIndex >= 0 {
 
@@ -402,4 +402,14 @@ func IsLoggedIn(req *http.Request) (*Patient, bool) {
 	}
 
 	return patient, noPatientErr == nil
+}
+
+// Sequential search
+func (p *Patient) searchApptID(apptID int64) (int, error) {
+	for k, v := range p.Appointments {
+		if v.Id == apptID {
+			return k, nil
+		}
+	}
+	return -1, ErrAppointmentIDNotFound
 }
