@@ -9,8 +9,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var db *sql.DB
-
 func main() {
 
 	db, err := sql.Open("mysql", clinic.DbConnection())
