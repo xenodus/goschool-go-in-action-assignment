@@ -13,7 +13,7 @@ import (
 const resetDB = false
 
 // True  = clean system with test data
-const resetAndSeedDB = true
+const resetAndSeedDB = false
 
 // If above 2 are both false = fetch from database
 
