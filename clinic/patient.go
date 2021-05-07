@@ -314,7 +314,7 @@ func binarySearchPatient(arr []*Patient, first int, last int, patientID string) 
 }
 
 // Returns true if Patient is an admin. Checks recursively against Admins slice.
-func (p Patient) IsAdmin() bool {
+func (p *Patient) IsAdmin() bool {
 	return isAdminCheck(p.Id, 0)
 }
 
