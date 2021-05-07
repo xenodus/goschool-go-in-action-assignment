@@ -1,5 +1,5 @@
 package web
 
 // Server settings
-const serverHost = "goschool.alvinyeoh.com"
-const serverPort = "443"
+const serverHost = "localhost"
+const serverPort = "5221"
