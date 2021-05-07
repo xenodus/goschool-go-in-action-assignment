@@ -117,7 +117,14 @@ func editAppointmentPage(res http.ResponseWriter, req *http.Request) {
 				// Form submit values
 				if timeslot != "" {
 
-					t, _ := strconv.ParseInt(timeslot, 10, 64)
+					t, timeErr := strconv.ParseInt(timeslot, 10, 64)
+
+					if timeErr != nil {
+						payload.ErrorMsg = "Invalid timeslot"
+						go doLog(req, "ERROR", "Appointment update failure: "+payload.ErrorMsg+timeErr.Error())
+						tpl.ExecuteTemplate(res, "editAppointment.gohtml", payload)
+						return
+					}
 
 					// Patient / Doctor time check
 					if !payload.Appt.Patient.IsFreeAt(t) || !payload.Appt.Doctor.IsFreeAt(t) {
@@ -257,7 +264,14 @@ func newAppointmentPage(res http.ResponseWriter, req *http.Request) {
 				}
 
 				if timeslot != "" {
-					t, _ := strconv.ParseInt(timeslot, 10, 64)
+					t, timeErr := strconv.ParseInt(timeslot, 10, 64)
+
+					if timeErr != nil {
+						payload.ErrorMsg = "Invalid timeslot"
+						go doLog(req, "ERROR", "Appointment creation failure: "+payload.ErrorMsg+timeErr.Error())
+						tpl.ExecuteTemplate(res, "newAppointment.gohtml", payload)
+						return
+					}
 
 					// Check if slot truely exists
 					if !payload.ChosenDoctor.IsFreeAt(t) || !thePatient.IsFreeAt(t) {

@@ -55,9 +55,9 @@ func registerPage(res http.ResponseWriter, req *http.Request) {
 		// Policy to disallow and strip all tags - Similar to GO's unexported striptags
 		p := bluemonday.StrictPolicy()
 
-		username := p.Sanitize(strings.ToUpper(strings.TrimSpace(req.FormValue("nric"))))
-		firstname := p.Sanitize(strings.TrimSpace(req.FormValue("firstname")))
-		lastname := p.Sanitize(strings.TrimSpace(req.FormValue("lastname")))
+		username := strings.ToUpper(strings.TrimSpace(p.Sanitize(req.FormValue("nric"))))
+		firstname := strings.TrimSpace(p.Sanitize(req.FormValue("firstname")))
+		lastname := strings.TrimSpace(p.Sanitize(req.FormValue("lastname")))
 		password := req.FormValue("password")
 
 		inputErr := areInputValid(username, firstname, lastname, password, true)
@@ -177,8 +177,8 @@ func profilePage(res http.ResponseWriter, req *http.Request) {
 		// Policy to disallow and strip all tags - Similar to GO's unexported striptags
 		p := bluemonday.StrictPolicy()
 
-		firstname := p.Sanitize(strings.TrimSpace(req.FormValue("firstname")))
-		lastname := p.Sanitize(strings.TrimSpace(req.FormValue("lastname")))
+		firstname := strings.TrimSpace(p.Sanitize(req.FormValue("firstname")))
+		lastname := strings.TrimSpace(p.Sanitize(req.FormValue("lastname")))
 		password := req.FormValue("password")
 
 		inputErr := areInputValid(thePatient.Id, firstname, lastname, password, false)
