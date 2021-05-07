@@ -14,8 +14,10 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-// Package globals - Patients holds all the patients sorted by Id (alphanumeric), Admins is a slice containing Ids of clinic staff.
+// Patients holds all the patients sorted by Id (alphanumeric).
 var Patients = []*Patient{}
+
+// Admins is a slice containing Ids of clinic staff.
 var Admins = []string{}
 
 type Patient struct {

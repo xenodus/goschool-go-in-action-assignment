@@ -22,14 +22,14 @@ func psiPage(res http.ResponseWriter, req *http.Request) {
 		thePatient, "PSI", "", "", "",
 	}
 
-	psi, err := psi.GetPSI()
+	thePsi, err := psi.GetPSI()
 
 	if err != nil {
 		payload.ErrorMsg = "Unable to retrieve PSI"
 		go doLog(req, "ERROR", "[Admin] "+err.Error()) // only show detailed error inside logs
 	} else {
-		payload.Psi = psi.Value
-		payload.PsiDescription = psi.Description
+		payload.Psi = thePsi.Value
+		payload.PsiDescription = thePsi.Description
 	}
 
 	tpl.ExecuteTemplate(res, "psi.gohtml", payload)

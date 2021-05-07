@@ -8,8 +8,10 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-// Package globals - Doctors hold all the doctors sorted by incremental id and DoctorsBST is a balanced binary search tree of doctors.
+// Doctors hold all the doctors sorted by incremental id.
 var Doctors = []*Doctor{}
+
+// DoctorsBST is a balanced binary search tree of doctors.
 var DoctorsBST *BST
 
 type Doctor struct {

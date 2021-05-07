@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-var Db *sql.DB
+var tpl *template.Template
 
 // Parse directory for templates and add helper functions to be used inside.
 func init() {

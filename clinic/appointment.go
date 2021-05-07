@@ -10,8 +10,10 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-// Package globals - Appointments holds all the appointments sorted by Id and AppointmentsSortedByTimeslot holds all appointments sorted by time.
+// Appointments holds all the appointments sorted by Id.
 var Appointments = []*Appointment{}
+
+// AppointmentsSortedByTimeslot holds all appointments sorted by time.
 var AppointmentsSortedByTimeslot = []*Appointment{}
 
 type Appointment struct {

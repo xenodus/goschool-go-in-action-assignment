@@ -43,7 +43,6 @@ var (
 	db_connection string
 )
 
-// Package globals
 var Wg sync.WaitGroup
 var mutex sync.Mutex
 var clinicDb *sql.DB

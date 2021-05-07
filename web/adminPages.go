@@ -2,7 +2,6 @@ package web
 
 import (
 	"fmt"
-	"html/template"
 	"net/http"
 	"strconv"
 	"strings"
@@ -11,8 +10,6 @@ import (
 	"assignment4/clinic"
 	"assignment4/session"
 )
-
-var tpl *template.Template
 
 func adminSessionsPage(res http.ResponseWriter, req *http.Request) {
 

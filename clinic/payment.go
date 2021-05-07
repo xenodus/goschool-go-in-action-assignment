@@ -8,8 +8,10 @@ import (
 	"sync"
 )
 
-// Package globals - PaymentQ holds the payments that are pending in a FIFO queue, MissedPaymentQ holds the outstanding payments that have been moved over from PaymentQ.
+// PaymentQ holds the payments that are pending in a FIFO queue.
 var PaymentQ = &PaymentQueue{}
+
+// MissedPaymentQ holds the outstanding payments that have been moved over from PaymentQ.
 var MissedPaymentQ = &PaymentQueue{}
 
 type Payment struct {
