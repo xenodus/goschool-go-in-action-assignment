@@ -12,7 +12,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// Reset database, setup database, seed test data or load clinic globals from database depending on settings in clinic config.
+// SeedData resets the database, setup the database, seed test data or load clinic globals from database depending on settings in clinic config.
 func SeedData() {
 
 	if resetDB {

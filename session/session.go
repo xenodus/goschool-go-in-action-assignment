@@ -47,7 +47,7 @@ func deleteDuplicateSession(username string) {
 	}
 }
 
-// Creates client side cookie, create and add session to global MapSessions; Also, purge any duplicate sessions by a user.
+// CreateSession creates client side cookie, create and add session to global MapSessions; Also, purge any duplicate sessions by a user.
 func CreateSession(res http.ResponseWriter, req *http.Request, username, serverHost string) {
 
 	deleteDuplicateSession(username)
@@ -67,7 +67,7 @@ func CreateSession(res http.ResponseWriter, req *http.Request, username, serverH
 	MapSessions[myCookie.Value] = Session{username, time.Now().Unix(), req.URL, nil}
 }
 
-// Expires a user's client side cookie and remove session from global MapSessions.
+// DeleteSession expires a user's client side cookie and remove session from global MapSessions.
 func DeleteSession(res http.ResponseWriter, req *http.Request) {
 	myCookie, err := req.Cookie(CookieID)
 

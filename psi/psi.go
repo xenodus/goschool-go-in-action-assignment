@@ -15,7 +15,7 @@ type PSI struct {
 	Description string
 }
 
-// Returns a PSI containing the 24H national average pollutant standards index value and description.
+// GetPSI returns a PSI item containing the 24H national average pollutant standards index value and description.
 func GetPSI() (*PSI, error) {
 
 	var jsonResult map[string]interface{}

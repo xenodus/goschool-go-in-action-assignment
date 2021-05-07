@@ -110,7 +110,7 @@ func addAppointment(appt *Appointment) {
 	sortAppointments()
 }
 
-// Update appointment, update corresponding database entry, sort global slice AppointmentsSortedByTimeslot, patient's Appointments slice, doctor's Appointments slice by appointment time.
+// EditAppointment updates appointment item, updates corresponding database entry, sort AppointmentsSortedByTimeslot slice by time, Appointments slice by Id, patient's Appointments slice and doctor's Appointments slice by time.
 func (appt *Appointment) EditAppointment(t int64, pat *Patient, doc *Doctor) error {
 
 	mutex.Lock()
@@ -136,9 +136,9 @@ func (appt *Appointment) EditAppointment(t int64, pat *Patient, doc *Doctor) err
 	return nil
 }
 
-// Remove appointment from global slice AppointmentsSortedByTimeslot and Appointments, patient's Appointments slice, doctor's Appointments slice,
+// CancelAppointment removes appointment from AppointmentsSortedByTimeslot and Appointments, patient's Appointments slice, doctor's Appointments slice,
 // delete corresponding database entry,
-// sort global slice AppointmentsSortedByTimeslot, patient's Appointments slice, doctor's Appointments slice by appointment time.
+// sort AppointmentsSortedByTimeslot slice by time, Appointments slice by Id, patient's Appointments slice and doctor's Appointments slice by time.
 func (appt *Appointment) CancelAppointment() {
 
 	mutex.Lock()
@@ -175,7 +175,7 @@ func (appt *Appointment) CancelAppointment() {
 	}
 }
 
-// Check if time of appointment is in the past - e.g. process started at 3:55 PM, user chose 4 PM timeslot but submitted form at 4:05 PM.
+// IsApptTimeValid checks if time of appointment is in the past - e.g. process started at 3:55 PM, user chose 4 PM timeslot but submitted form at 4:05 PM.
 func IsApptTimeValid(t int64) (bool, error) {
 
 	currTime := time.Now()
@@ -194,7 +194,7 @@ func IsApptTimeValid(t int64) (bool, error) {
 	return true, nil
 }
 
-// Check if there's timeslot available for the day by checking both the patient's and doctor's appointments for the day.
+// IsThereTimeslot checks if there's timeslot available for the day by checking both the patient's and doctor's appointments for the day.
 func IsThereTimeslot(dt int64, pat *Patient, doc *Doctor) (bool, error) {
 
 	patientTimeslotsAvailable := GetAvailableTimeslot(dt, pat.GetAppointmentsByDate(dt))
@@ -234,7 +234,7 @@ func updateIdSortedAppts() {
 	mergeSortByAppointmentId(Appointments, 0, len(Appointments)-1)
 }
 
-// Return a slice of all the possible open timeslots for a given day by getting the delta between all timeslots for the day and a slice of appointments on the day.
+// GetAvailableTimeslot returns a slice of all the possible open timeslots for a given day by getting the delta between all timeslots for the day and a slice of appointments on the day.
 func GetAvailableTimeslot(dt int64, apptsToExclude []*Appointment) []int64 {
 
 	allTimeSlots := timeSlotsGenerator(dt)
@@ -259,7 +259,7 @@ func GetAvailableTimeslot(dt int64, apptsToExclude []*Appointment) []int64 {
 	return availableTimeslots
 }
 
-// Returns slice of available time slots in 30 mins intervals from provided datetime.
+// timeSlotsGenerator returns slice of available time slots in 30 mins intervals from provided datetime.
 func timeSlotsGenerator(dt int64) []int64 {
 
 	selectedDate := time.Unix(dt, 0)
@@ -419,7 +419,7 @@ func mergeByTime(arr []*Appointment, first int, mid int, last int) {
 	}
 }
 
-// Binary search for appointment id in sorted slice Appointments.
+// BinarySearchApptID performs binary search for appointment id in Appointments.
 func BinarySearchApptID(apptID int64) int {
 	return binarySearchAppt(Appointments, 0, len(Appointments)-1, apptID)
 }
@@ -442,7 +442,7 @@ func binarySearchAppt(arr []*Appointment, first int, last int, apptID int64) int
 	}
 }
 
-// Binary search for appointment time in sorted slice Appointments.
+// BinarySearchApptTime performs binary search for appointment time in Appointments.
 func BinarySearchApptTime(time int64) int {
 	return binarySearchApptbyTime(AppointmentsSortedByTimeslot, 0, len(AppointmentsSortedByTimeslot)-1, time)
 }

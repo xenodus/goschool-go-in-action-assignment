@@ -95,7 +95,7 @@ func (d *Doctor) IsFreeAt(t int64) bool {
 	return true
 }
 
-// Returns a slice of Appointments (pointers) on the given date (unix time).
+// GetAppointmentsByDate returns a slice of Appointments (pointers) on the given date (unix time).
 // Todo: Can improve by making it binary search instead of sequential since Appointments is sorted by time.
 func (d *Doctor) GetAppointmentsByDate(dt int64) []*Appointment {
 
@@ -143,7 +143,6 @@ func (d *Doctor) cancelAppointment(apptID int64, wg *sync.WaitGroup) error {
 	return err
 }
 
-// BST
 type BinaryNode struct {
 	doctor *Doctor     // to store the data
 	left   *BinaryNode // pointer to point to left node
@@ -204,7 +203,7 @@ func (bst *BST) searchNode(t *BinaryNode, docID int64) *BinaryNode {
 	}
 }
 
-// Get a Doctor from the global DoctorsBST by Id. Returns pointer to Doctor if found.
+// GetDoctorByIDBST gets a Doctor from the global DoctorsBST by Id. Returns pointer to Doctor if found.
 func (bst *BST) GetDoctorByIDBST(docID int64) (*Doctor, error) {
 
 	docBN := bst.searchNode(bst.root, docID)

@@ -62,12 +62,12 @@ func init() {
 	}
 }
 
-// Returns database connection string.
+// DbConnection returns the database connection string.
 func DbConnection() string {
 	return db_connection
 }
 
-// Sets the singleton database connection to be used by package.
+// SetDb sets the singleton database connection to be used by package.
 func SetDb(myDb *sql.DB) {
 	clinicDb = myDb
 }

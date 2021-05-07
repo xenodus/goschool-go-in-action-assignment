@@ -26,7 +26,8 @@ func init() {
 	tpl = template.Must(template.New("").Funcs(funcMap).ParseGlob("templates/*"))
 }
 
-// Scan file server for static assets, setup routes & handlers, start web server over https.
+// StartHttpServer setup routes & handlers and start web server over https.
+// It also calls SeedData from clinic package to perform database setup and/or seeding of test data depending on clinic package's config settings.
 func StartHttpServer(myDb *sql.DB) {
 
 	clinic.SetDb(myDb)

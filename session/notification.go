@@ -10,7 +10,7 @@ type Notification struct {
 	Type    string // Types: "Success", "Error"
 }
 
-// Sets notification message to user's session.
+// SetNotification sets a notification message to user's session.
 func SetNotification(req *http.Request, notificationMsg, notificationType string) error {
 	myCookie, err := req.Cookie(CookieID)
 	if err != nil {
@@ -28,7 +28,7 @@ func SetNotification(req *http.Request, notificationMsg, notificationType string
 	return nil
 }
 
-// Get notification message from user's session.
+// GetNotification gets a notification message from user's session.
 func GetNotification(req *http.Request) (*Notification, error) {
 	myCookie, err := req.Cookie(CookieID)
 	if err != nil {
@@ -38,7 +38,7 @@ func GetNotification(req *http.Request) (*Notification, error) {
 	return MapSessions[myCookie.Value].Notification, nil
 }
 
-// Delete notification message from user's session.
+// ClearNotification deletes a notification message from user's session.
 func ClearNotification(req *http.Request) error {
 	myCookie, err := req.Cookie(CookieID)
 	if err != nil {

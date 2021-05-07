@@ -60,7 +60,7 @@ func getPaymentsFromDB() (*PaymentQueue, error) {
 	return PaymentQ, nil
 }
 
-// Create payment, add to database, add to payment queue and remove the appointment.
+// CreatePayment is for creating payment, adding to database, adding to payment queue and removing the appointment.
 func CreatePayment(appt *Appointment, amt float64, wg *sync.WaitGroup) (*PaymentQueue, error) {
 
 	if wg != nil {
@@ -97,7 +97,7 @@ func CreatePayment(appt *Appointment, amt float64, wg *sync.WaitGroup) (*Payment
 	return PaymentQ, nil
 }
 
-// Delete payment entry from database.
+// ClearPayment deletes the payment entry from database.
 func (pmy *Payment) ClearPayment() {
 	// Db
 	_, execErr := clinicDb.Exec("DELETE FROM `payment` WHERE id = ?", pmy.Id)
@@ -106,7 +106,7 @@ func (pmy *Payment) ClearPayment() {
 	}
 }
 
-// Add payment to a queue.
+// Enqueue is for adding a payment to a queue.
 func (p *PaymentQueue) Enqueue(pmy *Payment) error {
 
 	newNode := &PaymentNode{
@@ -126,7 +126,7 @@ func (p *PaymentQueue) Enqueue(pmy *Payment) error {
 	return nil
 }
 
-// Remove payment from a queue.
+// Dequeue is for removing a payment from a queue.
 func (p *PaymentQueue) Dequeue() (*Payment, error) {
 
 	var pmy *Payment
@@ -149,7 +149,7 @@ func (p *PaymentQueue) Dequeue() (*Payment, error) {
 	return pmy, nil
 }
 
-// Returns a CSV concatenated string of appointment ids from payments inside a payment queue.
+// PrintAllQueueIDs returns a CSV of appointment ids from payments inside a payment queue.
 func (p *PaymentQueue) PrintAllQueueIDs(skipFirst bool) string {
 
 	queueIds := p.getAllQueueID()
@@ -183,7 +183,7 @@ func (p *PaymentQueue) getAllQueueID() []string {
 	return queueIDs
 }
 
-// Remove a payment from a queue and move it to MissedPaymentQ.
+// DequeueToMissedPaymentQueue removes a payment from a queue and move it to MissedPaymentQ.
 func (p *PaymentQueue) DequeueToMissedPaymentQueue() (*Payment, error) {
 
 	mutex.Lock()
@@ -199,7 +199,7 @@ func (p *PaymentQueue) DequeueToMissedPaymentQueue() (*Payment, error) {
 	return nil, err
 }
 
-// Remove a payment from a queue and move it to PaymentQ.
+// DequeueToPaymentQueue removes a payment from a queue and move it to PaymentQ.
 func (p *PaymentQueue) DequeueToPaymentQueue() (*Payment, error) {
 
 	mutex.Lock()
