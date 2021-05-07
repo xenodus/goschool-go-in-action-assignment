@@ -18,8 +18,10 @@ type Session struct {
 	Notification *Notification
 }
 
-// Package globals - CookieID is the name of the cookie, global MapSessions stores all the Session(s).
+// CookieID is the name of the client side cookie.
 var CookieID string
+
+// MapSessions stores all the user session(s) of the app.
 var MapSessions = make(map[string]Session)
 
 func init() {
