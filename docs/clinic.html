@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<!-- saved from url=(0045)http://localhost:8080/pkg/assignment4/clinic/ -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>clinic - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="./clinic_files/style.css">
+
+<script>window.initFuncs = [];</script><script data-dapp-detection="">!function(){let e=!1;function n(){if(!e){const n=document.createElement("meta");n.name="dapp-detected",document.head.appendChild(n),e=!0}}if(window.hasOwnProperty("ethereum")){if(window.__disableDappDetectionInsertion=!0,void 0===window.ethereum)return;n()}else{var t=window.ethereum;Object.defineProperty(window,"ethereum",{configurable:!0,enumerable:!1,set:function(e){window.__disableDappDetectionInsertion||n(),t=e},get:function(){if(!window.__disableDappDetectionInsertion){const e=arguments.callee;e&&e.caller&&e.caller.toString&&-1!==e.caller.toString().indexOf("getOwnPropertyNames")||n()}return t}})}}();</script>
+<script src="./clinic_files/jquery.js.download" defer=""></script>
+
+
+
+<script>var goVersion = "go1.16.3";</script>
+<script src="./clinic_files/godocs.js.download" defer=""></script>
+</head>
+<body>
+
+<div id="lowframe" style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="http://localhost:8080/pkg/">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="http://localhost:8080/pkg/">GoDoc</a></div>
+<a href="http://localhost:8080/pkg/assignment4/clinic/#" id="menu-button"><span id="menu-button-arrow">▽</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu" style="min-width: 60px;">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required=""><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path><path d="M0 0h24v24H0z" fill="none"></path></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide" tabindex="-1" style="outline: 0px;">
+<div class="container">
+
+
+  <h1>
+    Package clinic
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "assignment4/clinic"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="http://localhost:8080/pkg/assignment4/clinic/#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="http://localhost:8080/pkg/assignment4/clinic/#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>
+Package clinic defines the Doctor, Patient, Appointment and Payment types, which implements their individual CRUD, search and helper methods.
+</p>
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+				<dd><a href="http://localhost:8080/pkg/assignment4/clinic/#pkg-constants">Constants</a></dd>
+			
+			
+				<dd><a href="http://localhost:8080/pkg/assignment4/clinic/#pkg-variables">Variables</a></dd>
+			
+			
+				
+				<dd><a href="http://localhost:8080/pkg/assignment4/clinic/#BinarySearchApptID">func BinarySearchApptID(apptID int64) int</a></dd>
+			
+				
+				<dd><a href="http://localhost:8080/pkg/assignment4/clinic/#BinarySearchApptTime">func BinarySearchApptTime(time int64) int</a></dd>
+			
+				
+				<dd><a href="http://localhost:8080/pkg/assignment4/clinic/#DbConnection">func DbConnection() string</a></dd>
+			
+				
+				<dd><a href="http://localhost:8080/pkg/assignment4/clinic/#GetAvailableTimeslot">func GetAvailableTimeslot(dt int64, apptsToExclude []*Appointment) []int64</a></dd>
+			
+				
+				<dd><a href="http://localhost:8080/pkg/assignment4/clinic/#IsApptTimeValid">func IsApptTimeValid(t int64) (bool, error)</a></dd>
+			
+				
+				<dd><a href="http://localhost:8080/pkg/assignment4/clinic/#IsNRICValid">func IsNRICValid(nric string) bool</a></dd>
+			
+				
+				<dd><a href="http://localhost:8080/pkg/assignment4/clinic/#IsThereTimeslot">func IsThereTimeslot(dt int64, pat *Patient, doc *Doctor) (bool, error)</a></dd>
+			
+				
+				<dd><a href="http://localhost:8080/pkg/assignment4/clinic/#SeedData">func SeedData()</a></dd>
+			
+				
+				<dd><a href="http://localhost:8080/pkg/assignment4/clinic/#SetDb">func SetDb(myDb *sql.DB)</a></dd>
+			
+			
+				
+				<dd><a href="http://localhost:8080/pkg/assignment4/clinic/#Appointment">type Appointment</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="http://localhost:8080/pkg/assignment4/clinic/#MakeAppointment">func MakeAppointment(t int64, pat *Patient, doc *Doctor, wgrp *sync.WaitGroup) (*Appointment, error)</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="http://localhost:8080/pkg/assignment4/clinic/#Appointment.CancelAppointment">func (appt *Appointment) CancelAppointment()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="http://localhost:8080/pkg/assignment4/clinic/#Appointment.EditAppointment">func (appt *Appointment) EditAppointment(t int64, pat *Patient, doc *Doctor) error</a></dd>
+				
+			
+				
+				<dd><a href="http://localhost:8080/pkg/assignment4/clinic/#BST">type BST</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="http://localhost:8080/pkg/assignment4/clinic/#BST.GetDoctorByIDBST">func (bst *BST) GetDoctorByIDBST(docID int64) (*Doctor, error)</a></dd>
+				
+			
+				
+				<dd><a href="http://localhost:8080/pkg/assignment4/clinic/#BinaryNode">type BinaryNode</a></dd>
+				
+				
+			
+				
+				<dd><a href="http://localhost:8080/pkg/assignment4/clinic/#Doctor">type Doctor</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="http://localhost:8080/pkg/assignment4/clinic/#Doctor.GetAppointmentsByDate">func (d *Doctor) GetAppointmentsByDate(dt int64) []*Appointment</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="http://localhost:8080/pkg/assignment4/clinic/#Doctor.IsFreeAt">func (d *Doctor) IsFreeAt(t int64) bool</a></dd>
+				
+			
+				
+				<dd><a href="http://localhost:8080/pkg/assignment4/clinic/#Patient">type Patient</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="http://localhost:8080/pkg/assignment4/clinic/#CreatePatient">func CreatePatient(username, first_name, last_name string, password []byte) (*Patient, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="http://localhost:8080/pkg/assignment4/clinic/#GetPatientByID">func GetPatientByID(patientID string) (*Patient, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="http://localhost:8080/pkg/assignment4/clinic/#IsLoggedIn">func IsLoggedIn(req *http.Request) (*Patient, bool)</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="http://localhost:8080/pkg/assignment4/clinic/#Patient.DeletePatient">func (p *Patient) DeletePatient() error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="http://localhost:8080/pkg/assignment4/clinic/#Patient.EditPatient">func (p *Patient) EditPatient(username, first_name, last_name string, password []byte)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="http://localhost:8080/pkg/assignment4/clinic/#Patient.GetAppointmentsByDate">func (p *Patient) GetAppointmentsByDate(dt int64) []*Appointment</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="http://localhost:8080/pkg/assignment4/clinic/#Patient.IsAdmin">func (p *Patient) IsAdmin() bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="http://localhost:8080/pkg/assignment4/clinic/#Patient.IsFreeAt">func (p *Patient) IsFreeAt(t int64) bool</a></dd>
+				
+			
+				
+				<dd><a href="http://localhost:8080/pkg/assignment4/clinic/#Payment">type Payment</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="http://localhost:8080/pkg/assignment4/clinic/#Payment.ClearPayment">func (pmy *Payment) ClearPayment()</a></dd>
+				
+			
+				
+				<dd><a href="http://localhost:8080/pkg/assignment4/clinic/#PaymentNode">type PaymentNode</a></dd>
+				
+				
+			
+				
+				<dd><a href="http://localhost:8080/pkg/assignment4/clinic/#PaymentQueue">type PaymentQueue</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="http://localhost:8080/pkg/assignment4/clinic/#CreatePayment">func CreatePayment(appt *Appointment, amt float64, wg *sync.WaitGroup) (*PaymentQueue, error)</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="http://localhost:8080/pkg/assignment4/clinic/#PaymentQueue.Dequeue">func (p *PaymentQueue) Dequeue() (*Payment, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="http://localhost:8080/pkg/assignment4/clinic/#PaymentQueue.DequeueToMissedPaymentQueue">func (p *PaymentQueue) DequeueToMissedPaymentQueue() (*Payment, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="http://localhost:8080/pkg/assignment4/clinic/#PaymentQueue.DequeueToPaymentQueue">func (p *PaymentQueue) DequeueToPaymentQueue() (*Payment, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="http://localhost:8080/pkg/assignment4/clinic/#PaymentQueue.Enqueue">func (p *PaymentQueue) Enqueue(pmy *Payment) error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="http://localhost:8080/pkg/assignment4/clinic/#PaymentQueue.PrintAllQueueIDs">func (p *PaymentQueue) PrintAllQueueIDs(skipFirst bool) string</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="http://localhost:8080/src/assignment4/clinic/appointment.go">appointment.go</a>
+			
+				<a href="http://localhost:8080/src/assignment4/clinic/config.go">config.go</a>
+			
+				<a href="http://localhost:8080/src/assignment4/clinic/doc.go">doc.go</a>
+			
+				<a href="http://localhost:8080/src/assignment4/clinic/doctor.go">doctor.go</a>
+			
+				<a href="http://localhost:8080/src/assignment4/clinic/errors.go">errors.go</a>
+			
+				<a href="http://localhost:8080/src/assignment4/clinic/helper.go">helper.go</a>
+			
+				<a href="http://localhost:8080/src/assignment4/clinic/patient.go">patient.go</a>
+			
+				<a href="http://localhost:8080/src/assignment4/clinic/payment.go">payment.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+			<h2 id="pkg-constants">Constants <a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#pkg-constants">¶</a></h2>
+			
+				<p>
+Maximum number of days in the future allowed to make an appointment.
+</p>
+
+				<pre>const <span id="MaxAdvanceApptDays">MaxAdvanceApptDays</span> = 90</pre>
+			
+				<p>
+Password policy.
+</p>
+
+				<pre>const <span id="MinPasswordLength">MinPasswordLength</span> = 8</pre>
+			
+		
+		
+			<h2 id="pkg-variables">Variables <a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#pkg-variables">¶</a></h2>
+			
+				<p>
+Errors and accompanying messages to be output in logs or to users.
+</p>
+
+				<pre>var (
+    <span class="comment">// Appointments</span>
+    <span id="ErrInvalidTimeslot">ErrInvalidTimeslot</span>       = <a href="http://localhost:8080/pkg/errors/">errors</a>.<a href="http://localhost:8080/pkg/errors/#New">New</a>("invalid timeslots entered")
+    <span id="ErrDoctorNoMoreTimeslot">ErrDoctorNoMoreTimeslot</span>  = <a href="http://localhost:8080/pkg/errors/">errors</a>.<a href="http://localhost:8080/pkg/errors/#New">New</a>("doctor has no more timeslots available for today")
+    <span id="ErrPatientNoMoreTimeslot">ErrPatientNoMoreTimeslot</span> = <a href="http://localhost:8080/pkg/errors/">errors</a>.<a href="http://localhost:8080/pkg/errors/#New">New</a>("patient has no more timeslots available for today")
+    <span id="ErrNoMoreTimeslot">ErrNoMoreTimeslot</span>        = <a href="http://localhost:8080/pkg/errors/">errors</a>.<a href="http://localhost:8080/pkg/errors/#New">New</a>("there are no other timeslots available with the chosen doctor")
+    <span id="ErrDuplicateTimeslot">ErrDuplicateTimeslot</span>     = <a href="http://localhost:8080/pkg/errors/">errors</a>.<a href="http://localhost:8080/pkg/errors/#New">New</a>("there's already an appointment scheduled for that timeslot")
+    <span id="ErrTimeslotExpired">ErrTimeslotExpired</span>       = <a href="http://localhost:8080/pkg/errors/">errors</a>.<a href="http://localhost:8080/pkg/errors/#New">New</a>("timeslot has already expired")
+    <span id="ErrAppointmentIDNotFound">ErrAppointmentIDNotFound</span> = <a href="http://localhost:8080/pkg/errors/">errors</a>.<a href="http://localhost:8080/pkg/errors/#New">New</a>("appointment id not found")
+
+    <span id="ErrCreateAppointment">ErrCreateAppointment</span> = <a href="http://localhost:8080/pkg/errors/">errors</a>.<a href="http://localhost:8080/pkg/errors/#New">New</a>("unable to create appointment")
+
+    <span class="comment">// Doc</span>
+    <span id="ErrDoctorIDNotFound">ErrDoctorIDNotFound</span> = <a href="http://localhost:8080/pkg/errors/">errors</a>.<a href="http://localhost:8080/pkg/errors/#New">New</a>("doctor id not found")
+    <span id="ErrCreateDoctor">ErrCreateDoctor</span>     = <a href="http://localhost:8080/pkg/errors/">errors</a>.<a href="http://localhost:8080/pkg/errors/#New">New</a>("unable to create doctor")
+
+    <span class="comment">// Patient</span>
+    <span id="ErrPatientIDNotFound">ErrPatientIDNotFound</span> = <a href="http://localhost:8080/pkg/errors/">errors</a>.<a href="http://localhost:8080/pkg/errors/#New">New</a>("patient id not found")
+    <span id="ErrCreatePatient">ErrCreatePatient</span>     = <a href="http://localhost:8080/pkg/errors/">errors</a>.<a href="http://localhost:8080/pkg/errors/#New">New</a>("unable to create patient")
+
+    <span class="comment">// Payment</span>
+    <span id="ErrEmptyPaymentQueue">ErrEmptyPaymentQueue</span> = <a href="http://localhost:8080/pkg/errors/">errors</a>.<a href="http://localhost:8080/pkg/errors/#New">New</a>("empty payment queue")
+
+    <span class="comment">// DB</span>
+    <span id="ErrDBConn">ErrDBConn</span> = <a href="http://localhost:8080/pkg/errors/">errors</a>.<a href="http://localhost:8080/pkg/errors/#New">New</a>("unable to get db connection")
+)</pre>
+			
+				<p>
+Admins is a slice containing Ids of clinic staff.
+</p>
+
+				<pre>var <span id="Admins">Admins</span> = []<a href="http://localhost:8080/pkg/builtin/#string">string</a>{}</pre>
+			
+				<p>
+Appointments holds all the appointments sorted by Id.
+</p>
+
+				<pre>var <span id="Appointments">Appointments</span> = []*<a href="http://localhost:8080/pkg/assignment4/clinic/#Appointment">Appointment</a>{}</pre>
+			
+				<p>
+AppointmentsSortedByTimeslot holds all appointments sorted by time.
+</p>
+
+				<pre>var <span id="AppointmentsSortedByTimeslot">AppointmentsSortedByTimeslot</span> = []*<a href="http://localhost:8080/pkg/assignment4/clinic/#Appointment">Appointment</a>{}</pre>
+			
+				<p>
+Doctors hold all the doctors sorted by incremental id.
+</p>
+
+				<pre>var <span id="Doctors">Doctors</span> = []*<a href="http://localhost:8080/pkg/assignment4/clinic/#Doctor">Doctor</a>{}</pre>
+			
+				<p>
+MissedPaymentQ holds the outstanding payments that have been moved over from PaymentQ.
+</p>
+
+				<pre>var <span id="MissedPaymentQ">MissedPaymentQ</span> = &amp;<a href="http://localhost:8080/pkg/assignment4/clinic/#PaymentQueue">PaymentQueue</a>{}</pre>
+			
+				<p>
+Patients holds all the patients sorted by Id (alphanumeric).
+</p>
+
+				<pre>var <span id="Patients">Patients</span> = []*<a href="http://localhost:8080/pkg/assignment4/clinic/#Patient">Patient</a>{}</pre>
+			
+				<p>
+PaymentQ holds the payments that are pending in a FIFO queue.
+</p>
+
+				<pre>var <span id="PaymentQ">PaymentQ</span> = &amp;<a href="http://localhost:8080/pkg/assignment4/clinic/#PaymentQueue">PaymentQueue</a>{}</pre>
+			
+				
+				<pre>var <span id="Wg">Wg</span> <a href="http://localhost:8080/pkg/sync/">sync</a>.<a href="http://localhost:8080/pkg/sync/#WaitGroup">WaitGroup</a></pre>
+			
+		
+		
+			
+			
+			<h2 id="BinarySearchApptID">func <a href="http://localhost:8080/src/assignment4/clinic/appointment.go?s=11802:11843#L413">BinarySearchApptID</a>
+				<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#BinarySearchApptID">¶</a>
+				
+				
+			</h2>
+			<pre>func BinarySearchApptID(apptID <a href="http://localhost:8080/pkg/builtin/#int64">int64</a>) <a href="http://localhost:8080/pkg/builtin/#int">int</a></pre>
+			<p>
+BinarySearchApptID performs binary search for appointment id in Appointments.
+</p>
+
+			
+			
+
+		
+			
+			
+			<h2 id="BinarySearchApptTime">func <a href="http://localhost:8080/src/assignment4/clinic/appointment.go?s=12526:12567#L436">BinarySearchApptTime</a>
+				<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#BinarySearchApptTime">¶</a>
+				
+				
+			</h2>
+			<pre>func BinarySearchApptTime(time <a href="http://localhost:8080/pkg/builtin/#int64">int64</a>) <a href="http://localhost:8080/pkg/builtin/#int">int</a></pre>
+			<p>
+BinarySearchApptTime performs binary search for appointment time in Appointments.
+</p>
+
+			
+			
+
+		
+			
+			
+			<h2 id="DbConnection">func <a href="http://localhost:8080/src/assignment4/clinic/config.go?s=1530:1556#L56">DbConnection</a>
+				<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#DbConnection">¶</a>
+				
+				
+			</h2>
+			<pre>func DbConnection() <a href="http://localhost:8080/pkg/builtin/#string">string</a></pre>
+			<p>
+DbConnection returns the database connection string.
+</p>
+
+			
+			
+
+		
+			
+			
+			<h2 id="GetAvailableTimeslot">func <a href="http://localhost:8080/src/assignment4/clinic/appointment.go?s=6753:6827#L228">GetAvailableTimeslot</a>
+				<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#GetAvailableTimeslot">¶</a>
+				
+				
+			</h2>
+			<pre>func GetAvailableTimeslot(dt <a href="http://localhost:8080/pkg/builtin/#int64">int64</a>, apptsToExclude []*<a href="http://localhost:8080/pkg/assignment4/clinic/#Appointment">Appointment</a>) []<a href="http://localhost:8080/pkg/builtin/#int64">int64</a></pre>
+			<p>
+GetAvailableTimeslot returns a slice of all the possible open timeslots for a given day by getting the delta between all timeslots for the day and a slice of appointments on the day.
+</p>
+
+			
+			
+
+		
+			
+			
+			<h2 id="IsApptTimeValid">func <a href="http://localhost:8080/src/assignment4/clinic/appointment.go?s=4841:4884#L169">IsApptTimeValid</a>
+				<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#IsApptTimeValid">¶</a>
+				
+				
+			</h2>
+			<pre>func IsApptTimeValid(t <a href="http://localhost:8080/pkg/builtin/#int64">int64</a>) (<a href="http://localhost:8080/pkg/builtin/#bool">bool</a>, <a href="http://localhost:8080/pkg/builtin/#error">error</a>)</pre>
+			<p>
+IsApptTimeValid checks if time of appointment is in the past - e.g. process started at 3:55 PM, user chose 4 PM timeslot but submitted form at 4:05 PM.
+</p>
+
+			
+			
+
+		
+			
+			
+			<h2 id="IsNRICValid">func <a href="http://localhost:8080/src/assignment4/clinic/patient.go?s=8909:8943#L329">IsNRICValid</a>
+				<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#IsNRICValid">¶</a>
+				
+				
+			</h2>
+			<pre>func IsNRICValid(nric <a href="http://localhost:8080/pkg/builtin/#string">string</a>) <a href="http://localhost:8080/pkg/builtin/#bool">bool</a></pre>
+			<p>
+IsNRICValid checks if a given NRIC is valid - Checks for length of 9 if strictNRIC is set to false (default) in clinic config; If true, will perform full NRIC validity check against checksum.
+Translated from <a href="https://gist.github.com/kamerk22/ed5e0778b3723311d8dd074c792834ef">https://gist.github.com/kamerk22/ed5e0778b3723311d8dd074c792834ef</a>
+</p>
+
+			
+			
+
+		
+			
+			
+			<h2 id="IsThereTimeslot">func <a href="http://localhost:8080/src/assignment4/clinic/appointment.go?s=5500:5571#L188">IsThereTimeslot</a>
+				<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#IsThereTimeslot">¶</a>
+				
+				
+			</h2>
+			<pre>func IsThereTimeslot(dt <a href="http://localhost:8080/pkg/builtin/#int64">int64</a>, pat *<a href="http://localhost:8080/pkg/assignment4/clinic/#Patient">Patient</a>, doc *<a href="http://localhost:8080/pkg/assignment4/clinic/#Doctor">Doctor</a>) (<a href="http://localhost:8080/pkg/builtin/#bool">bool</a>, <a href="http://localhost:8080/pkg/builtin/#error">error</a>)</pre>
+			<p>
+IsThereTimeslot checks if there's timeslot available for the day by checking both the patient's and doctor's appointments for the day.
+</p>
+
+			
+			
+
+		
+			
+			
+			<h2 id="SeedData">func <a href="http://localhost:8080/src/assignment4/clinic/helper.go?s=299:314#L6">SeedData</a>
+				<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#SeedData">¶</a>
+				
+				
+			</h2>
+			<pre>func SeedData()</pre>
+			<p>
+SeedData resets the database, setup the database, seed test data or load clinic globals from database depending on settings in clinic config.
+</p>
+
+			
+			
+
+		
+			
+			
+			<h2 id="SetDb">func <a href="http://localhost:8080/src/assignment4/clinic/config.go?s=1660:1684#L61">SetDb</a>
+				<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#SetDb">¶</a>
+				
+				
+			</h2>
+			<pre>func SetDb(myDb *<a href="http://localhost:8080/pkg/database/sql/">sql</a>.<a href="http://localhost:8080/pkg/database/sql/#DB">DB</a>)</pre>
+			<p>
+SetDb sets the singleton database connection to be used by package.
+</p>
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="Appointment">type <a href="http://localhost:8080/src/assignment4/clinic/appointment.go?s=342:515#L9">Appointment</a>
+				<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#Appointment">¶</a>
+				
+				
+			</h2>
+			
+			<pre>type Appointment struct {
+<span id="Appointment.Id"></span>    Id      <a href="http://localhost:8080/pkg/builtin/#int64">int64</a> <span class="comment">// unique identifier</span>
+<span id="Appointment.Time"></span>    Time    <a href="http://localhost:8080/pkg/builtin/#int64">int64</a> <span class="comment">// unix time for easy sorting via int value comparison</span>
+<span id="Appointment.Patient"></span>    Patient *<a href="http://localhost:8080/pkg/assignment4/clinic/#Patient">Patient</a>
+<span id="Appointment.Doctor"></span>    Doctor  *<a href="http://localhost:8080/pkg/assignment4/clinic/#Doctor">Doctor</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="MakeAppointment">func <a href="http://localhost:8080/src/assignment4/clinic/appointment.go?s=1592:1692#L56">MakeAppointment</a>
+					<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#MakeAppointment">¶</a>
+					
+					
+				</h3>
+				<pre>func MakeAppointment(t <a href="http://localhost:8080/pkg/builtin/#int64">int64</a>, pat *<a href="http://localhost:8080/pkg/assignment4/clinic/#Patient">Patient</a>, doc *<a href="http://localhost:8080/pkg/assignment4/clinic/#Doctor">Doctor</a>, wgrp *<a href="http://localhost:8080/pkg/sync/">sync</a>.<a href="http://localhost:8080/pkg/sync/#WaitGroup">WaitGroup</a>) (*<a href="http://localhost:8080/pkg/assignment4/clinic/#Appointment">Appointment</a>, <a href="http://localhost:8080/pkg/builtin/#error">error</a>)</pre>
+				<p>
+Create Appointment, insert to database, add Appointment to global slice AppointmentsSortedByTimeslot and Appointments, sort global slice AppointmentsSortedByTimeslot, patient's Appointments slice and doctor's Appointments slice by appointment time.
+</p>
+
+				
+				
+			
+
+			
+				
+				<h3 id="Appointment.CancelAppointment">func (*Appointment) <a href="http://localhost:8080/src/assignment4/clinic/appointment.go?s=3818:3862#L132">CancelAppointment</a>
+					<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#Appointment.CancelAppointment">¶</a>
+					
+					
+				</h3>
+				<pre>func (appt *<a href="http://localhost:8080/pkg/assignment4/clinic/#Appointment">Appointment</a>) CancelAppointment()</pre>
+				<p>
+CancelAppointment removes appointment from AppointmentsSortedByTimeslot and Appointments, patient's Appointments slice, doctor's Appointments slice,
+delete corresponding database entry,
+sort AppointmentsSortedByTimeslot slice by time, Appointments slice by Id, patient's Appointments slice and doctor's Appointments slice by time.
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="Appointment.EditAppointment">func (*Appointment) <a href="http://localhost:8080/src/assignment4/clinic/appointment.go?s=2943:3025#L104">EditAppointment</a>
+					<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#Appointment.EditAppointment">¶</a>
+					
+					
+				</h3>
+				<pre>func (appt *<a href="http://localhost:8080/pkg/assignment4/clinic/#Appointment">Appointment</a>) EditAppointment(t <a href="http://localhost:8080/pkg/builtin/#int64">int64</a>, pat *<a href="http://localhost:8080/pkg/assignment4/clinic/#Patient">Patient</a>, doc *<a href="http://localhost:8080/pkg/assignment4/clinic/#Doctor">Doctor</a>) <a href="http://localhost:8080/pkg/builtin/#error">error</a></pre>
+				<p>
+EditAppointment updates appointment item, updates corresponding database entry, sort AppointmentsSortedByTimeslot slice by time, Appointments slice by Id, patient's Appointments slice and doctor's Appointments slice by time.
+</p>
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="BST">type <a href="http://localhost:8080/src/assignment4/clinic/doctor.go?s=3505:3544#L142">BST</a>
+				<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#BST">¶</a>
+				
+				
+			</h2>
+			
+			<pre>type BST struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+				<p>
+DoctorsBST is a balanced binary search tree of doctors.
+</p>
+
+				<pre>var <span id="DoctorsBST">DoctorsBST</span> *<a href="http://localhost:8080/pkg/assignment4/clinic/#BST">BST</a></pre>
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="BST.GetDoctorByIDBST">func (*BST) <a href="http://localhost:8080/src/assignment4/clinic/doctor.go?s=4752:4814#L197">GetDoctorByIDBST</a>
+					<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#BST.GetDoctorByIDBST">¶</a>
+					
+					
+				</h3>
+				<pre>func (bst *<a href="http://localhost:8080/pkg/assignment4/clinic/#BST">BST</a>) GetDoctorByIDBST(docID <a href="http://localhost:8080/pkg/builtin/#int64">int64</a>) (*<a href="http://localhost:8080/pkg/assignment4/clinic/#Doctor">Doctor</a>, <a href="http://localhost:8080/pkg/builtin/#error">error</a>)</pre>
+				<p>
+GetDoctorByIDBST gets a Doctor from the global DoctorsBST by Id. Returns pointer to Doctor if found.
+</p>
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="BinaryNode">type <a href="http://localhost:8080/src/assignment4/clinic/doctor.go?s=3323:3501#L136">BinaryNode</a>
+				<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#BinaryNode">¶</a>
+				
+				
+			</h2>
+			
+			<pre>type BinaryNode struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Doctor">type <a href="http://localhost:8080/src/assignment4/clinic/doctor.go?s=269:387#L7">Doctor</a>
+				<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#Doctor">¶</a>
+				
+				
+			</h2>
+			
+			<pre>type Doctor struct {
+<span id="Doctor.Id"></span>    Id           <a href="http://localhost:8080/pkg/builtin/#int64">int64</a>
+<span id="Doctor.First_name"></span>    First_name   <a href="http://localhost:8080/pkg/builtin/#string">string</a>
+<span id="Doctor.Last_name"></span>    Last_name    <a href="http://localhost:8080/pkg/builtin/#string">string</a>
+<span id="Doctor.Appointments"></span>    Appointments []*<a href="http://localhost:8080/pkg/assignment4/clinic/#Appointment">Appointment</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Doctor.GetAppointmentsByDate">func (*Doctor) <a href="http://localhost:8080/src/assignment4/clinic/doctor.go?s=2125:2188#L90">GetAppointmentsByDate</a>
+					<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#Doctor.GetAppointmentsByDate">¶</a>
+					
+					
+				</h3>
+				<pre>func (d *<a href="http://localhost:8080/pkg/assignment4/clinic/#Doctor">Doctor</a>) GetAppointmentsByDate(dt <a href="http://localhost:8080/pkg/builtin/#int64">int64</a>) []*<a href="http://localhost:8080/pkg/assignment4/clinic/#Appointment">Appointment</a></pre>
+				<p>
+GetAppointmentsByDate returns a slice of Appointments (pointers) on the given date (unix time).
+Todo: Can improve by making it binary search instead of sequential since Appointments is sorted by time.
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="Doctor.IsFreeAt">func (*Doctor) <a href="http://localhost:8080/src/assignment4/clinic/doctor.go?s=1771:1810#L79">IsFreeAt</a>
+					<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#Doctor.IsFreeAt">¶</a>
+					
+					
+				</h3>
+				<pre>func (d *<a href="http://localhost:8080/pkg/assignment4/clinic/#Doctor">Doctor</a>) IsFreeAt(t <a href="http://localhost:8080/pkg/builtin/#int64">int64</a>) <a href="http://localhost:8080/pkg/builtin/#bool">bool</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Patient">type <a href="http://localhost:8080/src/assignment4/clinic/patient.go?s=347:489#L13">Patient</a>
+				<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#Patient">¶</a>
+				
+				
+			</h2>
+			
+			<pre>type Patient struct {
+<span id="Patient.Id"></span>    Id           <a href="http://localhost:8080/pkg/builtin/#string">string</a>
+<span id="Patient.First_name"></span>    First_name   <a href="http://localhost:8080/pkg/builtin/#string">string</a>
+<span id="Patient.Last_name"></span>    Last_name    <a href="http://localhost:8080/pkg/builtin/#string">string</a>
+<span id="Patient.Password"></span>    Password     []<a href="http://localhost:8080/pkg/builtin/#byte">byte</a>
+<span id="Patient.Appointments"></span>    Appointments []*<a href="http://localhost:8080/pkg/assignment4/clinic/#Appointment">Appointment</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="CreatePatient">func <a href="http://localhost:8080/src/assignment4/clinic/patient.go?s=1388:1481#L63">CreatePatient</a>
+					<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#CreatePatient">¶</a>
+					
+					
+				</h3>
+				<pre>func CreatePatient(username, first_name, last_name <a href="http://localhost:8080/pkg/builtin/#string">string</a>, password []<a href="http://localhost:8080/pkg/builtin/#byte">byte</a>) (*<a href="http://localhost:8080/pkg/assignment4/clinic/#Patient">Patient</a>, <a href="http://localhost:8080/pkg/builtin/#error">error</a>)</pre>
+				<p>
+CreatePatient is for creating new Patient, inserting to database, add Patient to Patients slice and sort Patients slice via mergesort.
+</p>
+
+				
+				
+			
+				
+				<h3 id="GetPatientByID">func <a href="http://localhost:8080/src/assignment4/clinic/patient.go?s=4395:4450#L170">GetPatientByID</a>
+					<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#GetPatientByID">¶</a>
+					
+					
+				</h3>
+				<pre>func GetPatientByID(patientID <a href="http://localhost:8080/pkg/builtin/#string">string</a>) (*<a href="http://localhost:8080/pkg/assignment4/clinic/#Patient">Patient</a>, <a href="http://localhost:8080/pkg/builtin/#error">error</a>)</pre>
+				<p>
+GetPatientByID gets and return a Patient (pointer) by id.
+</p>
+
+				
+				
+			
+				
+				<h3 id="IsLoggedIn">func <a href="http://localhost:8080/src/assignment4/clinic/patient.go?s=10543:10594#L390">IsLoggedIn</a>
+					<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#IsLoggedIn">¶</a>
+					
+					
+				</h3>
+				<pre>func IsLoggedIn(req *<a href="http://localhost:8080/pkg/net/http/">http</a>.<a href="http://localhost:8080/pkg/net/http/#Request">Request</a>) (*<a href="http://localhost:8080/pkg/assignment4/clinic/#Patient">Patient</a>, <a href="http://localhost:8080/pkg/builtin/#bool">bool</a>)</pre>
+				<p>
+IsLoggedIn checks if a user is logged in by checking for existence of client side Cookie and comparing Cookie's value to server side session data in MapSessions to check for validity;
+Returns Patient and true if valid.
+</p>
+
+				
+				
+			
+
+			
+				
+				<h3 id="Patient.DeletePatient">func (*Patient) <a href="http://localhost:8080/src/assignment4/clinic/patient.go?s=3166:3205#L121">DeletePatient</a>
+					<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#Patient.DeletePatient">¶</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="http://localhost:8080/pkg/assignment4/clinic/#Patient">Patient</a>) DeletePatient() <a href="http://localhost:8080/pkg/builtin/#error">error</a></pre>
+				<p>
+DeletePatient is for deleting Patient, Patient's appointments, removing patient from Patients slice and deleting corresponding database entry.
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="Patient.EditPatient">func (*Patient) <a href="http://localhost:8080/src/assignment4/clinic/patient.go?s=2306:2392#L90">EditPatient</a>
+					<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#Patient.EditPatient">¶</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="http://localhost:8080/pkg/assignment4/clinic/#Patient">Patient</a>) EditPatient(username, first_name, last_name <a href="http://localhost:8080/pkg/builtin/#string">string</a>, password []<a href="http://localhost:8080/pkg/builtin/#byte">byte</a>)</pre>
+				<p>
+EditPatient is for updating Patient, update corresponding database entry and sort Patients slice via mergesort.
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="Patient.GetAppointmentsByDate">func (*Patient) <a href="http://localhost:8080/src/assignment4/clinic/patient.go?s=4729:4793#L182">GetAppointmentsByDate</a>
+					<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#Patient.GetAppointmentsByDate">¶</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="http://localhost:8080/pkg/assignment4/clinic/#Patient">Patient</a>) GetAppointmentsByDate(dt <a href="http://localhost:8080/pkg/builtin/#int64">int64</a>) []*<a href="http://localhost:8080/pkg/assignment4/clinic/#Appointment">Appointment</a></pre>
+				<p>
+GetAppointmentsByDate gets a Patient's appointments (slice of pointers) on a given date (unix time).
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="Patient.IsAdmin">func (*Patient) <a href="http://localhost:8080/src/assignment4/clinic/patient.go?s=8314:8346#L309">IsAdmin</a>
+					<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#Patient.IsAdmin">¶</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="http://localhost:8080/pkg/assignment4/clinic/#Patient">Patient</a>) IsAdmin() <a href="http://localhost:8080/pkg/builtin/#bool">bool</a></pre>
+				<p>
+IsAdmin returns true if Patient is an admin. Checks recursively against Admins slice.
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="Patient.IsFreeAt">func (*Patient) <a href="http://localhost:8080/src/assignment4/clinic/patient.go?s=2871:2911#L110">IsFreeAt</a>
+					<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#Patient.IsFreeAt">¶</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="http://localhost:8080/pkg/assignment4/clinic/#Patient">Patient</a>) IsFreeAt(t <a href="http://localhost:8080/pkg/builtin/#int64">int64</a>) <a href="http://localhost:8080/pkg/builtin/#bool">bool</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Payment">type <a href="http://localhost:8080/src/assignment4/clinic/payment.go?s=313:406#L7">Payment</a>
+				<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#Payment">¶</a>
+				
+				
+			</h2>
+			
+			<pre>type Payment struct {
+<span id="Payment.Id"></span>    Id          <a href="http://localhost:8080/pkg/builtin/#int64">int64</a>
+<span id="Payment.Appointment"></span>    Appointment *<a href="http://localhost:8080/pkg/assignment4/clinic/#Appointment">Appointment</a>
+<span id="Payment.Amount"></span>    Amount      <a href="http://localhost:8080/pkg/builtin/#float64">float64</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Payment.ClearPayment">func (*Payment) <a href="http://localhost:8080/src/assignment4/clinic/payment.go?s=2173:2207#L91">ClearPayment</a>
+					<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#Payment.ClearPayment">¶</a>
+					
+					
+				</h3>
+				<pre>func (pmy *<a href="http://localhost:8080/pkg/assignment4/clinic/#Payment">Payment</a>) ClearPayment()</pre>
+				<p>
+ClearPayment deletes the payment entry from database.
+</p>
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="PaymentNode">type <a href="http://localhost:8080/src/assignment4/clinic/payment.go?s=410:480#L13">PaymentNode</a>
+				<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#PaymentNode">¶</a>
+				
+				
+			</h2>
+			
+			<pre>type PaymentNode struct {
+<span id="PaymentNode.Payment"></span>    Payment *<a href="http://localhost:8080/pkg/assignment4/clinic/#Payment">Payment</a>
+<span id="PaymentNode.Next"></span>    Next    *<a href="http://localhost:8080/pkg/assignment4/clinic/#PaymentNode">PaymentNode</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="PaymentQueue">type <a href="http://localhost:8080/src/assignment4/clinic/payment.go?s=484:567#L18">PaymentQueue</a>
+				<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#PaymentQueue">¶</a>
+				
+				
+			</h2>
+			
+			<pre>type PaymentQueue struct {
+<span id="PaymentQueue.Front"></span>    Front *<a href="http://localhost:8080/pkg/assignment4/clinic/#PaymentNode">PaymentNode</a>
+<span id="PaymentQueue.Back"></span>    Back  *<a href="http://localhost:8080/pkg/assignment4/clinic/#PaymentNode">PaymentNode</a>
+<span id="PaymentQueue.Size"></span>    Size  <a href="http://localhost:8080/pkg/builtin/#int">int</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="CreatePayment">func <a href="http://localhost:8080/src/assignment4/clinic/payment.go?s=1231:1324#L54">CreatePayment</a>
+					<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#CreatePayment">¶</a>
+					
+					
+				</h3>
+				<pre>func CreatePayment(appt *<a href="http://localhost:8080/pkg/assignment4/clinic/#Appointment">Appointment</a>, amt <a href="http://localhost:8080/pkg/builtin/#float64">float64</a>, wg *<a href="http://localhost:8080/pkg/sync/">sync</a>.<a href="http://localhost:8080/pkg/sync/#WaitGroup">WaitGroup</a>) (*<a href="http://localhost:8080/pkg/assignment4/clinic/#PaymentQueue">PaymentQueue</a>, <a href="http://localhost:8080/pkg/builtin/#error">error</a>)</pre>
+				<p>
+CreatePayment is for creating payment, adding to database, adding to payment queue and removing the appointment.
+</p>
+
+				
+				
+			
+
+			
+				
+				<h3 id="PaymentQueue.Dequeue">func (*PaymentQueue) <a href="http://localhost:8080/src/assignment4/clinic/payment.go?s=2725:2775#L120">Dequeue</a>
+					<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#PaymentQueue.Dequeue">¶</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="http://localhost:8080/pkg/assignment4/clinic/#PaymentQueue">PaymentQueue</a>) Dequeue() (*<a href="http://localhost:8080/pkg/assignment4/clinic/#Payment">Payment</a>, <a href="http://localhost:8080/pkg/builtin/#error">error</a>)</pre>
+				<p>
+Dequeue is for removing a payment from a queue.
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="PaymentQueue.DequeueToMissedPaymentQueue">func (*PaymentQueue) <a href="http://localhost:8080/src/assignment4/clinic/payment.go?s=3908:3978#L177">DequeueToMissedPaymentQueue</a>
+					<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#PaymentQueue.DequeueToMissedPaymentQueue">¶</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="http://localhost:8080/pkg/assignment4/clinic/#PaymentQueue">PaymentQueue</a>) DequeueToMissedPaymentQueue() (*<a href="http://localhost:8080/pkg/assignment4/clinic/#Payment">Payment</a>, <a href="http://localhost:8080/pkg/builtin/#error">error</a>)</pre>
+				<p>
+DequeueToMissedPaymentQueue removes a payment from a queue and move it to MissedPaymentQ.
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="PaymentQueue.DequeueToPaymentQueue">func (*PaymentQueue) <a href="http://localhost:8080/src/assignment4/clinic/payment.go?s=4231:4295#L193">DequeueToPaymentQueue</a>
+					<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#PaymentQueue.DequeueToPaymentQueue">¶</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="http://localhost:8080/pkg/assignment4/clinic/#PaymentQueue">PaymentQueue</a>) DequeueToPaymentQueue() (*<a href="http://localhost:8080/pkg/assignment4/clinic/#Payment">Payment</a>, <a href="http://localhost:8080/pkg/builtin/#error">error</a>)</pre>
+				<p>
+DequeueToPaymentQueue removes a payment from a queue and move it to PaymentQ.
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="PaymentQueue.Enqueue">func (*PaymentQueue) <a href="http://localhost:8080/src/assignment4/clinic/payment.go?s=2415:2465#L100">Enqueue</a>
+					<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#PaymentQueue.Enqueue">¶</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="http://localhost:8080/pkg/assignment4/clinic/#PaymentQueue">PaymentQueue</a>) Enqueue(pmy *<a href="http://localhost:8080/pkg/assignment4/clinic/#Payment">Payment</a>) <a href="http://localhost:8080/pkg/builtin/#error">error</a></pre>
+				<p>
+Enqueue is for adding a payment to a queue.
+</p>
+
+				
+				
+				
+			
+				
+				<h3 id="PaymentQueue.PrintAllQueueIDs">func (*PaymentQueue) <a href="http://localhost:8080/src/assignment4/clinic/payment.go?s=3115:3177#L143">PrintAllQueueIDs</a>
+					<a class="permalink" href="http://localhost:8080/pkg/assignment4/clinic/#PaymentQueue.PrintAllQueueIDs">¶</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="http://localhost:8080/pkg/assignment4/clinic/#PaymentQueue">PaymentQueue</a>) PrintAllQueueIDs(skipFirst <a href="http://localhost:8080/pkg/builtin/#bool">bool</a>) <a href="http://localhost:8080/pkg/builtin/#string">string</a></pre>
+				<p>
+PrintAllQueueIDs returns a CSV of appointment ids from payments inside a payment queue.
+</p>
+
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.16.3.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+
+
+</body></html>
