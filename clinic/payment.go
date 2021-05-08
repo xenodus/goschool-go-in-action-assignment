@@ -69,7 +69,6 @@ func CreatePayment(appt *Appointment, amt float64, wg *sync.WaitGroup) (*Payment
 
 	mutex.Lock()
 	{
-
 		// Db
 		stmt, prepErr := clinicDb.Prepare("INSERT into payment (amount, appointment_id) values(?,?)")
 		if prepErr != nil {

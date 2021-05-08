@@ -1,6 +1,7 @@
 package clinic
 
 import (
+	"fmt"
 	"log"
 	"math"
 	"net/http"
@@ -32,9 +33,10 @@ func init() {
 	seedAdmins()
 }
 
+// getPatientsFromDB get all Patient from the DB and add it to Patients.
 func getPatientsFromDB() ([]*Patient, error) {
 
-	rows, rowsErr := clinicDb.Query("SELECT * FROM patient")
+	rows, rowsErr := clinicDb.Query("SELECT * FROM patient ORDER BY id ASC")
 
 	if rowsErr != nil {
 		return Patients, ErrDBConn
@@ -59,11 +61,6 @@ func getPatientsFromDB() ([]*Patient, error) {
 		}
 
 		Patients = append(Patients, pat)
-	}
-
-	if len(Doctors) > 0 {
-		// Sort by patient id alphabetically
-		mergeSortPatient(Patients, 0, len(Patients)-1)
 	}
 
 	return Patients, nil
@@ -92,6 +89,8 @@ func CreatePatient(username, first_name, last_name string, password []byte) (*Pa
 	Patients = append(Patients, thePatient)
 	// Sort by patient id alphabetically
 	mergeSortPatient(Patients, 0, len(Patients)-1)
+
+	fmt.Println("Created Patient:", thePatient.Id)
 
 	return thePatient, nil
 }
@@ -211,7 +210,8 @@ func (p *Patient) sortAppointments() {
 	mergeSortByTime(p.Appointments, 0, len(p.Appointments)-1) // sorted by time
 }
 
-func (p *Patient) addAppointment(appt *Appointment) {
+func (p *Patient) addAppointment(appt *Appointment, appWg *sync.WaitGroup) {
+	defer appWg.Done()
 	p.Appointments = append(p.Appointments, appt)
 	p.sortAppointments()
 }

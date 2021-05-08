@@ -25,7 +25,7 @@ type Appointment struct {
 
 func getAppointmentsFromDB() ([]*Appointment, error) {
 
-	rows, rowsErr := clinicDb.Query("SELECT * FROM appointment")
+	rows, rowsErr := clinicDb.Query("SELECT * FROM appointment ORDER BY id ASC")
 
 	if rowsErr != nil {
 		return Appointments, ErrDBConn
@@ -53,9 +53,13 @@ func getAppointmentsFromDB() ([]*Appointment, error) {
 				id, time, pat, doc,
 			}
 
-			addAppointment(appt)
-			appt.Doctor.addAppointment(appt)
-			appt.Patient.addAppointment(appt)
+			var appWg sync.WaitGroup
+
+			appWg.Add(3)
+			go addAppointment(appt, &appWg)
+			go appt.Doctor.addAppointment(appt, &appWg)
+			go appt.Patient.addAppointment(appt, &appWg)
+			appWg.Wait()
 		}
 	}
 
@@ -96,16 +100,21 @@ func MakeAppointment(t int64, pat *Patient, doc *Doctor, wgrp *sync.WaitGroup) (
 
 	app := &Appointment{insertedId, t, pat, doc}
 
-	addAppointment(app)
-	app.Doctor.addAppointment(app)
-	app.Patient.addAppointment(app)
+	var appWg sync.WaitGroup
+
+	appWg.Add(3)
+	go addAppointment(app, &appWg)
+	go app.Doctor.addAppointment(app, &appWg)
+	go app.Patient.addAppointment(app, &appWg)
+	appWg.Wait()
 
 	fmt.Println("Created Appt:", app.Id)
 
 	return app, nil
 }
 
-func addAppointment(appt *Appointment) {
+func addAppointment(appt *Appointment, appWg *sync.WaitGroup) {
+	defer appWg.Done()
 	Appointments = append(Appointments, appt)
 	sortAppointments()
 }

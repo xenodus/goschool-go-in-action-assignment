@@ -130,6 +130,8 @@ func seedPatients() {
 			go CreatePatient("S9999999A", "Sheev", "Palpatine", bPassword)
 			Wg.Wait()
 		}
+
+		fmt.Println("Seed patients done")
 	}
 }
 
@@ -146,6 +148,8 @@ func seedDoctors() {
 	go addDoctor("Galen", "Erso")
 	go addDoctor("Saw", "Gerrera")
 	Wg.Wait()
+
+	fmt.Println("Seed doctors done")
 }
 
 func seedAppointments() {
@@ -179,6 +183,8 @@ func seedAppointments() {
 		no2seed--
 	}
 	Wg.Wait()
+
+	fmt.Println("Seed appointments done")
 }
 
 func seedPaymentQueue() {
@@ -203,4 +209,6 @@ func seedPaymentQueue() {
 		no2queue--
 	}
 	Wg.Wait()
+
+	fmt.Println("Seed payment queue done")
 }

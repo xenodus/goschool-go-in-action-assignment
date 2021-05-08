@@ -1,6 +1,7 @@
 package clinic
 
 import (
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -11,7 +12,7 @@ import (
 // Doctors hold all the doctors sorted by incremental id.
 var Doctors = []*Doctor{}
 
-// DoctorsBST is a balanced binary search tree of doctors.
+// DoctorsBST is a balanced (by Id) binary search tree of doctors.
 var DoctorsBST *BST
 
 type Doctor struct {
@@ -21,6 +22,7 @@ type Doctor struct {
 	Appointments []*Appointment
 }
 
+// getDoctorsFromDB get all Doctor from the DB and add it to Doctors and call makeBST to make DoctorsBST.
 func getDoctorsFromDB() ([]*Doctor, error) {
 
 	rows, rowsErr := clinicDb.Query("SELECT * FROM doctor ORDER BY id ASC")
@@ -56,6 +58,7 @@ func getDoctorsFromDB() ([]*Doctor, error) {
 	return Doctors, nil
 }
 
+// addDoctor is use to create doctor, add to database and call makeBST to make DoctorsBST.
 func addDoctor(first_name string, last_name string) (*Doctor, error) {
 	defer Wg.Done()
 
@@ -82,6 +85,8 @@ func addDoctor(first_name string, last_name string) (*Doctor, error) {
 	Doctors = append(Doctors, doc)
 	sortDoctorsById()
 	DoctorsBST = makeBST()
+
+	fmt.Println("Created Doctor:", doc.Id)
 
 	return doc, nil
 }
@@ -119,7 +124,8 @@ func (d *Doctor) sortAppointments() {
 	mergeSortByTime(d.Appointments, 0, len(d.Appointments)-1) // sorted by time
 }
 
-func (d *Doctor) addAppointment(appt *Appointment) {
+func (d *Doctor) addAppointment(appt *Appointment, appWg *sync.WaitGroup) {
+	defer appWg.Done()
 	d.Appointments = append(d.Appointments, appt)
 	d.sortAppointments()
 }

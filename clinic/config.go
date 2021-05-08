@@ -9,19 +9,21 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// True  = clean system with no data
+// True  = reset system.
 const resetDB = false
 
-// True  = clean system with test data
+// True  = reset system and seed with test data.
 const resetAndSeedDB = false
 
-// If above 2 are both false = fetch from database
+// If above 2 are both false = fetch from database.
 
-// For doctors' timeslots - 1st consultation @ 8 am, last @ 10 pm
+// Doctors' timeslots - First consultation at 8 am.
 const startOperationHour = 8
+
+// Doctors' timeslots - Last consultation at 10 pm.
 const endOperationHour = 22
 
-// 30 mins between each consultations
+// 30 mins between each consultations.
 const appointmentIntervals = 30
 
 // Maximum number of days in the future allowed to make an appointment.
@@ -30,7 +32,7 @@ const MaxAdvanceApptDays = 90
 // Password policy.
 const MinPasswordLength = 8
 
-// Disabled for ease of testing of assignment; Set to true to check for true NRIC format (PDPA though...)
+// Disabled for ease of testing of assignment; Set to true to check for true NRIC format.
 const strictNRIC = false
 
 // DB settings
