@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0042)http://localhost:8080/pkg/assignment4/psi/ -->
+<!-- saved from url=(0043)http://localhost/pkg/assignment4/psi/?m=all -->
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -24,10 +24,10 @@
 </div><!-- #lowframe -->
 
 <div id="topbar" class="wide"><div class="container">
-<div class="top-heading" id="heading-wide"><a href="http://localhost:8080/pkg/">Go Documentation Server</a></div>
-<div class="top-heading" id="heading-narrow"><a href="http://localhost:8080/pkg/">GoDoc</a></div>
-<a href="http://localhost:8080/pkg/assignment4/psi/#" id="menu-button"><span id="menu-button-arrow">▽</span></a>
-<form method="GET" action="http://localhost:8080/search">
+<div class="top-heading" id="heading-wide"><a href="http://localhost/pkg/">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="http://localhost/pkg/">GoDoc</a></div>
+<a href="http://localhost/pkg/assignment4/psi/?m=all#" id="menu-button"><span id="menu-button-arrow">▽</span></a>
+<form method="GET" action="http://localhost/search">
 <div id="menu" style="min-width: 60px;">
 
 <span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required=""><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path><path d="M0 0h24v24H0z" fill="none"></path></svg></span></button></span>
@@ -80,8 +80,8 @@
 			<dd><code>import "assignment4/psi"</code></dd>
 			</dl>
 			<dl>
-			<dd><a href="http://localhost:8080/pkg/assignment4/psi/#pkg-overview" class="overviewLink">Overview</a></dd>
-			<dd><a href="http://localhost:8080/pkg/assignment4/psi/#pkg-index" class="indexLink">Index</a></dd>
+			<dd><a href="http://localhost/pkg/assignment4/psi/?m=all#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="http://localhost/pkg/assignment4/psi/?m=all#pkg-index" class="indexLink">Index</a></dd>
 			
 			
 			</dl>
@@ -114,12 +114,15 @@ Package psi defines the PSI type and provide implementation for fetching the 24H
 			
 			
 			
+				
+				<dd><a href="http://localhost/pkg/assignment4/psi/?m=all#parseJSON">func parseJSON(jsonResult map[string]interface{}) (interface{}, error)</a></dd>
+			
 			
 				
-				<dd><a href="http://localhost:8080/pkg/assignment4/psi/#PSI">type PSI</a></dd>
+				<dd><a href="http://localhost/pkg/assignment4/psi/?m=all#PSI">type PSI</a></dd>
 				
 					
-					<dd>&nbsp; &nbsp; <a href="http://localhost:8080/pkg/assignment4/psi/#GetPSI">func GetPSI() (*PSI, error)</a></dd>
+					<dd>&nbsp; &nbsp; <a href="http://localhost/pkg/assignment4/psi/?m=all#GetPSI">func GetPSI() (*PSI, error)</a></dd>
 				
 				
 			
@@ -134,7 +137,7 @@ Package psi defines the PSI type and provide implementation for fetching the 24H
 			<p>
 			<span style="font-size:90%">
 			
-				<a href="http://localhost:8080/src/assignment4/psi/psi.go">psi.go</a>
+				<a href="http://localhost/src/assignment4/psi/psi.go">psi.go</a>
 			
 			</span>
 			</p>
@@ -147,18 +150,34 @@ Package psi defines the PSI type and provide implementation for fetching the 24H
 		
 		
 		
+			
+			
+			<h2 id="parseJSON">func <a href="http://localhost/src/assignment4/psi/psi.go?s=1703:1773#L61">parseJSON</a>
+				<a class="permalink" href="http://localhost/pkg/assignment4/psi/?m=all#parseJSON">¶</a>
+				
+				
+			</h2>
+			<pre>func parseJSON(jsonResult map[<a href="http://localhost/pkg/builtin/#string">string</a>]interface{}) (interface{}, <a href="http://localhost/pkg/builtin/#error">error</a>)</pre>
+			<p>
+Is there a better way to check / unmarshal json with many similarly named keys aside from traversing and checking each level?
+</p>
+
+			
+			
+
+		
 		
 			
 			
-			<h2 id="PSI">type <a href="http://localhost:8080/src/assignment4/psi/psi.go?s=238:300#L3">PSI</a>
-				<a class="permalink" href="http://localhost:8080/pkg/assignment4/psi/#PSI">¶</a>
+			<h2 id="PSI">type <a href="http://localhost/src/assignment4/psi/psi.go?s=238:300#L3">PSI</a>
+				<a class="permalink" href="http://localhost/pkg/assignment4/psi/?m=all#PSI">¶</a>
 				
 				
 			</h2>
 			
 			<pre>type PSI struct {
-<span id="PSI.Value"></span>    Value       <a href="http://localhost:8080/pkg/builtin/#string">string</a>
-<span id="PSI.Description"></span>    Description <a href="http://localhost:8080/pkg/builtin/#string">string</a>
+<span id="PSI.Value"></span>    Value       <a href="http://localhost/pkg/builtin/#string">string</a>
+<span id="PSI.Description"></span>    Description <a href="http://localhost/pkg/builtin/#string">string</a>
 }
 </pre>
 
@@ -172,12 +191,12 @@ Package psi defines the PSI type and provide implementation for fetching the 24H
 
 			
 				
-				<h3 id="GetPSI">func <a href="http://localhost:8080/src/assignment4/psi/psi.go?s=419:446#L9">GetPSI</a>
-					<a class="permalink" href="http://localhost:8080/pkg/assignment4/psi/#GetPSI">¶</a>
+				<h3 id="GetPSI">func <a href="http://localhost/src/assignment4/psi/psi.go?s=419:446#L9">GetPSI</a>
+					<a class="permalink" href="http://localhost/pkg/assignment4/psi/?m=all#GetPSI">¶</a>
 					
 					
 				</h3>
-				<pre>func GetPSI() (*<a href="http://localhost:8080/pkg/assignment4/psi/#PSI">PSI</a>, <a href="http://localhost:8080/pkg/builtin/#error">error</a>)</pre>
+				<pre>func GetPSI() (*<a href="http://localhost/pkg/assignment4/psi/?m=all#PSI">PSI</a>, <a href="http://localhost/pkg/builtin/#error">error</a>)</pre>
 				<p>
 GetPSI returns a PSI item containing the 24H national average pollutant standards index value and description.
 </p>
@@ -203,7 +222,7 @@ Build version go1.16.3.<br>
 Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
 the content of this page is licensed under the
 Creative Commons Attribution 3.0 License,
-and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+and code is licensed under a <a href="http://localhost/LICENSE">BSD license</a>.<br>
 <a href="https://golang.org/doc/tos.html">Terms of Service</a> |
 <a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
 </div>
